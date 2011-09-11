@@ -1,4 +1,4 @@
-package com.yopco.ws.core.annotations;
+package org.brain2.ws.core.annotations;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

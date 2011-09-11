@@ -1,4 +1,4 @@
-package com.yopco.test.ws;
+package org.brain2.test.ws;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -12,12 +12,12 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.brain2.ws.core.annotations.RestHandler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 import com.google.gson.Gson;
-import com.yopco.ws.core.annotations.RestHandler;
 
 public class HelloWorld extends AbstractHandler {
 	

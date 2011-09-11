@@ -1,4 +1,4 @@
-package com.yopco.ws.core.utils;
+package org.brain2.ws.core.utils;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
