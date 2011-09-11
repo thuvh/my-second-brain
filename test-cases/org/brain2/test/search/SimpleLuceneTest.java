@@ -1,4 +1,4 @@
-package com.yopco.test.search;
+package org.brain2.test.search;
 
 import java.io.File;
 import java.io.IOException;

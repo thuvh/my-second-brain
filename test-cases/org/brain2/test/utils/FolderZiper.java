@@ -1,4 +1,4 @@
-package com.yopco.test.utils;
+package org.brain2.test.utils;
 
 import java.io.File;
 import java.io.FileInputStream;

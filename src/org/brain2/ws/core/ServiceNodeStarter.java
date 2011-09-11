@@ -1,4 +1,4 @@
-package com.yopco.ws.core;
+package org.brain2.ws.core;
 
 import java.io.IOException;
 import java.io.PrintWriter;

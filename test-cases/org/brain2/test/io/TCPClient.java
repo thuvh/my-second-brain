@@ -1,4 +1,4 @@
-package com.yopco.test.io;
+package org.brain2.test.io;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
