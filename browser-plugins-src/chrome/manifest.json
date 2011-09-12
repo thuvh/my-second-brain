@@ -1,0 +1,14 @@
+{
+  "name": "My Second Brain",
+  "version": "1.0",
+  "description": "Read, Organize, Marking and Sharing with your friends", 
+  "permissions": [
+    "bookmarks","tabs", "http://*/*", "https://*/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["http://*/*","https://*/*"],      
+      "js": ["jquery.min.js","core.js","app.js"]
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+<script type="text/javascript" src="jquery.min.js"></script>
+<style>
+#keywords {
+width:200px;
+}
+iframe {
+width:650px;height:480px;border: 0px solid #ffffff;
+}
+</style>
+
+
+
+<iframe id="iframe_share" src="" style="display:none;" ></iframe>
+
+<input type="text" id="keywords" onchange="doFilteringWords(this.value)" value="" /><br>
+<input type="button"  onclick="doFilteringWords(this.value)" value="doFilteringWords" />
+
+<script>
+
+
+
+function doFilteringWords(){
+	chrome.tabs.getSelected(null, function(tab) {
+	  chrome.tabs.sendRequest(tab.id, {method: "fromPopup", tabid: tab.id}, function(response) {
+		alert(response.data);
+	  });
+	});
+}
+
+function shareLink(href){
+	var node = document.getElementById('iframe_share');
+	node.src = 'http://qc.banbe.net/plugins/share/post?href=' + encodeURIComponent(href);	
+	node.style.display = 'block';
+}
+
+$(document).ready(function(){
+	shareLink('http://vnexpress.net/');
+	chrome.extension.sendRequest({method: "whatShareLink"}, function(response) {      
+	  shareLink(response.href);
+    });
+});
+
+/*
+chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
+	  // From content script.
+	  if (sender.tab) {
+		if (request.method == "fromContentScript")
+		  sendResponse({data: "Response from popup Page"});
+		else if (request.method == "shareLink")
+		  shareLink(request.href); 
+		else
+		  sendResponse({}); // snub them.
+	  }
+});
+*/
+
+
+</script>
