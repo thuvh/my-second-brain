@@ -8,26 +8,40 @@
 	return temp;
 };
 
-function appendPlugins() {
+var postSaveData = function() {
 	var href = location.href;
-	//alert(href);
-	if(href.indexOf('banbe.net')<0){		
-		var tpl = '';
-		tpl += '<span class="bb_like_holder" ><a href="[link]" >Post</a></span>';		
-		tpl = '<div >' + tpl + '</div>';
-		var node = jQuery( tpl.replaceAll('[link]',href) );
+	var link = 'http://localhost:10001/linkmarking/save?';
+	var tags = '';
+	var data = {'description':'link hay', 'href':encodeURIComponent(href), 'tags':tags, 'title':document.title};
+	var callback = function(rs){
+		alert(rs);
+	};
 	
-		var leftPos = jQuery(window).width() - 90;
-		var topPos = jQuery(window).height() - 90;
-		node.attr( {'style' : "position:fixed !important; left:"+leftPos+"px; top: "+topPos+"px;z-index:9999;width:100px!important;padding:0px!important" });	
-		jQuery('body').append(node);	
-	}
+	jQuery.ajax({
+	  url: link,
+	  dataType: 'json',
+	  data: data,
+	  success: callback
+	});
 };
-jQuery(document).ready(function(){
-	appendPlugins();
-});
 
+function appendPlugins() {
+		
+	var tpl = '';
+	tpl += '<a href="javascript:;" title="Save this link" ><img src="http://dl.dropbox.com/u/4074962/icons/bigfolder.png" /></a>';
+		
+	var node = jQuery( tpl );
+	node.click(postSaveData);
+
+	var leftPos = jQuery(window).width() - 90;
+	var topPos = jQuery(window).height() - 90;
+	node.attr( {'style' : "position:fixed !important; left:"+leftPos+"px; top: "+topPos+"px;z-index:9999;width:100px!important;padding:0px!important" });	
+	jQuery('body').append(node);
 	
+};
+
+appendPlugins();		
+
 
 chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
   alert('method: '+request.method);
