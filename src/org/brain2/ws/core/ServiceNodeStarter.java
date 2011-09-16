@@ -28,7 +28,6 @@ public class ServiceNodeStarter extends AbstractHandler {
 		//response.getWriter().println(request.getRequestURI());
 		// response.getWriter().println(request.getQueryString());
 
-
 	}
 
 	public void processTargetHandler(String target, String queryStr, HttpServletRequest request,
