@@ -3,9 +3,9 @@ package org.brain2.ws.core;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -40,22 +40,14 @@ public class ServiceNodeStarter extends AbstractHandler {
 			}
 			response.setContentType("text/html;charset=utf-8");
 			response.setStatus(HttpServletResponse.SC_OK);
-
+						
+			Map params = new HashMap();			
+			Enumeration<String> p = request.getParameterNames();
 			
-			Map<String,String> paramMap = request.getParameterMap();
-			int paramLength = paramMap.size();
-			
-			String[] params = new String[paramLength];
-			Class[] paramClasses = new Class[paramLength];	
-			
-			Set<String> keys = paramMap.keySet();
-			int i = 0;
-			for (String key : keys) {				
-				paramClasses[i] = String.class;
-				params[i] = request.getParameter(key);
-//				System.out.println(params[i]);
-				i++;				
-			}			
+			while(p.hasMoreElements()){				
+				String name = p.nextElement();
+				params.put(name, request.getParameter(name));
+			}					
 
 //			System.out.println(toks[1]);
 //			System.out.println(toks[2]);
@@ -64,22 +56,17 @@ public class ServiceNodeStarter extends AbstractHandler {
 			
 			//TODO use config here
 			String key = "org.brain2.ws.services.linkmarking.LinkDataHandler";			
-			Class clazz = Class.forName(key);
-			
+			Class clazz = Class.forName(key);			
 			
 			if( ! servicesMap.containsKey(key)){
 				servicesMap.put(key, (ServiceHandler) clazz.newInstance());
 			}
 			
-			Method method = null;
-			if(paramLength > 0){
-				method = clazz.getDeclaredMethod(toks[2],paramClasses);
-			} else {
-				method = clazz.getDeclaredMethod(toks[2]);
-			}			
+			Method method = clazz.getDeclaredMethod(toks[2],new Class[]{Map.class} );		
 						
 			System.out.println(clazz);
-			System.out.println(method);
+			System.out.println(method);	
+			
 			Object result = method.invoke(servicesMap.get(key), params);
 			Gson gson = new Gson();
 			writer.println(gson.toJson(result));
