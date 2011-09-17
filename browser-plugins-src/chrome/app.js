@@ -8,6 +8,41 @@
 	return temp;
 };
 
+var postSaveDataByMethodPOST = function() {
+	var href = location.href;
+	var link = 'http://localhost:10001/linkmarking/save?';
+	var tags = '';
+	var data = {'description':'link hay', 'href':encodeURIComponent(href), 'tags':tags, 'title':document.title};
+	var callback = function(rs){
+		alert(rs);
+	};
+	
+	var theIframeId = '__brain2_ext_handler' ;
+	if(jQuery('#__brain2_ext_handler').length === 0){
+		var targetIframe = jQuery("<iframe/>").attr( {'style':'display:none', 'id': theIframeId});
+		jQuery('body').append(targetIframe);
+	}
+	
+	var form = jQuery("<form/>").attr( {'method':'POST', 'action': link , 'target': theIframeId });
+	
+	var field = jQuery("<input/>").attr( {'type':'hidden', 'name':'href', 'value':encodeURIComponent(href) });	
+	form.append(field);
+	
+	var text = '';
+	var collector = function(){
+		text += (jQuery(this).text());
+	};
+	jQuery('span.messageBody').each(collector);
+	
+	var field = jQuery("<input/>").attr( {'type':'hidden', 'name':'description', 'value': text });	
+	form.append(field);
+	
+	jQuery('body').append(form);
+	
+	form.submit();
+	
+};
+
 var postSaveData = function() {
 	var href = location.href;
 	var link = 'http://localhost:10001/linkmarking/save?';
@@ -31,7 +66,7 @@ function appendPlugins() {
 	tpl += '<a href="javascript:;" title="Save this link" ><img src="http://dl.dropbox.com/u/4074962/icons/bigfolder.png" /></a>';
 		
 	var node = jQuery( tpl );
-	node.click(postSaveData);
+	node.click(postSaveDataByMethodPOST);
 
 	var leftPos = jQuery(window).width() - 90;
 	var topPos = jQuery(window).height() - 90;
@@ -54,4 +89,14 @@ chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
     sendResponse({}); // snub them.
   }
 });
+
+window.addEventListener("message", receiveMessage, false);
+
+function receiveMessage(event)
+{
+  if (event.origin !== "http://localhost:10001")
+    return;
+  alert(event.data);
+  // ...
+}
 
