@@ -15,6 +15,7 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
@@ -28,7 +29,7 @@ public class SimpleLuceneTest {
 	private static String indexDirectoryPath = "D:/data/my-second-brain";
 	private static Directory indexDirectory;
 
-	private static int mode = 1;
+	private static int mode =1;
 
 	public static String getIndexDirectoryPath() {
 		if (indexDirectoryPath == null) {
@@ -65,19 +66,22 @@ public class SimpleLuceneTest {
 			// the boolean arg in the IndexWriter ctor means to
 			// create a new index, overwriting any existing index
 			IndexWriterConfig indexWriterConfig = new IndexWriterConfig(VERSION, analyzer);
-			IndexWriter w = new IndexWriter(index, indexWriterConfig);
-			CrawlerFileTraversal crawler = new CrawlerFileTraversal(w, new File("D:/EBOOKS"));
+			
+			IndexWriter indexWriter = new IndexWriter(index, indexWriterConfig);
+			CrawlerFileTraversal crawler = new CrawlerFileTraversal(indexWriter, new File("D:/EBOOKS"));
 			crawler.start();
-			w.close();
+			indexWriter.optimize();
+			indexWriter.close();
 		}
 		// else just query
 
 		// 2. query
-		String querystr = args.length > 0 ? args[0] : "android";
-
-		// the "title" arg specifies the default field to use
-		// when no field is explicitly specified in the query.
-		Query q = new QueryParser(VERSION, "title", analyzer).parse(querystr);
+		String querystr = "*lucene*";
+		//Query q = new WildcardQuery(new Term("title", querystr));		
+		
+		querystr = "\"D:/EBOOKS/Manning.Lucene.in.Action.2nd.Edition.Jun.2010.pdf\"";
+		Query q = new QueryParser(VERSION, "uri", analyzer).parse(querystr);	
+		
 
 		// 3. search
 		int hitsPerPage = 10;
@@ -91,7 +95,10 @@ public class SimpleLuceneTest {
 		for (int i = 0; i < hits.length; ++i) {
 			int docId = hits[i].doc;
 			Document d = searcher.doc(docId);
+			System.out.println(" *docId= " + docId);
 			System.out.println((i + 1) + ". " + d.get("title") + " at URI " + d.get("uri"));
+			Explanation explanation  = searcher.explain(q, docId);
+			System.out.println(explanation.toString());
 		}
 
 		// searcher can only be closed when there
@@ -200,8 +207,9 @@ public class SimpleLuceneTest {
 			try {
 				Document doc = new Document();
 				doc.add(new Field("title", f.getName(), Field.Store.YES, Field.Index.ANALYZED));
-				doc.add(new Field("uri", f.getAbsolutePath(), Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
+				doc.add(new Field("uri", f.getAbsolutePath().replace("\\","/"), Field.Store.YES, Field.Index.ANALYZED));
 				this.idxWriter.addDocument(doc);
+				
 			} catch (CorruptIndexException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
