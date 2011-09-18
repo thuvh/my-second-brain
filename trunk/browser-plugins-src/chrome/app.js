@@ -63,15 +63,15 @@ var postSaveData = function() {
 function appendPlugins() {
 		
 	var tpl = '';
-	tpl += '<a href="javascript:;" title="Save this link" ><img src="http://dl.dropbox.com/u/4074962/icons/bigfolder.png" /></a>';
+	tpl += '<div><a href="javascript:;" title="Save this link" ><img src="http://dl.dropbox.com/u/4074962/icons/bigfolder.png" /></a></div>';
 		
 	var node = jQuery( tpl );
 	node.click(postSaveDataByMethodPOST);
 
 	var leftPos = jQuery(window).width() - 90;
 	var topPos = jQuery(window).height() - 90;
-	node.attr( {'style' : "position:fixed !important; left:"+leftPos+"px; top: "+topPos+"px;z-index:9999;width:100px!important;padding:0px!important" });	
-	jQuery('body').append(node);
+	node.attr( {'style' : "width:100px!important;padding-left:0px!important; clear: both;z-index:999999" });	
+	jQuery('body').prepend(node);
 	
 };
 
