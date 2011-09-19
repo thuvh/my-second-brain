@@ -1,7 +1,11 @@
 {
   "name": "My Second Brain",
   "version": "1.0",
-  "description": "Read, Organize, Marking and Sharing with your friends", 
+  "description": "Read, Organize, Marking and Sharing with your friends",
+  "browser_action": {
+    "default_icon": "icon.png",
+    "popup": "popup.html"
+  }, 
   "permissions": [
     "bookmarks","tabs", "http://*/*", "https://*/*"
   ],

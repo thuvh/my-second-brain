@@ -75,18 +75,18 @@ function appendPlugins() {
 	
 };
 
-appendPlugins();		
+//appendPlugins();		
 
 
 chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
   alert('method: '+request.method);
   if (request.method == "fromPopup") {
     // Send JSON data back to Popup.
-    sendResponse({data: "from Content Script to Popup"});
+	  sendResponse({data: "from Content Script to Popup"});
   } else if(request.method === 'whatShareLink'){
-	 sendResponse({href: location.href});
+	  sendResponse({href: location.href});
   } else {
-    sendResponse({}); // snub them.
+	  sendResponse({}); // snub them.
   }
 });
 
