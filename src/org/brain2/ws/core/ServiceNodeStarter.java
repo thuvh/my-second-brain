@@ -87,7 +87,7 @@ public class ServiceNodeStarter extends AbstractHandler {
 			Gson gson = new Gson();
 			html = html.replace("_json", gson.toJson(result));
 
-			System.out.println(html);
+			//System.out.println(html);
 			writer.println(html);
 
 		} catch (java.lang.NoSuchMethodException e) {
