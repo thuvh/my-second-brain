@@ -20,6 +20,7 @@ public class LinkDataHandler extends ServiceHandler{
 		System.out.println("title: " + params.get("title"));
 		System.out.println("description: " + params.get("description"));
 		System.out.println("tags: " + params.get("tags"));
+		//TODO 
 				
 		return true;
 	}
