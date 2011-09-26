@@ -38,7 +38,7 @@ public class ServiceNodeStarter extends AbstractHandler {
 		try {
 			PrintWriter writer = response.getWriter();
 			String[] toks = target.split("/");
-			if (toks.length < 3) {
+			if (toks.length <= 3) {
 				return;
 			}
 			response.setContentType("text/html;charset=utf-8");
@@ -71,24 +71,23 @@ public class ServiceNodeStarter extends AbstractHandler {
 			System.out.println(method);
 
 			Object result = method.invoke(servicesMap.get(key), params);
-
-			// TODO option here
-			// Gson gson = new Gson();
-			// writer.println(gson.toJson(result));
-
-			String filepath = "/resources/html/target_response.html";			
-			String html = "";
-			try {
-				html = readFileAsString(filepath);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			
+			Gson gson = new Gson();	
+			if(toks[3].toLowerCase().equals("json")){
+				writer.print(gson.toJson(result));
+			} else {
+				String filepath = "/resources/html/target_response.html";			
+				String html = "";
+				try {
+					html = readFileAsString(filepath);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}				
+				html = html.replace("_json", gson.toJson(result));
+				writer.print(html);
 			}
-			Gson gson = new Gson();
-			html = html.replace("_json", gson.toJson(result));
-
-			//System.out.println(html);
-			writer.println(html);
+			
 
 		} catch (java.lang.NoSuchMethodException e) {
 			System.out.println("Not found handler for the target: " + target + " !");

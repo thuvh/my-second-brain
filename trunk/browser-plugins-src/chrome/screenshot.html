@@ -1,0 +1,39 @@
+<html>
+<script>
+	function resizeImage(url, width, height, callback) {
+		var sourceImage = new Image();
+
+		sourceImage.onload = function() {
+			alert(this.width);
+			alert(this.height);
+			
+			// Create a canvas with the desired dimensions
+			var canvas = document.createElement("canvas");
+			canvas.width = Math.ceil(this.width / 2);
+			canvas.height = Math.ceil(this.height / 2);
+
+			// Scale and draw the source image to the canvas
+			canvas.getContext("2d").drawImage(sourceImage, 0, 0, width, height);
+
+			// Convert the canvas to a data URL in PNG format
+			callback(canvas.toDataURL());
+			
+
+		}
+
+		sourceImage.src = url;
+		return sourceImage;
+	}
+	function setScreenshotUrl(url) {
+		var img = resizeImage(url,600,480,function(resizeUrl){
+			document.getElementById('target').src = resizeUrl;	
+		});		
+	}
+</script>
+<body>
+	Image here:
+	<p>
+		<img id="target" src="http://jrillustration.com/images/Portfolio1-advert/0Blank.jpg" />
+	<p>End image
+</body>
+</html>
