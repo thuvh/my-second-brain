@@ -50,9 +50,19 @@ public class VietnameseIndex {
 	}
 	
 	public static void main(String[] args) {
-		String s = "Tiến hành thay thế , lọc bỏ dấu cho chuỗi";
+		//String s = "Tiến hành thay thế , lọc bỏ dấu cho chuỗi";
+		String s = "; ? Lên @ án nạn \"đi đêm\" , nâng giá cầu thủ vô tội vạ nhưng ông Nguyễn Đức Kiên vừa khiến cả V-League";
+		
+		
+		
 		String clearedVietnamese = StringUtil.RemoveSign4VietnameseString(s);
 		System.out.println(clearedVietnamese);
+		clearedVietnamese = clearedVietnamese.replaceAll("[^a-zA-Z0-9]+", "");
+		System.out.println(clearedVietnamese);
+		
+		clearedVietnamese = "project team                manage key    ";
+		clearedVietnamese = clearedVietnamese.replaceAll("[^\\S]+", " ").trim();
+		System.out.println("\""+clearedVietnamese+"\"");
 	}
 
 	

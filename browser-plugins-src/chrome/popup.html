@@ -79,6 +79,10 @@
 <a href="javascript:postSaveDataByMethodPOST()" class="button orange bigrounded" title="Save to my brain" style="float: right; margin-bot: 0 0 0 10px;" >Save</a>
 </div>
 
+<div id="plusone_holder" style="width: 280px; margin: 10px;" >
+<div id="plusone_btn" class="g-plusone" data-annotation="inline" callback="plusoneCallback" data-href=""></div>
+</div>
+
 <script type="text/javascript">
 	var curTabId = 0;
 	function postSaveDataByMethodPOST() {
@@ -87,7 +91,7 @@
 			var tagText = document.getElementById('theTags').value;
 			
 			chrome.tabs.sendRequest(tab.id, {
-				method : "postSaveDataByMethodPOST",
+				method : "postDataLink",
 				tabid : tab.id,
 				tags : tagText
 			}, function(response) {				
@@ -95,6 +99,19 @@
 				//chrome.tabs.remove(curTabId);
 				self.close();
 			});
+		});		
+	}
+	
+	chrome.tabs.getSelected(null, function(tab) {			
+		chrome.tabs.sendRequest(tab.id, {
+			method : "getCurrentUrl"				
+		}, function(response) {
+			var node = document.getElementById('plusone_btn');
+			node.setAttribute('data-href',response.href);
+			var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+			po.src = 'https://apis.google.com/js/plusone.js';
+			document.getElementById('plusone_holder').appendChild(po);
 		});
-	}	
+	});	
+	
 </script>
