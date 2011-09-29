@@ -19,9 +19,7 @@ var postDataLink = function(tags) {
 	
 	jQuery.post(postUrl, data, function(response){
 		console.log(response);	
-		chrome.extension.sendRequest({bg_method: "takeScreenshot2"}, function(response) {
-			  console.log(response.message);
-		});
+		//chrome.extension.sendRequest({bg_method: "takeScreenshot"}, function(response) {  console.log(response.message); });
 	});
 };
 
