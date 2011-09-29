@@ -1,0 +1,29 @@
+package org.brain2.test.search;
+
+import java.io.IOException;
+
+import org.apache.lucene.document.Document;
+import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.queryParser.ParseException;
+import org.brain2.ws.core.search.MetaDataUtil;
+import org.brain2.ws.core.search.QueryLinkMetaData;
+
+public class TestQueryLinkMetaData {
+	public static void main(String[] args) throws CorruptIndexException, IOException, ParseException {
+		QueryLinkMetaData theQuery = new QueryLinkMetaData();
+		int docId = theQuery.queryDocIdByUrl("http://www.youtube.com/watch?v=KWXZW-h7D0o&feature=related");
+		
+		if(docId >= 0){
+			IndexReader reader = MetaDataUtil.getIndexReader(true);
+			Document doc = reader.document(docId);
+			
+			System.out.println("href:"+doc.get("href"));
+			System.out.println("title:"+doc.get("title"));
+			System.out.println("description:"+doc.get("description"));
+			System.out.println("tags:"+doc.get("tags"));
+			
+			reader.close();				
+		}		
+	}
+}
