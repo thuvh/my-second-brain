@@ -15,7 +15,8 @@ public class IndexMetaData {
 			if(oldDocId >= 0){
 				IndexReader reader = MetaDataUtil.getIndexReader(false);
 				reader.deleteDocument(oldDocId);
-				reader.close();				
+				reader.close();			
+				System.out.println("deleteDocument OK 1 Old doc for href:"+href);
 			}
 
 			// 2. create new doc, set fields
@@ -24,9 +25,13 @@ public class IndexMetaData {
 			IndexWriter indexWriter = MetaDataUtil.getIndexWriter();
 			indexWriter.addDocument(newDoc);			
 			indexWriter.optimize();
-			indexWriter.close();	
 			System.out.println("Add OK 1 doc for href:"+href);
+			
+			indexWriter.close();				
 		} catch (Exception e) {
+			if(e instanceof org.apache.lucene.store.AlreadyClosedException){
+				return;
+			}
 			e.printStackTrace();
 		}
 	}
