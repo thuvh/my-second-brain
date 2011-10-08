@@ -1,0 +1,110 @@
+<html>
+<head>
+	<title>Search</title>
+	<link rel="stylesheet"	href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/base/jquery-ui.css" type="text/css" media="all" />
+	<style type="text/css">
+		body {
+			font-size: 62.5%;
+		}
+		
+		body {
+			font-family: "Trebuchet MS", "Helvetica", "Arial", "Verdana",
+				"sans-serif";
+		}
+		#search_results {
+			margin: 10px 0px;
+		}
+		#search_results > .record {
+			padding: 10px;
+		}
+		#search_results > .record:HOVER {
+			background: #F5DA81;
+			color: #0404B4;
+		}
+	</style>
+
+
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
+	<script type="text/javascript">
+		$.extend({
+		  getUrlVars: function(){
+		    var vars = [], hash;
+		    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+		    for(var i = 0; i < hashes.length; i++)
+		    {
+		      hash = hashes[i].split('=');
+		      vars.push(hash[0]);
+		      vars[hash[0]] = decodeURIComponent(hash[1]);
+		    }
+		    return vars;
+		  },
+		  getUrlVar: function(name){
+		    return $.getUrlVars()[name];
+		  }
+		});
+	</script>
+	<script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js"></script>
+
+
+</head>
+<body>
+
+	Keywords: <input type="text" id="theKeywords" value="" style="width: 270px; margin: 5px;" placeholder="Enter the keywords here" />
+	<div id="search_results"></div>
+	<script>
+		function setKeywordsAndSearch(keywords){			
+			$("#theKeywords").val(keywords);			
+			doSearch(keywords);					
+		}
+		$(document).ready(function(){
+			initAutoComplete();
+			var keywords = $.getUrlVar('keywords');
+			if(typeof keywords === 'string'){
+				setKeywordsAndSearch(keywords);
+			}
+		});
+		
+		jQuery('#theKeywords').keyup(function(event) {
+		  	if (event.keyCode == '13') {
+		  		doSearch($(this).val());
+			}
+		});
+		
+		function doSearch(keywords){
+			if($.trim(keywords)  != ''){
+				var postUrl = 'http://localhost:10001/linkmarking/search/json?';			
+				var data = {'keywords' : encodeURIComponent(keywords)};
+
+				$("#search_results > div.record").remove();
+				jQuery.post(postUrl, data, function(response){
+					var list = JSON.parse(response);
+					if(list.length > 0){						
+						$("#searchRecordTpl").tmpl(list).appendTo("#search_results");	
+					} else {
+						$("#search_results").html("No results found!");
+					}					
+				});	
+			}	
+		}
+		
+		function initAutoComplete(){
+			var availableTags = [ "ActionScript", "AppleScript", "Asp",
+			  					"BASIC", "C", "C++", "Clojure", "COBOL", "ColdFusion",
+			  					"Erlang", "Fortran", "Groovy", "Haskell", "Java","lucene",
+			  					"JavaScript", "Lisp", "Perl", "PHP", "Python", "Ruby",
+			  					"Scala", "Scheme" ];
+  			$("#theKeywords").autocomplete({
+  				source : availableTags
+  			});
+		}
+		
+	</script>
+	<script id="searchRecordTpl" type="text/x-jquery-tmpl"> 
+    	<div class="record" >
+			<a href="${href}" target="_blank" ><b>${title}</b> </a>
+		</div> 
+	</script>
+	
+</body>
+</html>

@@ -13,7 +13,7 @@ public class TestQueryLinkMetaData {
 		QueryLinkMetaData theQuery = new QueryLinkMetaData();
 		//int docId = theQuery.queryDocIdByUrl("http://www.youtube.com/watch?v=KWXZW-h7D0o&feature=related");
 		
-		List<Document> docs = theQuery.queryDocsByKeywords("engine");		
+		List<Document> docs = theQuery.queryDocsByKeywords("iphone_dev");		
 		for (Document doc : docs) {
 			System.out.println("href:"+doc.get("href"));
 			System.out.println("title:"+doc.get("title"));
