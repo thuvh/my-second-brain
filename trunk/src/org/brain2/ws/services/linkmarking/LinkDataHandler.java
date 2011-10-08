@@ -2,13 +2,18 @@ package org.brain2.ws.services.linkmarking;
 
 import java.net.URLDecoder;
 import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.CRC32;
 
 import org.apache.commons.codec.binary.Hex;
+import org.apache.lucene.document.Document;
 import org.brain2.ws.core.ServiceHandler;
 import org.brain2.ws.core.annotations.RestHandler;
 import org.brain2.ws.core.search.IndexMetaData;
+import org.brain2.ws.core.search.QueryLinkMetaData;
 
 
 public class LinkDataHandler extends ServiceHandler{
@@ -43,6 +48,26 @@ public class LinkDataHandler extends ServiceHandler{
 		indexMetaData.indexLink(href, params.get("title").toString(), params.get("description").toString(),  params.get("tags").toString());
 				
 		return true;
+	}
+	
+	@RestHandler
+	public List<Map<String,String>> search(Map params ) throws Exception {
+		String keywords = URLDecoder.decode(params.get("keywords").toString(),"utf-8").trim();
+		System.out.println("keywords: "+keywords);
+		
+		List<Map<String,String>> rs = new ArrayList<Map<String,String>>();
+		QueryLinkMetaData theQuery = new QueryLinkMetaData();		
+		
+		List<Document> docs = theQuery.queryDocsByKeywords(keywords);		
+		for (Document doc : docs) {
+			Map<String,String> obj = new HashMap<String, String>(4);
+			obj.put("href", doc.get("href"));
+			obj.put("title", doc.get("title"));
+			obj.put("description", doc.get("description"));
+			obj.put("tags", doc.get("tags"));
+			rs.add(obj);
+		}		
+		return rs;
 	}
 	
 	

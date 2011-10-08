@@ -1,6 +1,4 @@
 <style type="text/css">
-/* button 
----------------------------------------------- */
 .button {
 	display: inline-block;
 	zoom: 1; /* zoom and *display = ie7 hack for display:inline-block */
@@ -21,32 +19,26 @@
 	-moz-box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
 	box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
 }
-
 .button:hover {
 	text-decoration: none;
 }
-
 .button:active {
 	position: relative;
 	top: 1px;
 }
-
 .bigrounded {
 	-webkit-border-radius: 2em;
 	-moz-border-radius: 2em;
 	border-radius: 2em;
 }
-
 .medium {
 	font-size: 12px;
 	padding: .4em 1.5em .42em;
 }
-
 .small {
 	font-size: 11px;
 	padding: .2em 1em .275em;
 }
-
 .orange {
 	color: #fef4e9;
 	border: solid 1px #da7c0c;
@@ -56,50 +48,79 @@
 	filter: progid : DXImageTransform.Microsoft.gradient ( startColorstr =
 		'#faa51a', endColorstr = '#f47a20' );
 }
-
 .orange:hover {
 	background: #f47c20;
 	background: -webkit-gradient(linear, left top, left bottom, from(#f88e11),to(#f06015) );
 	background: -moz-linear-gradient(top, #f88e11, #f06015);
-	filter: progid : DXImageTransform.Microsoft.gradient ( startColorstr =
-		'#f88e11', endColorstr = '#f06015' );
+	filter: progid : DXImageTransform.Microsoft.gradient ( startColorstr = '#f88e11', endColorstr = '#f06015' );
 }
-
 .orange:active {
 	color: #fcd3a5;
 	background: -webkit-gradient(linear, left top, left bottom, from(#f47a20),to(#faa51a) );
 	background: -moz-linear-gradient(top, #f47a20, #faa51a);
-	filter: progid : DXImageTransform.Microsoft.gradient ( startColorstr =
-		'#f47a20', endColorstr = '#faa51a' );
+	filter: progid : DXImageTransform.Microsoft.gradient ( startColorstr = '#f47a20', endColorstr = '#faa51a' );
+}
+ul {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
 }
 </style>
+<script type="text/javascript" src="jquery.min.js" ></script>
 
 <div style="width: 280px; margin: 10px;" >
-<input type="text" id="theTags" value="" style="width: 270px; margin: 5px;" placeholder="Enter the tags here (separated by space)" />
-<a href="javascript:postSaveDataByMethodPOST()" class="button orange bigrounded" title="Save to my brain" style="float: right; margin-bot: 0 0 0 10px;" >Save</a>
-</div>
-
-<div id="plusone_holder" style="width: 280px; margin: 10px;" >
-<div id="plusone_btn" class="g-plusone" data-annotation="inline" callback="plusoneCallback" data-href=""></div>
-</div>
-
-<script type="text/javascript" src="http://www.google.com/jsapi"></script>
-<script type="text/javascript">
-  google.load("gdata", "2.x", {packages: ['blogger']});
-</script>
-<script type="text/javascript" src="http://gdata-javascript-client.googlecode.com/svn/trunk/samples/blogger/blogpress/blogpress.js"></script>
-<link rel="stylesheet" type="text/css" href="http://gdata-javascript-client.googlecode.com/svn/trunk/samples/blogger/blogpress/blogpress_styles.css">
+	Options:<br>
+	<select id="option_box" onchange="optionHandler(this)">
+		<option value="save">Save</option>
+		<option value="search">Search</option>
+		<option value="gplus_btn">G+ button</option>
+	</select>
+	<ul id="panel_list" >
+		<li id="save" >			
+			<input type="text" id="theTags" value="" style="width: 270px; margin: 5px;" placeholder="Enter the tags here (separated by space)" />
+			<a href="javascript:postSaveDataByMethodPOST()" class="button orange bigrounded" title="Save to my brain" style="float: right; margin: 10px;" >Save</a>
+	 	</li>
+	  	<li id="search" >
+	  		<input type="text" id="theKeywords" value="" style="width: 270px; margin: 5px;" placeholder="Enter the keywords here" />
+	  		<a href="javascript:openSearchForm()" class="button orange bigrounded" title="Search" style="float: right; margin: 10px;" >Search</a>
+		</li>
+	  	<li id="gplus_btn" >
+		  	<div id="plusone_holder" style="margin: 10px;">
+				<div id="plusone_btn" class="g-plusone" data-annotation="inline" callback="plusoneCallback" data-href=""></div>
+			</div>
+	  	</li>
+	</ul>
+</div> 
 
 <script type="text/javascript" >	
-
+	var initSelectionBox = function(){
+		jQuery('#panel_list').find('li').hide();
+		jQuery('#panel_list').find('#save').show();
+	};
+	initSelectionBox();
+	
+	var optionHandler = function(n){
+		jQuery('#panel_list').find('li').hide();
+		jQuery( '#' + jQuery(n).val() ).show();		
+	};
+	
+	jQuery('#theTags').keyup(function(event) {
+	  	if (event.keyCode == '13') {
+	  		postSaveDataByMethodPOST();
+		}
+	});
+	
+	jQuery('#theKeywords').keyup(function(event) {
+	  	if (event.keyCode == '13') {
+	  		openSearchForm();
+		}
+	});
 	
 	//chrome.tts.speak('Please, enter your tags for this page!', {'lang': 'en-US', 'rate': 1.0});
 	
 	var curTabId = 0;
-	function postSaveDataByMethodPOST() {
-		
-		var tagText = document.getElementById('theTags').value;
-		
+	function postSaveDataByMethodPOST() {		
+		var tagText = document.getElementById('theTags').value;		
 		chrome.tabs.getSelected(null, function(tab) {
 			curTabId = tab.id;
 			
@@ -115,6 +136,12 @@
 		});		
 	}
 	
+	function openSearchForm(){
+		var keywords = jQuery("#theKeywords").val();		
+		var viewTabUrl = [ chrome.extension.getURL('search.html'), '?keywords=',	encodeURIComponent(keywords) ].join('');
+		chrome.tabs.create({url : viewTabUrl });	
+	}
+	
 	chrome.tabs.getSelected(null, function(tab) {			
 		chrome.tabs.sendRequest(tab.id, {
 			method : "getCurrentUrl"				
@@ -127,73 +154,4 @@
 		});
 	});	
 	
-	init();
 </script>
-
-<table style="width:100%" cellpadding="0" cellspacing="0">
-<tr>
-<td class="header" style="width:60%">
-<img src="images/blogpress.png" alt="Blog.press (Blogger Client)"/>
-</td>
-<td class="header" style="text-align:right">
-Choose blog: 
-<select id="blogSelect" onchange="updateCurrentBlogNum()">
-</select>
-<input id="authButton" type="button" value="Authenticate" onclick="loginOrLogout()"/>
-</td>
-</tr>
-<tr>
-<tr>
-<td class="divider" colspan="2">
-<!-- nothing here! -->
-</td>
-</tr>
-<td class="subheader" colspan="2">
-<table>
-  <tr>
-   <td class="sublink" id="sublink0">
-     <a href="javascript:switchView(0)" id="sublink0a">Show All Posts</a></td>
-   <td class="sublink" id="sublink1">
-     <a href="javascript:switchView(1)" id="sublink1a">Create New Post</a></td>
-  </tr>
-</table>
-</td>
-</tr>
-</table>
-
-<br/>
-
-<div id="statusDiv" class="centered" style="color:#ff0000">
-Status messages will appear here (errors, syncs, etc).
-</div>
-
-<br/>
-
-<div id="showAllPostsDiv" class="centered" style="display: none;">
-<div id="loginNotice" style="color:#cc0000; font-weight:bold; display:none">
-  Because this is a third-party app that uses your Google account authentication, you'll need to grant access to it by clicking the "Login" button. 
-</div>
-</div>
-
-<div id="createOrEditDiv" class="centered" style="display: none;">
-  <input type="hidden" id="blogPostEditUri"></input>
-  <table style="width:100%">
-  <tr><td>Title</td></tr>
-  <tr><td>
-  <input type="text" id="blogPostTitleInput" style="width:100%"></input>
-  </td></tr>
-  <tr><td>Post</td></tr>
-  <tr><td>
-  <textarea rows="10" id="blogPostTextArea" style="width:100%"></textarea>
-  </td></tr>
-  <tr><td>Tags (separate multiple tags with commas: cats, pet food, dogs)</td></tr>
-  <tr><td>
-  <input type="text" id="blogPostCategoriesInput" style="width:100%"></input>
-  </td></tr>
-  <tr><td style="text-align: right">
-  <input type="button" id="draftButton" value="Save Draft" onclick="insertOrUpdatePostEntry(true);"></input>
-  <input type="button" id="publishButton" value="Publish" onclick="insertOrUpdatePostEntry();"></input>
-  </td></tr>
-  </table>
-</div>
-
