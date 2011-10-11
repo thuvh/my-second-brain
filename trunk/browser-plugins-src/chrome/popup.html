@@ -74,6 +74,7 @@ ul {
 		<option value="save">Save</option>
 		<option value="search">Search</option>
 		<option value="gplus_btn">G+ button</option>
+		<option value="bb_plugins">Banbe Plugins</option>
 	</select>
 	<ul id="panel_list" >
 		<li id="save" >			
@@ -87,6 +88,12 @@ ul {
 	  	<li id="gplus_btn" >
 		  	<div id="plusone_holder" style="margin: 10px;">
 				<div id="plusone_btn" class="g-plusone" data-annotation="inline" callback="plusoneCallback" data-href=""></div>
+			</div>
+	  	</li>
+	  	<li id="bb_plugins" >
+		  	<div id="bb_plugins_holder" style="margin: 10px;">
+				<bb:sp-like layout="button_count" href="#_href_" ></bb:sp-like><br>
+				<bb:sp-share-button href="#_href_" ></bb:sp-share-button>
 			</div>
 	  	</li>
 	</ul>
@@ -146,11 +153,24 @@ ul {
 		chrome.tabs.sendRequest(tab.id, {
 			method : "getCurrentUrl"				
 		}, function(response) {
+			
+			//G+ Button
 			var node = document.getElementById('plusone_btn');
 			node.setAttribute('data-href',response.href);
 			var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
 			po.src = 'https://apis.google.com/js/plusone.js';
 			document.getElementById('plusone_holder').appendChild(po);
+			
+			//BB Plugins 
+			var node = jQuery('#bb_plugins_holder');
+			node.html(node.html().replace('#_href_' , response.href));
+			node.html(node.html().replace('#_href_' , response.href));
+			var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+			po.src = 'http://plugins.banbe.net/static/js/v2/social-plugins.js';
+			document.getElementById('bb_plugins').appendChild(po);
+			po.onload = function(){
+				window.FOSP.XFOML.parse();	
+			};			
 		});
 	});	
 	
