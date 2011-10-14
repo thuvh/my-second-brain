@@ -33,6 +33,9 @@ public class ServiceNodeStarter extends AbstractHandler {
 
 	}
 
+	/*
+	 * 
+	 */
 	public void processTargetHandler(String target, String queryStr, HttpServletRequest request,
 			HttpServletResponse response) {
 		try {
@@ -50,6 +53,7 @@ public class ServiceNodeStarter extends AbstractHandler {
 			while (p.hasMoreElements()) {
 				String name = p.nextElement();
 				params.put(name, request.getParameter(name));
+				
 			}
 
 			// System.out.println(toks[1]);
