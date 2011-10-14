@@ -30,7 +30,6 @@ public class ServiceNodeStarter extends AbstractHandler {
 		processTargetHandler(target, request.getQueryString(), request, response);
 		// response.getWriter().println(request.getRequestURI());
 		// response.getWriter().println(request.getQueryString());
-
 	}
 
 	/*
@@ -84,8 +83,7 @@ public class ServiceNodeStarter extends AbstractHandler {
 				String html = "";
 				try {
 					html = readFileAsString(filepath);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
+				} catch (IOException e) {					
 					e.printStackTrace();
 				}				
 				html = html.replace("_json", gson.toJson(result));
@@ -97,8 +95,7 @@ public class ServiceNodeStarter extends AbstractHandler {
 			System.out.println("Not found handler for the target: " + target + " !");
 		} catch (java.lang.IllegalArgumentException e) {
 			System.out.println("wrong number of arguments for the target: " + target + " !");
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
+		} catch (Exception e) {			
 			e.printStackTrace();
 		}
 	}
