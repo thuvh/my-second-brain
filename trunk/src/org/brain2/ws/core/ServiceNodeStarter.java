@@ -70,8 +70,8 @@ public class ServiceNodeStarter extends AbstractHandler {
 
 			Method method = clazz.getDeclaredMethod(toks[2], new Class[] { Map.class });
 
-			System.out.println(clazz);
-			System.out.println(method);
+//			System.out.println(clazz);
+//			System.out.println(method);
 
 			Object result = method.invoke(servicesMap.get(key), params);
 			

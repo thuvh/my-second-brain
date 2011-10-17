@@ -9,11 +9,13 @@ import java.util.Properties;
 import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
+import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.NoSuchProviderException;
 import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.Store;
+import javax.mail.search.SearchTerm;
 
 public class InboxReader {
 
@@ -23,12 +25,27 @@ public class InboxReader {
 		try {
 			Session session = Session.getDefaultInstance(props, null);
 			Store store = session.getStore("imaps");
-			store.connect("imap.gmail.com", "tantrieuf31.database", "hellboy113");
+			store.connect("imap.gmail.com", "tantrieuf31.database2", "hellboy113");
 			System.out.println(store);
 
 			Folder inbox = store.getFolder("Inbox");
+			SearchTerm term = new SearchTerm() {				
+				@Override
+				public boolean match(Message msg) {
+					try {
+						if(msg.getSubject().startsWith("[my-secound-brain]"))
+						return true;
+					} catch (MessagingException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					return false;
+				}
+			};;;
+			
 			inbox.open(Folder.READ_WRITE);
-			Message messages[] = inbox.getMessages();
+			//Message messages[] = inbox.getMessages();
+			Message messages[] = inbox.search(term );
 			for (Message message : messages) {
 				System.out.println(message.getSubject());
 				Object content = message.getContent();
