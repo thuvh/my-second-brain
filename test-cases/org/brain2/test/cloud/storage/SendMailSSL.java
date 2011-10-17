@@ -25,7 +25,7 @@ public class SendMailSSL {
 		Session session = Session.getDefaultInstance(props,
 			new javax.mail.Authenticator() {
 				protected PasswordAuthentication getPasswordAuthentication() {
-					return new PasswordAuthentication("tantrieuf31.database","hellboy113");
+					return new PasswordAuthentication("tantrieuf31.database2","hellboy113");
 				}
 			});
  
@@ -35,7 +35,7 @@ public class SendMailSSL {
 			message.setFrom(new InternetAddress("tantrieuf31.database@gmail.com"));
 			message.setRecipients(Message.RecipientType.TO,
 					InternetAddress.parse("tantrieuf31.database@gmail.com"));
-			message.setSubject("Testing Subject 2");
+			message.setSubject("[my-secound-brain] 2");
 			message.setText("Dear Mail Crawler," +"\n\n No spam to my email, please!");
 		    // create the second message part
 		    MimeBodyPart mbp2 = new MimeBodyPart();
