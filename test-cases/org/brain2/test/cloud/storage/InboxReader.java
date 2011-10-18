@@ -44,8 +44,8 @@ public class InboxReader {
 			};;;
 			
 			inbox.open(Folder.READ_WRITE);
-			//Message messages[] = inbox.getMessages();
-			Message messages[] = inbox.search(term );
+			Message messages[] = inbox.getMessages();
+			//Message messages[] = inbox.search(term );
 			System.out.println("messages.length: "+messages.length);
 			for (Message message : messages) {
 				System.out.println(message.getSubject());

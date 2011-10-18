@@ -14,6 +14,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.brain2.ws.core.utils.FileUtils;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -112,8 +113,7 @@ public class ServiceNodeStarter extends AbstractHandler {
 
 	
 	private static String readFileAsString(String filePath) throws java.io.IOException {
-		File dir1 = new File (".");
-		String fullpath = dir1.getCanonicalPath() + filePath;
+		String fullpath = FileUtils.getRuntimeFolderPath() + filePath;
 		
 		StringBuffer fileData = new StringBuffer(1000);
 		BufferedReader reader = new BufferedReader(new FileReader(fullpath));
