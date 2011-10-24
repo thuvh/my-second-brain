@@ -75,6 +75,7 @@ ul {
 		<option value="search">Search</option>
 		<option value="gplus_btn">G+ button</option>
 		<option value="bb_plugins">Banbe Plugins</option>
+		<option value="crawling_facebook">Crawling Facebook</option>
 	</select>
 	<ul id="panel_list" >
 		<li id="save" >			
@@ -94,6 +95,11 @@ ul {
 		  	<div id="bb_plugins_holder" style="margin: 10px;">
 				<bb:sp-like layout="button_count" href="#_href_" ></bb:sp-like><br>
 				<bb:sp-share-button href="#_href_" ></bb:sp-share-button>
+			</div>
+	  	</li>
+	  	<li id="crawling_facebook" >
+		  	<div  style="margin: 10px;">
+				<a href="javascript: crawlingMyFacebook()" class="button orange bigrounded" title="Crawling your Facebook profile" style="float: right; margin: 10px;" >Crawling my Facebook</a>
 			</div>
 	  	</li>
 	</ul>
@@ -135,6 +141,20 @@ ul {
 				method : "postDataLink",
 				tabid : tab.id,
 				tags : tagText
+			}, function(response) {				
+				//alert(response.href);
+				//chrome.tabs.remove(curTabId);
+				self.close();
+			});
+		});		
+	}
+	
+	function crawlingMyFacebook() {
+		chrome.tabs.getSelected(null, function(tab) {
+			curTabId = tab.id;			
+			chrome.tabs.sendRequest(tab.id, {
+				method : "crawlingMyFacebook",
+				tabid : tab.id				
 			}, function(response) {				
 				//alert(response.href);
 				//chrome.tabs.remove(curTabId);
