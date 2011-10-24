@@ -12,29 +12,35 @@ var postDataLink = function(tags) {
 	var href = location.href;
 	var postUrl = 'http://localhost:10001/linkmarking/save/json?';
 	var metaInfo = Brain2.analytics.pageMetaInfo();
-	var data = {href:encodeURIComponent(href)};
+	var data = {
+		href : encodeURIComponent(href)
+	};
 	data['title'] = metaInfo['title'];
 	data['description'] = metaInfo['description'];
 	data['tags'] = tags;
-	
-	jQuery.post(postUrl, data, function(response){
-		console.log(response);	
-		//chrome.extension.sendRequest({bg_method: "takeScreenshot"}, function(response) {  console.log(response.message); });
+
+	jQuery.post(postUrl, data, function(response) {
+		console.log(response);
+		// chrome.extension.sendRequest({bg_method: "takeScreenshot"},
+		// function(response) { console.log(response.message); });
 	});
 };
 
 chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
 	// alert('method: '+request.method);
-	if (request.method === 'postDataLink') {
+	var m = request.method;
+	if (m === 'postDataLink') {
 		postDataLink(request.tags);
 		// Brain2.UI.popupCenter("http://google.com", 500, 450);
 		sendResponse({
 			href : location.href
 		});
-	} else if (request.method === 'getCurrentUrl') {
+	} else if (m === 'getCurrentUrl') {
 		sendResponse({
 			href : location.href
 		});
+	} else if (m === 'crawlingMyFacebook') {
+		fetchFacebookDataFeed();
 	} else {
 		sendResponse({}); // snub them.
 	}
@@ -48,8 +54,7 @@ window.addEventListener("message", function(event) {
 	// ...
 }, false);
 
-
-//test
+// test
 
 var postSaveDataByMethodPOST = function(tags) {
 	var href = location.href;
@@ -108,3 +113,22 @@ var postSaveDataByMethodPOST = function(tags) {
 	jQuery('body').append(form);
 	form.submit();
 };
+
+var fetchFacebookDataFeed = function() {
+	var feeds = jQuery('#profile_minifeed').find('> li');
+	feeds.each(function() {
+		var href = jQuery(this).find('a.external').attr('href');
+		if (href) {
+			console.log("-------------------------------");
+			console.log(href);
+			console.log(jQuery(this).find('div.uiAttachmentTitle a').text());
+			console.log(jQuery(this).find('div.uiAttachmentDesc').text());
+			 
+			var msg = jQuery(this).find('span.messageBody').text();
+			console.log(msg);
+		}
+	});
+	jQuery('#profile_pager').find('a.uiMorePagerPrimary').click();
+};
+
+
