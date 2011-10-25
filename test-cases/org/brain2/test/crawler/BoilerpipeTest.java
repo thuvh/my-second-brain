@@ -4,7 +4,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import de.l3s.boilerpipe.BoilerpipeProcessingException;
-import de.l3s.boilerpipe.extractors.DefaultExtractor;
+import de.l3s.boilerpipe.extractors.ArticleExtractor;
 
 public class BoilerpipeTest {
 
@@ -13,10 +13,10 @@ public class BoilerpipeTest {
 	 */
 	public static void main(String[] args) {
 		try {
-			final URL url = new URL("http://vnexpress.net/gl/vi-tinh/2011/10/nguoi-dung-than-phien-ve-chat-luong-man-hinh-iphone-4s/");
+			final URL url = new URL("http://ngoisao.net/tin-tuc/showbiz-viet/2011/10/jennifer-xinh-tuoi-di-co-vu-bong-da-180348/");
 
 			// This can also be done in one line:
-			System.out.println(DefaultExtractor.INSTANCE.getText(url));
+			System.out.println(ArticleExtractor.INSTANCE.getText(url));
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
