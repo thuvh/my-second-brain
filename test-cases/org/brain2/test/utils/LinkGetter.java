@@ -23,11 +23,10 @@ public class LinkGetter {
 		link = Pattern.compile("href=\"[^>]*\">");
 	}
 
-	public String loadHtmlPage(String url) {
+	public static String loadHtmlPage(String url) {
 		String html = "";
 		try {
-			BufferedReader bufferedReader = new BufferedReader(
-					new InputStreamReader(new URL(url).openStream()));
+			BufferedReader bufferedReader = new BufferedReader(	new InputStreamReader(new URL(url).openStream()));
 			String s;
 			StringBuilder builder = new StringBuilder();
 			while ((s = bufferedReader.readLine()) != null) {
@@ -38,8 +37,7 @@ public class LinkGetter {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			
 		}
 		return html;
 	}
@@ -109,11 +107,11 @@ public class LinkGetter {
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
-		// String domain = "vnexpress.net";
+		String domain = "vnexpress.net";
 		// String domain = "tantrieuf31.blogspot.com";
-		String seedLink = "book.pdfchm.net/processing-a-programming-handbook-for-visual-designers-and-artists/9780262182621/";
+		//String seedLink = "book.pdfchm.net/processing-a-programming-handbook-for-visual-designers-and-artists/9780262182621/";
 		LinkGetter linkGetter = new LinkGetter("pdfchm.net");
-		Set<String> links = linkGetter.getLinks("http://" + seedLink);
+		Set<String> links = linkGetter.getLinks("http://" + domain);
 		for (String link : links) {
 			System.out.println(link);
 			Set<String> links2 = linkGetter.getLinks(link);

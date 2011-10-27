@@ -38,6 +38,7 @@
 	<classpathentry kind="lib" path="lib/boilerpipe.jar"/>
 	<classpathentry kind="lib" path="lib/nekohtml-1.9.13.jar"/>
 	<classpathentry kind="lib" path="lib/xerces-2.9.1.jar"/>
-
+	<classpathentry kind="lib" path="lib/jsoup.jar"/>
+	<classpathentry kind="lib" path="lib/commons-io-2.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

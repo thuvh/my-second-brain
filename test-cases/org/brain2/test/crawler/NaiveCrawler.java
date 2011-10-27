@@ -50,6 +50,8 @@ public class NaiveCrawler {
 	private BufferedWriter crawlStatistics = null;
 
 	private int numberItemsSaved = 0;
+	
+	private String robotTxtUrl = "";
 
 	public NaiveCrawler(Queue<CrawlerUrl> urlQueue, int maxNumberUrls,
 			int maxDepth, long delayBetweenUrls, String regexpSearchPattern)
@@ -66,6 +68,10 @@ public class NaiveCrawler {
 		crawlOutput = new BufferedWriter(new FileWriter("crawl.txt"));
 		crawlStatistics = new BufferedWriter(new FileWriter(
 				"crawlStatistics.txt"));
+	}
+	
+	public void setRobotTxtUrl(String robotTxtUrl) {
+		this.robotTxtUrl = robotTxtUrl;
 	}
 
 	public void crawl() throws Exception {
@@ -177,10 +183,14 @@ public class NaiveCrawler {
 		return retValue;
 	}
 
-	private Collection<String> parseRobotsTxtFileToGetDisallowedPaths(
-			String host) {
+	private Collection<String> parseRobotsTxtFileToGetDisallowedPaths(String host) {
 		// read the robots.txt file
-		String robotFilePath = getContent("http://" + host + "/robots.txt");
+		String robotFilePath;
+		if(! this.robotTxtUrl.isEmpty()){
+			robotFilePath = getContent(this.robotTxtUrl);
+		} else {
+			robotFilePath = getContent("http://" + host + "/robots.txt");
+		}
 		Collection<String> disallowedPaths = new ArrayList<String>();
 		if (robotFilePath != null) {
 			Pattern p = Pattern.compile(USER_AGENT);
@@ -250,8 +260,7 @@ public class NaiveCrawler {
 		url.setIsVisited();
 	}
 
-	public static boolean isContentRelevant(String content,
-			Pattern regexpPattern) {
+	public static boolean isContentRelevant(String content, Pattern regexpPattern) {
 		boolean retValue = false;
 		if (content != null) {
 			Matcher m = regexpPattern.matcher(content.toLowerCase());
@@ -306,8 +315,10 @@ public class NaiveCrawler {
 						term = term.substring(0, index);
 					}
 					String s = "http://" + host + term;
+					if(urlMap.containsKey(s)){
 					urlMap.put(s, s);
 					System.out.println("Relative url: " + s);
+					}
 				}
 			}
 		}
@@ -342,10 +353,15 @@ public class NaiveCrawler {
 //			String url = "http://en.wikipedia.org/wiki/Collective_intelligence";
 //			String regexp = "collective.*intelligence";
 			
-			String url = "http://book.pdfchm.net/processing-a-programming-handbook-for-visual-designers-and-artists/9780262182621/";
+			//String url = "http://book.pdfchm.net/processing-a-programming-handbook-for-visual-designers-and-artists/9780262182621/";
+			String url = "http://www.24h.com.vn";
+			URL urlObj = new URL(url);
+			System.out.println(urlObj.getHost());
+			
 			String regexp = "";
 			urlQueue.add(new CrawlerUrl(url, 0));
 			NaiveCrawler crawler = new NaiveCrawler(urlQueue, 100, 5, 1000L, regexp);
+			//crawler.setRobotTxtUrl("http://vnexpress.net/robots.txt");
 			// boolean allowCrawl = crawler.areWeAllowedToVisit(url);
 			// System.out.println("Allowed to crawl: " + url + " " +
 			// allowCrawl);
