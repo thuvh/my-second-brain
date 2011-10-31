@@ -36,6 +36,27 @@ public class IndexMetaData {
 		}
 	}
 	
+	public void indexLink(String href, String title, String description, String tags, String content) {
+
+		try {						
+
+			// 2. create new doc, set fields
+			Document newDoc = MetaDataUtil.createDocumentForLink(href, title, description, tags, content);
+						
+			IndexWriter indexWriter = MetaDataUtil.getIndexWriter();
+			indexWriter.addDocument(newDoc);			
+			indexWriter.optimize();
+			System.out.println(" @@ Add OK 1 doc for href:"+href);
+			
+			indexWriter.close();				
+		} catch (Exception e) {
+			if(e instanceof org.apache.lucene.store.AlreadyClosedException){
+				return;
+			}
+			e.printStackTrace();
+		}
+	}
+	
 	
 	
 	

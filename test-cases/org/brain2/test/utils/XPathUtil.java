@@ -38,7 +38,7 @@ public class XPathUtil {
 	public static void main(String[] args) {
 
 		String url = "http://vnexpress.net/gl/vi-tinh/san-pham-moi/2011/10/dien-thoai-la-voi-man-hinh-uon-cong-cua-nokia/";
-		String html = LinkGetter.loadHtmlPage(url);
+		String html = (new LinkGetter("",1)).visitingLink(url);
 		System.out.println(html);
 
 		Document doc = Jsoup.parse(html);

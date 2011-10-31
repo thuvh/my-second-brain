@@ -58,7 +58,17 @@ public class MetaDataUtil {
 		doc.add(new Field("href", href, Field.Store.YES, Field.Index.ANALYZED));
 		doc.add(new Field("title", title, Field.Store.YES, Field.Index.ANALYZED));
 		doc.add(new Field("description", description, Field.Store.YES, Field.Index.ANALYZED));
+		doc.add(new Field("tags", tags, Field.Store.YES, Field.Index.ANALYZED));		
+		return doc;
+	}
+	
+	public static Document createDocumentForLink(String href, String title, String description, String tags, String content) throws Exception{			
+		Document doc = new Document();
+		doc.add(new Field("href", href, Field.Store.YES, Field.Index.ANALYZED));
+		doc.add(new Field("title", title, Field.Store.YES, Field.Index.ANALYZED));
+		doc.add(new Field("description", description, Field.Store.YES, Field.Index.ANALYZED));
 		doc.add(new Field("tags", tags, Field.Store.YES, Field.Index.ANALYZED));
+		doc.add(new Field("content", content, Field.Store.NO, Field.Index.ANALYZED));
 		return doc;
 	}
 	
