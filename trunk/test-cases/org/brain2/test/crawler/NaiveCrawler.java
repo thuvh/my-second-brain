@@ -19,6 +19,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class NaiveCrawler {
+	public static String ROOT_DOMAIN = "";
+	
 	private static final String USER_AGENT = "User-agent:";
 
 	private static final String DISALLOW = "Disallow:";
@@ -66,8 +68,7 @@ public class NaiveCrawler {
 		this.httpRegexp = Pattern.compile(REGEXP_HTTP);
 		this.relativeRegexp = Pattern.compile(REGEXP_RELATIVE);
 		crawlOutput = new BufferedWriter(new FileWriter("crawl.txt"));
-		crawlStatistics = new BufferedWriter(new FileWriter(
-				"crawlStatistics.txt"));
+		crawlStatistics = new BufferedWriter(new FileWriter("crawlStatistics.txt"));
 	}
 	
 	public void setRobotTxtUrl(String robotTxtUrl) {
@@ -78,16 +79,18 @@ public class NaiveCrawler {
 		while (continueCrawling()) {
 			CrawlerUrl url = getNextUrl();
 			if (url != null) {
-				printCrawlInfo();
-				String content = getContent(url);
-				if (isContentRelevant(content, this.regexpSearchPattern)) {
-					saveContent(url, content);
-					Collection<String> urlStrings = extractUrls(content, url);
-					addUrlsToUrlQueue(url, urlStrings);
-				} else {
-					System.out.println(url + " is not relevant ignoring ...");
+				if(url.getURL().getHost().contains(ROOT_DOMAIN)){
+					printCrawlInfo();
+					String content = getContent(url);
+					if (isContentRelevant(content, this.regexpSearchPattern)) {
+						//saveContent(url, content);
+						Collection<String> urlStrings = extractUrls(content, url);
+						addUrlsToUrlQueue(url, urlStrings);
+					} else {
+						System.out.println(url + " is not relevant ignoring ...");
+					}
+					Thread.sleep(this.delayBetweenUrls);
 				}
-				Thread.sleep(this.delayBetweenUrls);
 			}
 		}
 		closeOutputStream();
@@ -155,8 +158,7 @@ public class NaiveCrawler {
 			return false;
 		}
 		if (!crawlerUrl.isCheckedForPermission()) {
-			crawlerUrl
-					.setAllowedToVisit(computePermissionForVisting(crawlerUrl));
+			crawlerUrl.setAllowedToVisit(computePermissionForVisting(crawlerUrl));
 		}
 		// We need to check
 		return crawlerUrl.isAllowedToVisit();
@@ -265,6 +267,8 @@ public class NaiveCrawler {
 		if (content != null) {
 			Matcher m = regexpPattern.matcher(content.toLowerCase());
 			retValue = m.find();
+			//TODO
+			return true;
 		}
 		return retValue;
 	}
@@ -354,13 +358,11 @@ public class NaiveCrawler {
 //			String regexp = "collective.*intelligence";
 			
 			//String url = "http://book.pdfchm.net/processing-a-programming-handbook-for-visual-designers-and-artists/9780262182621/";
-			String url = "http://www.24h.com.vn";
-			URL urlObj = new URL(url);
-			System.out.println(urlObj.getHost());
-			
+			String url = "http://vnexpress.net";
 			String regexp = "";
 			urlQueue.add(new CrawlerUrl(url, 0));
-			NaiveCrawler crawler = new NaiveCrawler(urlQueue, 100, 5, 1000L, regexp);
+			NaiveCrawler crawler = new NaiveCrawler(urlQueue, 10000000, 10000, 800L, regexp);
+			NaiveCrawler.ROOT_DOMAIN = "vnexpress.net";
 			//crawler.setRobotTxtUrl("http://vnexpress.net/robots.txt");
 			// boolean allowCrawl = crawler.areWeAllowedToVisit(url);
 			// System.out.println("Allowed to crawl: " + url + " " +

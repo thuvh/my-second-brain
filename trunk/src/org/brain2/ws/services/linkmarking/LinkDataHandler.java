@@ -60,11 +60,12 @@ public class LinkDataHandler extends ServiceHandler{
 		
 		List<Document> docs = theQuery.queryDocsByKeywords(keywords);		
 		for (Document doc : docs) {
-			Map<String,String> obj = new HashMap<String, String>(4);
+			Map<String,String> obj = new HashMap<String, String>(4);			
 			obj.put("href", doc.get("href"));
 			obj.put("title", doc.get("title"));
 			obj.put("description", doc.get("description"));
 			obj.put("tags", doc.get("tags"));
+			System.out.println(obj.get("title"));
 			rs.add(obj);
 		}		
 		return rs;

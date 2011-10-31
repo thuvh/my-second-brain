@@ -89,7 +89,7 @@ public class QueryLinkMetaData {
 				
 		MultiFieldQueryParser queryParser = new MultiFieldQueryParser(
 				MetaDataUtil.VERSION,
-                new String[] {"title", "description","tags"},
+                new String[] {"title", "description"},
                 MetaDataUtil.getDefaultAnalyzer());		
 
 		// 3. search
