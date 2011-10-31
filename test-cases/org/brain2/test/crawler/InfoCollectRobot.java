@@ -95,15 +95,17 @@ public class InfoCollectRobot {
 				if (!href.startsWith("http")) {
 					href = baseURL + href;
 				}
-				if (shouldAddToQueue(href)) {
-					System.out.print("Found link: " + href);
+				System.out.print("Found link: " + href);
+				if (shouldAddToQueue(href)) {					
 					if (!vertices.containsKey(href)) {
 						vertices.put(href, false);
 						urlQueue.add(href);
 						System.out.println(" , PUSH to queue ");
 					} else {
-						System.out.println(" , SKIP ");
+						System.out.println(" , SKIP to queue");
 					}
+				} else {
+					System.out.println(" not matched rules");
 				}
 			}
 		}
@@ -265,12 +267,12 @@ public class InfoCollectRobot {
 	public static void main(String[] args) throws Exception {
 		long start = System.nanoTime();
 
-		//test_tantrieuf31_blogspot_com();
-		test_vnexpress_net();
+		
+		test_asmarterplanet_com();
 
 		long end = System.nanoTime();
 		long miliseconds = (end - start) / 10000000;
-		System.out.println(" \n miliseconds:" + miliseconds);
+		System.out.println(" \n === Test done === in miliseconds:" + miliseconds);
 	}
 
 	protected static void test_tantrieuf31_blogspot_com() throws Exception {
@@ -291,5 +293,16 @@ public class InfoCollectRobot {
 		robot.setUrlRuleShouldMatch("http://vnexpress.net/gl/vi-tinh/.*");
 		robot.crawleNews("http://vnexpress.net/gl/vi-tinh/");
 	}
+	
+	protected static void test_asmarterplanet_com() throws Exception {
+		int maxQueueSize = 10000;
+		String domain = "asmarterplanet.com";
+		InfoCollectRobot robot = new InfoCollectRobot(domain, maxQueueSize);
+		robot.setMainContentNodeId("#content");
+		robot.setUrlRuleShouldMatch("http://asmarterplanet.com/blog/2011/10/.*");
+		robot.crawleNews("http://asmarterplanet.com/blog/2011/10/smarter-silhouettes-a-curriculum-of-analytics.html");
+	}
+	
+	
 
 }
