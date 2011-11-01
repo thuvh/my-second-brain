@@ -148,12 +148,12 @@ public class InfoCollectRobot {
 					}
 
 					String content = DefaultExtractor.INSTANCE.getText(contentNodes.html());
-					System.out.println(content);
-					org.apache.lucene.document.Document newDoc = MetaDataUtil
-							.createDocumentForLink(theLink, titleTxt,
-									descriptionTxt, keywordsTxt, content);
-					indexWriter.addDocument(newDoc);
-					indexWriter.commit();
+//					System.out.println(content);
+//					org.apache.lucene.document.Document newDoc = MetaDataUtil
+//							.createDocumentForLink(theLink, titleTxt,
+//									descriptionTxt, keywordsTxt, content);
+//					indexWriter.addDocument(newDoc);
+//					indexWriter.commit();
 					System.out.println(" END #####################");
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -259,7 +259,7 @@ public class InfoCollectRobot {
 		long start = System.nanoTime();
 
 		
-		test_asmarterplanet_com();
+		test_nhipsongso_tuoitre_vn();
 
 		long end = System.nanoTime();
 		long miliseconds = (end - start) / 10000000;
@@ -293,6 +293,15 @@ public class InfoCollectRobot {
 		robot.setUrlRuleShouldMatch("http://asmarterplanet.com/blog/2011/10/.*");
 		robot.crawleNews("http://asmarterplanet.com/blog/2011/10/smarter-silhouettes-a-curriculum-of-analytics.html");
 	}
+	
+	protected static void test_nhipsongso_tuoitre_vn() throws Exception {
+		int maxQueueSize = 10000;
+		String domain = "nhipsongso.tuoitre.vn";
+		InfoCollectRobot robot = new InfoCollectRobot(domain, maxQueueSize);				
+		robot.crawleNews("http://nhipsongso.tuoitre.vn/");
+	}
+	
+	
 	
 	
 
