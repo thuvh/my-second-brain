@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 
 import org.apache.http.protocol.HTTP;
 import org.apache.lucene.index.CorruptIndexException;
@@ -23,7 +25,10 @@ import de.l3s.boilerpipe.extractors.DefaultExtractor;
 public class InfoCollectRobot {
 
 	private final String root;
+	private String seedUrl;
+	
 	private final Map<String, Boolean> vertices;
+	private final Map<String, Set<String>> clustersByURI;
 	private Queue<String> urlQueue;
 
 	private final IndexWriter indexWriter;
@@ -39,6 +44,8 @@ public class InfoCollectRobot {
 		this.root = root;
 		this.maxNumberUrls = maxNumberUrls;
 		vertices = new HashMap<String, Boolean>(this.maxNumberUrls);
+		clustersByURI = new HashMap<String, Set<String>>(100);
+		clustersByURI.put("unclassified", new HashSet<String>());
 		try {
 			indexWriter = MetaDataUtil.getIndexWriter();
 		} catch (Exception e) {
@@ -105,7 +112,15 @@ public class InfoCollectRobot {
 
 			@Override
 			public void run() {
-				System.out.println("index link: " + theLink);
+				System.out.println("\n ==> theLink: " + theLink);
+				
+				String theGroup = theLink.replace(seedUrl, "").split("/")[0];
+				System.out.println(" ==> theGroup: " + theGroup);
+				Set<String> theSet = clustersByURI.get(theGroup);
+				if(theSet != null){
+					theSet.add(theLink);
+					System.out.print(" with size: " + theSet.size() + " \n\n ");
+				}
 
 				Elements metas = doc.select("meta");
 				String descriptionTxt = "";
@@ -187,11 +202,13 @@ public class InfoCollectRobot {
 		}
 		return true;
 	}
+	
+	
 
 	public void crawleNews(String seedUrl) throws InterruptedException,
 			CorruptIndexException, IOException {
 		urlQueue = new LinkedList<String>();
-
+		this.seedUrl = seedUrl;
 		this.seedLinks(seedUrl);
 		while (!urlQueue.isEmpty() && urlQueue.size() < this.maxNumberUrls) {
 			System.out.println("## urlQueue size : " + urlQueue.size());
@@ -249,6 +266,10 @@ public class InfoCollectRobot {
 
 	public String getRoot() {
 		return root;
+	}		
+
+	public Map<String, Set<String>> getClustersByURI() {
+		return clustersByURI;
 	}
 
 	/**
@@ -257,9 +278,8 @@ public class InfoCollectRobot {
 	 */
 	public static void main(String[] args) throws Exception {
 		long start = System.nanoTime();
-
 		
-		test_nhipsongso_tuoitre_vn();
+		test_vnexpress_net();
 
 		long end = System.nanoTime();
 		long miliseconds = (end - start) / 10000000;
@@ -280,8 +300,14 @@ public class InfoCollectRobot {
 		int maxQueueSize = 10000;
 		String domain = "vnexpress.net";
 		InfoCollectRobot robot = new InfoCollectRobot(domain, maxQueueSize);
+		
 		robot.setMainContentNodeId("#content .content-center");
 		robot.setUrlRuleShouldMatch("http://vnexpress.net/gl/vi-tinh/.*");
+		robot.getClustersByURI().put("san-pham-moi", new HashSet<String>());
+		robot.getClustersByURI().put("kinh-nghiem", new HashSet<String>());
+		robot.getClustersByURI().put("giai-tri", new HashSet<String>());
+		robot.getClustersByURI().put("hoi-dap", new HashSet<String>());		
+		
 		robot.crawleNews("http://vnexpress.net/gl/vi-tinh/");
 	}
 	
