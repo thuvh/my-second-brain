@@ -76,6 +76,7 @@ ul {
 		<option value="gplus_btn">G+ button</option>
 		<option value="bb_plugins">Banbe Plugins</option>
 		<option value="crawling_facebook">Crawling Facebook</option>
+		<option value="javascript: openNewsStreamEditor()">News Stream Editor</option>
 	</select>
 	<ul id="panel_list" >
 		<li id="save" >			
@@ -101,7 +102,7 @@ ul {
 		  	<div  style="margin: 10px;">
 				<a href="javascript: crawlingMyFacebook()" class="button orange bigrounded" title="Crawling your Facebook profile" style="float: right; margin: 10px;" >Crawling my Facebook</a>
 			</div>
-	  	</li>
+	  	</li>	
 	</ul>
 </div> 
 
@@ -114,7 +115,14 @@ ul {
 	
 	var optionHandler = function(n){
 		jQuery('#panel_list').find('li').hide();
-		jQuery( '#' + jQuery(n).val() ).show();		
+		var cmd = jQuery(n).val();
+		var idx = cmd.indexOf('javascript:'); 
+		if(idx < 0){
+			jQuery( '#' + cmd ).show();	
+		} else {			
+			eval(cmd.replace('javascript:',''));
+		}
+				
 	};
 	
 	jQuery('#theTags').keyup(function(event) {
@@ -168,6 +176,11 @@ ul {
 		var viewTabUrl = [ chrome.extension.getURL('search.html'), '?keywords=',	encodeURIComponent(keywords) ].join('');
 		chrome.tabs.create({url : viewTabUrl });	
 	}
+	
+	function openNewsStreamEditor(){		
+		chrome.tabs.create({url : "http://localhost:10001/linkmarking/editor/html?path=news-stream-editor" });	
+	}
+	
 	
 	chrome.tabs.getSelected(null, function(tab) {			
 		chrome.tabs.sendRequest(tab.id, {

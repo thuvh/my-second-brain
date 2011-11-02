@@ -23,6 +23,11 @@ public class LinkDataHandler extends ServiceHandler{
 	}
 	
 	@RestHandler
+	public void editor(Map params ) throws Exception {
+		
+	}
+	
+	@RestHandler
 	public boolean save(Map params ) throws Exception {
 		String href = URLDecoder.decode(params.get("href").toString(),"utf-8");
 		System.out.println("href: " + href );

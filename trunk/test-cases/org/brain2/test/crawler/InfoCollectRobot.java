@@ -1,7 +1,6 @@
 package org.brain2.test.crawler;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -100,7 +99,7 @@ public class InfoCollectRobot {
 						urlQueue.add(href);
 						System.out.println(" , PUSH to queue ");
 					} else {
-						System.out.println(" , SKIP to queue");
+						System.out.println(" , SKIP");
 					}
 				} else {
 					System.out.println(" not matched rules");
@@ -185,13 +184,16 @@ public class InfoCollectRobot {
 			URL url = new URL(link);
 			rs = url.getHost().contains(root);
 			if( ! urlRuleShouldNotMatch.isEmpty() ){
-				rs = rs && !(link.matches(urlRuleShouldNotMatch));
+				//rs = rs && !(link.matches(urlRuleShouldNotMatch));
+				rs = rs && ! link.contains(urlRuleShouldNotMatch);
 			}
 			if( ! urlRuleShouldMatch.isEmpty() ){
-				rs = rs && (link.matches(urlRuleShouldMatch));
+				//rs = rs && (link.matches(urlRuleShouldMatch));
+				rs = rs && link.contains(urlRuleShouldMatch);
 			}
 
-		} catch (MalformedURLException e) {
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return rs;
 	}
@@ -279,7 +281,7 @@ public class InfoCollectRobot {
 	public static void main(String[] args) throws Exception {
 		long start = System.nanoTime();
 		
-		test_vnexpress_net();
+		test_video();
 
 		long end = System.nanoTime();
 		long miliseconds = (end - start) / 10000000;
@@ -326,6 +328,38 @@ public class InfoCollectRobot {
 		InfoCollectRobot robot = new InfoCollectRobot(domain, maxQueueSize);				
 		robot.crawleNews("http://nhipsongso.tuoitre.vn/");
 	}
+	
+	protected static void test_video() throws Exception {
+		int maxQueueSize = 10000;
+		String domain = "vnexpress.net";
+		InfoCollectRobot robot = new InfoCollectRobot(domain, maxQueueSize);		
+		robot.setUrlRuleShouldMatch("http://vnexpress.net/video/.*");
+		robot.crawleNews("http://vnexpress.net/video/the-gioi-tuong-lai-trong-tri-tuong-tuong-cua-microsoft/8/59647/");
+	}
+	
+	protected static void test_infoq_com() throws Exception {
+		int maxQueueSize = 10000;
+		String domain = "infoq.com";
+		InfoCollectRobot robot = new InfoCollectRobot(domain, maxQueueSize);		
+		robot.setUrlRuleShouldNotMatch("http://infoq.com/cn/.* & http://infoq.com/.*jsessionid=.*");		
+		robot.crawleNews("http://www.infoq.com");
+	}
+	
+	protected static void test_24h_com() throws Exception {
+		int maxQueueSize = 10000;
+		String domain = "24h.com.vn";
+		InfoCollectRobot robot = new InfoCollectRobot(domain, maxQueueSize);		
+		robot.setUrlRuleShouldMatch(".*/video-phim-dac-sac/.*");		
+		robot.crawleNews("http://www.24h.com.vn/");
+		
+		boolean test = "http://game.24h.com.vn/tinh-diem/dao-vang-ii-c145g624b16.html".matches("http://hcm.24h.com.vn/video-phim-dac-sac/.*");
+		System.out.println("test match: "+test);
+		
+		boolean test2 = "http://hcm.24h.com.vn/video-phim-dac-sac/video-phim-mr-bean-quay-o-thu-vien-c458v413458.js".matches("http://hcm.24h.com.vn/video-phim-dac-sac/.*.js");
+		System.out.println("test2 match: "+test2);
+		
+	}
+	
 	
 	
 	
