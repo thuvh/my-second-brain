@@ -1,5 +1,7 @@
 package org.brain2.test.crawler;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
@@ -29,6 +31,7 @@ public class InfoCollectRobot {
 	private final Map<String, Boolean> vertices;
 	private final Map<String, Set<String>> clustersByURI;
 	private Queue<String> urlQueue;
+	private BufferedWriter crawlStatistics = null;
 
 	private final IndexWriter indexWriter;
 
@@ -38,6 +41,7 @@ public class InfoCollectRobot {
 	private String urlRuleShouldMatch = "";
 	private String mainContentNodeId = "";
 	private String mainNavigationNodeId = "";
+	private volatile boolean forceExit = false;
 
 	public InfoCollectRobot(String root, int maxNumberUrls) {
 		this.root = root;
@@ -47,11 +51,24 @@ public class InfoCollectRobot {
 		clustersByURI.put("unclassified", new HashSet<String>());
 		try {
 			indexWriter = MetaDataUtil.getIndexWriter();
+			crawlStatistics = new BufferedWriter(new FileWriter("crawlStatistics.txt"));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage());
 		}
+	}
+	
+	private void closeOutputStream()  {
+		try {
+			crawlStatistics.append("\n ### urlQueue.size()= "+ urlQueue.size() + " ### \n");
+			crawlStatistics.flush();
+			crawlStatistics.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 
 	/**
@@ -76,7 +93,7 @@ public class InfoCollectRobot {
 
 		System.out.println();
 		final Document doc = Jsoup.parse(html, HTTP.UTF_8);
-		String baseURL = "http://" + this.root;
+		final String baseURL = "http://" + this.root;
 		doc.setBaseUri(baseURL);
 
 		final Elements linkNodes;
@@ -98,6 +115,13 @@ public class InfoCollectRobot {
 						vertices.put(href, false);
 						urlQueue.add(href);
 						System.out.println(" , PUSH to queue ");
+						try {
+							crawlStatistics.append(href+"\n");
+							crawlStatistics.flush();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					} else {
 						System.out.println(" , SKIP");
 					}
@@ -130,7 +154,6 @@ public class InfoCollectRobot {
 					String metaName = meta.attr("name");
 					String metaContent = meta.attr("content");
 					// System.out.println("meta name: " + metaName);
-
 					if (metaName.equals("description")) {
 						descriptionTxt = metaContent;
 						System.out.println("descriptionTxt: " + descriptionTxt);
@@ -152,17 +175,27 @@ public class InfoCollectRobot {
 
 				try {
 					System.out.println(" BEGIN #####################");
-					Elements contentNodes;
+					Elements contentNode;
 					if (mainContentNodeId.isEmpty()) {
-						contentNodes = doc.select("body");
+						contentNode = doc.select("body");						
 					} else {						
-						contentNodes = doc.select(mainContentNodeId);						
-//						System.out.println(contentNodes.html());					
-						
+						contentNode = doc.select(mainContentNodeId);
+					}
+					
+					//System.out.println(" HTML: "+contentNode.html());
+					
+					//get images in content
+					Elements imgs = contentNode.select("img[src]");
+					for (Element img : imgs) {
+						String src = img.attr("src");
+						//FIXME
+						if(src.startsWith("/Files/Subject/")){
+							System.out.println(" $$$ img[src] = " + baseURL + src);
+						}
 					}
 
-					String content = DefaultExtractor.INSTANCE.getText(contentNodes.html());
-//					System.out.println(content);
+					String content = DefaultExtractor.INSTANCE.getText(contentNode.html());
+					System.out.println(content);
 //					org.apache.lucene.document.Document newDoc = MetaDataUtil
 //							.createDocumentForLink(theLink, titleTxt,
 //									descriptionTxt, keywordsTxt, content);
@@ -173,6 +206,8 @@ public class InfoCollectRobot {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+				forceExit = true;
+				
 			}
 		};
 		new Thread(thread).start();
@@ -184,12 +219,12 @@ public class InfoCollectRobot {
 			URL url = new URL(link);
 			rs = url.getHost().contains(root);
 			if( ! urlRuleShouldNotMatch.isEmpty() ){
-				//rs = rs && !(link.matches(urlRuleShouldNotMatch));
-				rs = rs && ! link.contains(urlRuleShouldNotMatch);
+				rs = rs && !(link.matches(urlRuleShouldNotMatch));
+				//rs = rs && ! link.contains(urlRuleShouldNotMatch);
 			}
 			if( ! urlRuleShouldMatch.isEmpty() ){
-				//rs = rs && (link.matches(urlRuleShouldMatch));
-				rs = rs && link.contains(urlRuleShouldMatch);
+				rs = rs && (link.matches(urlRuleShouldMatch));
+				//rs = rs && link.contains(urlRuleShouldMatch);
 			}
 
 		} catch (Exception e) {
@@ -218,12 +253,16 @@ public class InfoCollectRobot {
 			System.out.println("enqueue a link: " + link);
 			if (!this.vertices.get(link)) {
 				this.seedLinks(link);
-				Thread.sleep(550);
+				Thread.sleep(450);
 			} else {
 				System.out.println("## visited, skip : " + link);
 			}
+			if(forceExit){
+				break;
+			}
 		}
 		indexWriter.optimize();
+		closeOutputStream();
 	}
 
 	public int getMaxNumberUrls() {
@@ -281,7 +320,7 @@ public class InfoCollectRobot {
 	public static void main(String[] args) throws Exception {
 		long start = System.nanoTime();
 		
-		test_video();
+		test_vnexpress_net();
 
 		long end = System.nanoTime();
 		long miliseconds = (end - start) / 10000000;
@@ -299,7 +338,7 @@ public class InfoCollectRobot {
 	}
 
 	protected static void test_vnexpress_net() throws Exception {
-		int maxQueueSize = 10000;
+		int maxQueueSize = 100;
 		String domain = "vnexpress.net";
 		InfoCollectRobot robot = new InfoCollectRobot(domain, maxQueueSize);
 		
@@ -310,7 +349,7 @@ public class InfoCollectRobot {
 		robot.getClustersByURI().put("giai-tri", new HashSet<String>());
 		robot.getClustersByURI().put("hoi-dap", new HashSet<String>());		
 		
-		robot.crawleNews("http://vnexpress.net/gl/vi-tinh/");
+		robot.crawleNews("http://vnexpress.net/gl/vi-tinh/2011/11/anonymous-tiet-lo-danh-tinh-ke-doa-xoa-so-facebook/");
 	}
 	
 	protected static void test_asmarterplanet_com() throws Exception {
