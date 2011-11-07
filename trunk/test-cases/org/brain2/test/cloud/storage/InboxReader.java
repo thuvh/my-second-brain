@@ -25,7 +25,7 @@ public class InboxReader {
 		try {
 			Session session = Session.getDefaultInstance(props, null);
 			Store store = session.getStore("imaps");
-			store.connect("imap.gmail.com", "tantrieuf31.database2", "hellboy113");
+			store.connect("imap.gmail.com", "tantrieuf31.database", "hellboy@123");
 			System.out.println(store);
 
 			Folder inbox = store.getFolder("Inbox");
