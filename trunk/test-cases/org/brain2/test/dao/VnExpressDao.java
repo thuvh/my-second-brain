@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.http.protocol.HTTP;
 import org.brain2.ws.core.utils.HttpClientUtil;
@@ -21,10 +22,11 @@ import org.jsoup.select.Elements;
 
 public class VnExpressDao {
 	final PrintStream print; // declare a print stream object
+	final PrintStream errorPrint; // declare a print stream object
 
 	protected Connection conn = null;
 	private static VnExpressDao _theInstance = null;
-	private int workerCount = 0;
+	private volatile int workerCount = 0;
 	private static int count = 0;
 	private volatile List<String> errorLinks = Collections.synchronizedList(new ArrayList<String>());
 	
@@ -49,17 +51,16 @@ public class VnExpressDao {
 	}
 
 	protected VnExpressDao() throws Exception {
-		// Create a new file output stream
-		FileOutputStream out = new FileOutputStream("import-data-log.txt");
-
 		// Connect print stream to the output stream
-		print = new PrintStream(out);
+		print = new PrintStream(new FileOutputStream("import-data-log.txt"));
+		errorPrint = new PrintStream(new FileOutputStream("import-error-log.txt"));
 		initConnection();
 	}
 
 	public void closeConnection() {
 		try {
-			finalize();
+			print.close();
+			finalize();			
 		} catch (Throwable e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -211,12 +212,11 @@ public class VnExpressDao {
 					}
 
 					VnExpressDao instance = VnExpressDao.getInstance();
-					print.println(" END ##################### workcount = "
-							+ instance.workFinished());
+					print.println(" END ### workcount = "	+ instance.workFinished());
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
-					print.println(e.getMessage());
+					e.printStackTrace();					
+					errorPrint.println(theLink + " @@@ " + e.getMessage());
 					errorLinks.add(theLink);
 				}
 			}
@@ -234,7 +234,7 @@ public class VnExpressDao {
 		int mod = total % NTHREDS;
 		print.println(" mod:" + mod);
 
-		total = 100000;
+		total = 10000;
 		int startIndex = 0;
 
 		while (startIndex < total) {
@@ -253,9 +253,13 @@ public class VnExpressDao {
 		}
 		System.out.println("Finished all threads");
 
-		_theInstance.closeConnection();
-		print.close();
+		_theInstance.closeConnection();		
 	}
+	
+	public PrintStream getPrintStream(){
+		return this.print;
+	}
+		
 
 	public void allowWorkersToPool(final int start, final int limit,
 			final VnExpressDao vnExpressDao, final ExecutorService executor) {
@@ -266,9 +270,9 @@ public class VnExpressDao {
 				Runnable worker = vnExpressDao.httpGetArticle(path);
 				executor.execute(worker);
 				count++;
-				print.println("executor count: " + count);
+				print.println(" #executor count: " + count);
 			}
-			System.out.println("Finished childWorker start: " + start);
+			print.println(" #Finished childWorker start: " + start);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -276,7 +280,6 @@ public class VnExpressDao {
 	}
 
 	public static void main(String[] args) {
-
 		long start = System.nanoTime();
 
 		try {
@@ -285,15 +288,19 @@ public class VnExpressDao {
 			
 			List<String> links = vnExpressDao.getErrorLinks();
 			for (String link : links) {
-				System.out.println(link);
+				System.err.println(link);
 			}
+			
+			long end = System.nanoTime();
+			long elapsedTime = end - start;
+						
+			//convert to seconds
+			vnExpressDao.getPrintStream().println(" \n === Test done === in miliseconds:"	+ TimeUnit.NANOSECONDS.toSeconds(elapsedTime));
+			vnExpressDao.getPrintStream().println(" elapsed: " + elapsedTime + "nano seconds\n");
+			vnExpressDao.closeConnection();
 		} catch (Exception e) {
 			System.err.println("Error in writing to file");
-		}		
-
-		long end = System.nanoTime();
-		long miliseconds = (end - start) / 10000000;
-		System.out.println(" \n === Test done === in miliseconds:"	+ miliseconds);
+		}	
 
 	}
 }
