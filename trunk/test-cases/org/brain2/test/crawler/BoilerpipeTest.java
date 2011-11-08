@@ -1,7 +1,5 @@
 package org.brain2.test.crawler;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 
 import org.apache.http.protocol.HTTP;
 import org.brain2.ws.core.utils.HttpClientUtil;
@@ -10,9 +8,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import de.l3s.boilerpipe.BoilerpipeProcessingException;
-import de.l3s.boilerpipe.extractors.ArticleExtractor;
-import de.l3s.boilerpipe.extractors.DefaultExtractor;
 
 public class BoilerpipeTest {
 
@@ -23,17 +18,17 @@ public class BoilerpipeTest {
 		try {
 			final String theLink = "http://vnexpress.net/gl/xa-hoi/2011/11/xe-container-tong-oto-khach-10-nguoi-chet-chay/";
 			
-			final String html = HttpClientUtil.executeGet(theLink);
-			final Document doc = Jsoup.parse(html, HTTP.UTF_8);
-			final String mainContentNodeId = "#content"; 
-			final String baseURL = "http://vnexpress.net";
+
 			
 			Runnable thread = new Runnable() {
 
 				@Override
 				public void run() {
 					System.out.println("\n ==> theLink: " + theLink);
-										
+					final String html = HttpClientUtil.executeGet(theLink);
+					final Document doc = Jsoup.parse(html, HTTP.UTF_8);
+					final String mainContentNodeId = "#content"; 
+					final String baseURL = "http://vnexpress.net";										
 
 					Elements metas = doc.select("meta");
 					String descriptionTxt = "";

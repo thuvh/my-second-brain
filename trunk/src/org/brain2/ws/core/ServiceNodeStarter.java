@@ -22,11 +22,11 @@ import com.google.gson.Gson;
 public class ServiceNodeStarter extends AbstractHandler {
 	private static int count = 0;
 	
-	public synchronized void setCount() {
+	public synchronized static void setCount() {
 		ServiceNodeStarter.count++;
 	}
 	
-	public synchronized int getCount() {
+	public synchronized static int getCount() {
 		return ServiceNodeStarter.count;
 	}
 
@@ -41,7 +41,7 @@ public class ServiceNodeStarter extends AbstractHandler {
 		if("true".equals(request.getParameter("keep-alive")) ){
 			//callby: http://localhost:10001/?keep-alive=true&keep-time=10000
 			final PrintStream writer = new PrintStream(response.getOutputStream(), true, "UTF-8");
-			System.out.println(" connection keep-alive=true");
+			System.out.println(" connection keep-alive=true ");
 			try {
 				int timeSleep = Integer.parseInt(request.getParameter("keep-time"));
 				if(timeSleep > 0){
