@@ -1,10 +1,13 @@
 package org.brain2.test.dao;
 
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,11 +20,28 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 public class VnExpressDao {
+	final PrintStream print; // declare a print stream object
 
 	protected Connection conn = null;
 	private static VnExpressDao _theInstance = null;
+	private int workerCount = 0;
+	private static int count = 0;
+	private volatile List<String> errorLinks = Collections.synchronizedList(new ArrayList<String>());
+	
+	public synchronized List<String> getErrorLinks() {
+		return errorLinks;
+	}
 
-	public static VnExpressDao getInstance() throws Exception {
+	public synchronized int workFinished() {
+		workerCount++;
+		return workerCount;
+	}
+
+	public synchronized int getWorkerCount() {
+		return workerCount;
+	}
+
+	public synchronized static VnExpressDao getInstance() throws Exception {
 		if (_theInstance == null) {
 			_theInstance = new VnExpressDao();
 		}
@@ -29,6 +49,11 @@ public class VnExpressDao {
 	}
 
 	protected VnExpressDao() throws Exception {
+		// Create a new file output stream
+		FileOutputStream out = new FileOutputStream("import-data-log.txt");
+
+		// Connect print stream to the output stream
+		print = new PrintStream(out);
 		initConnection();
 	}
 
@@ -83,13 +108,16 @@ public class VnExpressDao {
 		ps.close();
 		return total;
 	}
-	
+
 	public List<String> getSubjectPath(int begin, int total) throws Exception {
 		String sql = "SELECT `ID`,`Path`  FROM `vnemobile`.`subject0` LIMIT ?,? ";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		ps.setInt(1, begin);
 		ps.setInt(2, total);
-		
+
+		System.out.println("begin: " + begin);
+		System.out.println("total: " + total);
+
 		ResultSet rs = ps.executeQuery();
 		List<String> list = new ArrayList<String>(1000);
 		while (rs.next()) {
@@ -99,128 +127,173 @@ public class VnExpressDao {
 		ps.close();
 		return list;
 	}
-	
-	
-	public Runnable httpGetArticle(final String theLink){
+
+	public Runnable httpGetArticle(final String theLink) {
 		Runnable thread = new Runnable() {
 			@Override
 			public void run() {
-				System.out.println("\n ==> theLink: " + theLink);
-				final String html = HttpClientUtil.executeGet(theLink);
-				final Document doc = Jsoup.parse(html, HTTP.UTF_8);
-				final String mainContentNodeId = "#content"; 
-				final String baseURL = "http://vnexpress.net";										
-
-				Elements metas = doc.select("meta");
-				String descriptionTxt = "";
-				String keywordsTxt = "";
-				String robotsTxt = "";
-
-				for (Element meta : metas) {
-					String metaName = meta.attr("name");
-					String metaContent = meta.attr("content");
-					// System.out.println("meta name: " + metaName);
-					if (metaName.equals("description")) {
-						descriptionTxt = metaContent;
-						System.out.println("descriptionTxt: " + descriptionTxt);
-					} else if (metaName.equals("keywords")) {
-						keywordsTxt = metaContent;
-						// System.out.println("descriptionTxt: " + keywordsTxt);
-					} else if (metaName.equals("robots")) {
-						robotsTxt = metaContent;
-						// System.out.println("robotsTxt: " + robotsTxt);
-					}
-				}
-
-				Elements title = doc.select("title");
-				String titleTxt = "";
-				if (title.size() > 0) {
-					titleTxt = title.get(0).text();
-					System.out.println("titleTxt: " + titleTxt);
-				}
+				print.println("\n ==> theLink: " + theLink);				
 
 				try {
+					final String html = HttpClientUtil.executeGet(theLink);
+					final Document doc = Jsoup.parse(html, HTTP.UTF_8);
+					final String mainContentNodeId = "#content";
+					final String baseURL = "http://vnexpress.net";
+
+					Elements metas = doc.select("meta");
+					String descriptionTxt = "";
+					String keywordsTxt = "";
+					String robotsTxt = "";
+
+					for (Element meta : metas) {
+						String metaName = meta.attr("name");
+						String metaContent = meta.attr("content");
+						// System.out.println("meta name: " + metaName);
+						if (metaName.equals("description")) {
+							descriptionTxt = metaContent;
+							System.out.println("descriptionTxt: " + descriptionTxt);
+						} else if (metaName.equals("keywords")) {
+							keywordsTxt = metaContent;
+							// System.out.println("descriptionTxt: " + keywordsTxt);
+						} else if (metaName.equals("robots")) {
+							robotsTxt = metaContent;
+							// System.out.println("robotsTxt: " + robotsTxt);
+						}
+					}
+
+					Elements title = doc.select("title");
+					String titleTxt = "";
+					if (title.size() > 0) {
+						titleTxt = title.get(0).text();
+						print.println("titleTxt: " + titleTxt);
+					}
+					
 					System.out.println(" BEGIN #####################");
 					Elements contentNode;
 					if (mainContentNodeId.isEmpty()) {
-						contentNode = doc.select("body");						
-					} else {						
+						contentNode = doc.select("body");
+					} else {
 						contentNode = doc.select(mainContentNodeId);
 					}
-					
-					//get images in content
+
+					// get images in content
 					Elements imgs = contentNode.select("img[src]");
 					for (Element img : imgs) {
 						String src = img.attr("src");
-						//FIXME
-						if(src.startsWith("/Files/Subject/")){
+						// FIXME
+						if (src.startsWith("/Files/Subject/")) {
 							System.out.println(" #img[src] = " + baseURL + src);
 						}
 					}
-					
+
 					Elements comments = contentNode.select("div.comment_ct");
 					for (Element comment : comments) {
 						String commentText = comment.html();
-						//FIXME
+						// FIXME
 						System.out.println(commentText + "\n");
-					}		
-					
+					}
+
 					final Elements linkNodes = contentNode.select("a[href]");
-					for (Element linkNode : linkNodes) {							
+					for (Element linkNode : linkNodes) {
 						String href = linkNode.attr("href");
-						if(href.endsWith("#aComment")){
+						if (href.endsWith("#aComment")) {
 							System.out.println(" #a[href] = " + href);
 						}
 					}
-					
-					final Elements cpms_content = contentNode.select("div[cpms_content]");
-					System.out.println(" #cpms_content = " + cpms_content.size());		
-					for (Element node : cpms_content) {						
-						String text = node.text();							
-						System.out.println(" #cpms_content = " + text);							
+
+					final Elements cpms_content = contentNode
+							.select("div[cpms_content]");
+					System.out.println(" #cpms_content = "
+							+ cpms_content.size());
+					for (Element node : cpms_content) {
+						String text = node.text();
+						System.out.println(" #cpms_content = " + text);
 					}
 
-					System.out.println(" END #####################");
+					VnExpressDao instance = VnExpressDao.getInstance();
+					print.println(" END ##################### workcount = "
+							+ instance.workFinished());
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
+					print.println(e.getMessage());
+					errorLinks.add(theLink);
 				}
 			}
 		};
-		return thread;		
+		return thread;
 	}
 
 	private static final int NTHREDS = 10;
-	public static void main(String[] args) {
+
+	public void masterWorker() throws Exception {
+		final ExecutorService executor = Executors.newFixedThreadPool(NTHREDS);
+		int total = _theInstance.getTotalCount();
+		print.println("total article:" + total);
+
+		int mod = total % NTHREDS;
+		print.println(" mod:" + mod);
+
+		total = 100000;
+		int startIndex = 0;
+
+		while (startIndex < total) {
+			allowWorkersToPool(startIndex, NTHREDS, _theInstance, executor);
+			startIndex += NTHREDS;
+			System.out.println("sleeping zzz ...");
+			Thread.sleep(500);			
+		}
+
+		// This will make the executor accept no new threads
+		// and finish all existing threads in the queue
+		executor.shutdown();
+
+		// Wait until all threads are finish
+		while (!executor.isTerminated()) {
+		}
+		System.out.println("Finished all threads");
+
+		_theInstance.closeConnection();
+		print.close();
+	}
+
+	public void allowWorkersToPool(final int start, final int limit,
+			final VnExpressDao vnExpressDao, final ExecutorService executor) {
 		try {
-			VnExpressDao vnExpressDao = VnExpressDao.getInstance();
-			int total =  vnExpressDao.getTotalCount();
-			
-			System.out.println("total article:" + total);
-			
-			List<String> paths = vnExpressDao.getSubjectPath(400000, NTHREDS);
-			ExecutorService executor = Executors.newFixedThreadPool(NTHREDS);
-			
+			List<String> paths = vnExpressDao.getSubjectPath(start, limit);
 			for (String path : paths) {
 				System.out.println(path);
 				Runnable worker = vnExpressDao.httpGetArticle(path);
-				executor.execute(worker);			
+				executor.execute(worker);
+				count++;
+				print.println("executor count: " + count);
 			}
-			
-			// This will make the executor accept no new threads
-			// and finish all existing threads in the queue	
-			executor.shutdown();
-			
-			// Wait until all threads are finish
-			while (!executor.isTerminated()) {
-			}
-			System.out.println("Finished all threads");
-
-			vnExpressDao.closeConnection();
+			System.out.println("Finished childWorker start: " + start);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	public static void main(String[] args) {
+
+		long start = System.nanoTime();
+
+		try {
+			final VnExpressDao vnExpressDao = VnExpressDao.getInstance();
+			vnExpressDao.masterWorker();
+			
+			List<String> links = vnExpressDao.getErrorLinks();
+			for (String link : links) {
+				System.out.println(link);
+			}
+		} catch (Exception e) {
+			System.err.println("Error in writing to file");
+		}		
+
+		long end = System.nanoTime();
+		long miliseconds = (end - start) / 10000000;
+		System.out.println(" \n === Test done === in miliseconds:"	+ miliseconds);
 
 	}
 }

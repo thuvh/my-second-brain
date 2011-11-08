@@ -8,6 +8,7 @@ import net.htmlparser.jericho.Source;
 import net.htmlparser.jericho.StartTagType;
 
 public class DataVNEParser {
+	
 	public static void main(String[] args) {
 		String filePath = "D:/Researchs/Data VNE/FD/36/Body00.vne";
 		try {
@@ -24,7 +25,7 @@ public class DataVNEParser {
 	private static void displaySegments(List<? extends Segment> segments) {
 		for (Segment segment : segments) {
 			System.out.println("-------------------------------------------------------------------------------");
-			System.out.println(segment.getDebugInfo());
+			//System.out.println(segment.getDebugInfo());
 			System.out.println(segment);
 		}
 		System.out.println("\n*******************************************************************************\n");

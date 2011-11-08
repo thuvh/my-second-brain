@@ -4,6 +4,7 @@ package org.brain2.test.crawler;
 import org.apache.http.protocol.HTTP;
 import org.brain2.ws.core.utils.HttpClientUtil;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -91,17 +92,21 @@ public class BoilerpipeTest {
 							String href = linkNode.attr("href");
 							if(href.endsWith("#aComment")){
 								System.out.println(" #a[href] = " + href);
+								DataNode a = new DataNode("<span>" + linkNode.text() + "</span>", linkNode.baseUri());	
+								a.attr("iscomment", "true");
+								linkNode.replaceWith(a);
 							}
+
 						}
 						
+						System.out.println(" #contentNode = " + contentNode.html());	
 						final Elements cpms_content = contentNode.select("div[cpms_content]");
-						System.out.println(" #cpms_content = " + cpms_content.size());		
+						System.out.println(" #cpms_content = " + contentNode.html());		
 						for (Element node : cpms_content) {						
 							String text = node.text();							
-							System.out.println(" #cpms_content = " + text);							
+							System.out.println(" #cpms_content = " + text);								
 						}
-						
-						
+									
 
 //						String content = DefaultExtractor.INSTANCE.getText(contentNode.html());
 //						System.out.println(content);
