@@ -10,6 +10,7 @@ import java.util.zip.CRC32;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.lucene.document.Document;
+import org.brain2.test.dao.VnExpressDao;
 import org.brain2.ws.core.ServiceHandler;
 import org.brain2.ws.core.annotations.RestHandler;
 import org.brain2.ws.core.search.IndexMetaData;
@@ -24,9 +25,13 @@ public class LinkDataHandler extends ServiceHandler{
 	
 	@RestHandler
 	public void editor(Map params ) throws Exception {
-		
+		Object action = params.get("action");
+		//int limit = Integer.parseInt(params.get("limit")+"") ;
+		if("vne_export".equals(action)){
+			VnExpressDao.main(new String[0]);
+		}
 	}
-	
+			
 	@RestHandler
 	public boolean save(Map params ) throws Exception {
 		String href = URLDecoder.decode(params.get("href").toString(),"utf-8");
