@@ -108,6 +108,19 @@ public class FileUtils {
 		reader.close();
 		return fileData.toString();
 	}
+	
+	public static String loadFilePathToString(String fullPath) throws java.io.IOException {		
+		
+		StringBuffer fileData = new StringBuffer(1000);
+		BufferedReader reader = new BufferedReader(new FileReader(fullPath));
+		char[] buf = new char[2048];
+		int numRead = 0;
+		while ((numRead = reader.read(buf)) != -1) {
+			fileData.append(buf, 0, numRead);
+		}
+		reader.close();
+		return fileData.toString();
+	}
 
 	/**
 	 * Closes InputStream and/or OutputStream. It makes sure that both streams
