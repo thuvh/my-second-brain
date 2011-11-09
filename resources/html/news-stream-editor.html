@@ -50,12 +50,16 @@
 			$.getScript("http://localhost:10001/?keep-alive=true&keep-time=3000", function() {				 
 				 if($('#jobCount').html() == $('#totalJobCount').html()){
 					 $("#statistics").append('<div><h1>All Jobs Done!</h1></div>');
-					 if($('#workFinished').html() == $('#totalJobCount').html()){
-						 $("#statistics").append('<div><h1>No error link!</h1></div>');
-					 } else {
-						 var errNum = totalJobCount - parseInt($('#workFinished').html(),10);
-						 $("#statistics").append('<div><h1>'+ errNum +' error links, resume ? </h1></div>');
-					 }
+					 
+					 var checkErrorLink = function(){
+						 if($('#workFinished').html() == $('#totalJobCount').html()){
+							 $("#statistics").append('<div><h1>No error link!</h1></div>');
+						 } else {
+							 var errNum = totalJobCount - parseInt($('#workFinished').html(),10);
+							 $("#statistics").append('<div><h1>'+ errNum +' error links, resume ? </h1></div>');
+						 }
+					 };
+					 setTimeout(checkErrorLink,3000);
 				 } else {
 					 requestLiveDataStatus();	 
 				 }				 
