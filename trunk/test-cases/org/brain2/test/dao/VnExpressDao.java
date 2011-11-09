@@ -147,6 +147,10 @@ public class VnExpressDao {
 				print.println("\n ==> theLink: " + theLink);				
 
 				try {
+					if(VnExpressDao.getJobCount() % 300 == 0){
+						throw new RuntimeException("test error log");
+					}
+					
 					final String html = HttpClientUtil.executeGet(theLink);
 					final Document doc = Jsoup.parse(html, HTTP.UTF_8);
 					final String mainContentNodeId = "#content";
@@ -253,7 +257,7 @@ public class VnExpressDao {
 			allowWorkersToPool(startIndex, NTHREDS, _theInstance, executor);
 			startIndex += NTHREDS;
 			System.out.println("sleeping zzz ...");
-			Thread.sleep(500);			
+			Thread.sleep(400);
 		}
 
 		// This will make the executor accept no new threads
@@ -293,19 +297,16 @@ public class VnExpressDao {
 
 	
 	private static boolean isWorking = false;
-	
-	public static void main(String[] args) {
+	public static void importVnExpressArticles(){
 		if( isWorking ){
 			return;
 		}
-		long start = System.nanoTime();		
-
+		long start = System.nanoTime();	
 		try {
 			PrintStream statisticsPrint = new PrintStream(new FileOutputStream("statistics-data-log.txt"));			
 			statisticsPrint.println("#start-time: "+ (new SimpleDateFormat()).format(new Date()) );
-			
-			final VnExpressDao vnExpressDao = VnExpressDao.getInstance();
 			isWorking = true;
+			final VnExpressDao vnExpressDao = VnExpressDao.getInstance();			
 			vnExpressDao.masterWorker();
 			
 			List<String> links = vnExpressDao.getErrorLinks();
@@ -323,7 +324,13 @@ public class VnExpressDao {
 			vnExpressDao.closeConnection();
 		} catch (Exception e) {
 			System.err.println("Error in writing to file");
-		}	
+		} finally{
+			isWorking = false;
+		}
+	}
+	
+	public static void main(String[] args) {
+		
 
 	}
 }

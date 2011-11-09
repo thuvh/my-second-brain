@@ -27,8 +27,8 @@ public class LinkDataHandler extends ServiceHandler{
 	public void editor(Map params ) throws Exception {
 		Object action = params.get("action");
 		//int limit = Integer.parseInt(params.get("limit")+"") ;
-		if("vne_export".equals(action)){
-			VnExpressDao.main(new String[0]);
+		if("importVnExpressArticles".equals(action)){
+			VnExpressDao.importVnExpressArticles();
 		}
 	}
 			

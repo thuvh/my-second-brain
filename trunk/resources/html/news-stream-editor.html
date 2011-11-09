@@ -43,14 +43,19 @@
 			if(totalJobCount > 0){
 				var percent = (c * 100)/totalJobCount;
 				$( "#progressbar" ).progressbar({value: percent });	
-			}
-			
+			}			
 		}
 		
 		function requestLiveDataStatus(){
-			$.getScript("http://localhost:10001/?keep-alive=true&keep-time=4000", function() {				 
-				 if($('#workFinished').html() == $('#totalJobCount').html()){
-					 $("#statistics").append('<div><h1>Done!</h1></div>');
+			$.getScript("http://localhost:10001/?keep-alive=true&keep-time=3000", function() {				 
+				 if($('#jobCount').html() == $('#totalJobCount').html()){
+					 $("#statistics").append('<div><h1>All Jobs Done!</h1></div>');
+					 if($('#workFinished').html() == $('#totalJobCount').html()){
+						 $("#statistics").append('<div><h1>No error link!</h1></div>');
+					 } else {
+						 var errNum = totalJobCount - parseInt($('#workFinished').html(),10);
+						 $("#statistics").append('<div><h1>'+ errNum +' error links, resume ? </h1></div>');
+					 }
 				 } else {
 					 requestLiveDataStatus();	 
 				 }				 
@@ -62,7 +67,7 @@
 			if(!isWorking){
 				requestLiveDataStatus();
 				isWorking = true;	
-				var url = "http://localhost:10001/linkmarking/editor/html?action=vne_export";
+				var url = "http://localhost:10001/linkmarking/editor/html?action=importVnExpressArticles";
 				var iframe = $("<iframe/>").attr('src',url);
 				$('body').append(iframe);
 				iframe.hide();
