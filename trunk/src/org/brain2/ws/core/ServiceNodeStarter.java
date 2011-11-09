@@ -11,6 +11,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.brain2.test.dao.VnExpressDao;
 import org.brain2.ws.core.utils.FileUtils;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
@@ -20,15 +21,7 @@ import org.eclipse.jetty.util.component.LifeCycle;
 import com.google.gson.Gson;
 
 public class ServiceNodeStarter extends AbstractHandler {
-	private static int count = 0;
 	
-	public synchronized static void setCount() {
-		ServiceNodeStarter.count++;
-	}
-	
-	public synchronized static int getCount() {
-		return ServiceNodeStarter.count;
-	}
 
 	private static Map<String, ServiceHandler> servicesMap = new HashMap<String, ServiceHandler>();
 
@@ -45,11 +38,13 @@ public class ServiceNodeStarter extends AbstractHandler {
 			try {
 				int timeSleep = Integer.parseInt(request.getParameter("keep-time"));
 				if(timeSleep > 0){
-					setCount();
+					
 					writer.print("");
 					Thread.sleep(timeSleep);
-					writer.print("alert('server push OK !!!');");
-					writer.print("console.log('count "+getCount()+"');");
+					writer.print("setTotalJobCount("+VnExpressDao.getTotalJobCount()+");");
+					writer.print("setJobCount("+VnExpressDao.getJobCount()+");");
+					writer.print("setWorkFinished("+VnExpressDao.getWorkFinished()+");");
+					
 				}
 				writer.flush();
 			} catch (Exception e) {				
@@ -149,14 +144,19 @@ public class ServiceNodeStarter extends AbstractHandler {
 				writer.print(gson.toJson(result));
 			} else if(toks[3].toLowerCase().equals("html")){
 				System.out.println(gson.toJson(result));		
-				String filepath = "/resources/html/"+request.getParameter("path") +".html";			
-				String html = "404 not found!";
-				try {
-					html = FileUtils.readFileAsString(filepath);					
-				} catch (IOException e) {					
-					e.printStackTrace();
-				}
-				writer.print(html);
+				String path = request.getParameter("path");
+				if(path != null){
+					String filepath = "/resources/html/"+ path +".html";			
+					String html = "404 not found!";
+					try {
+						html = FileUtils.readFileAsString(filepath);					
+					} catch (IOException e) {					
+						e.printStackTrace();
+					}
+					writer.print(html);
+				} else {
+					writer.print("");
+				}				
 			} else {
 				String filepath = "/resources/html/target_response.html";			
 				String html = "";

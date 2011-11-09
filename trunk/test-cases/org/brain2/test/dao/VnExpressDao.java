@@ -6,8 +6,10 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -26,21 +28,30 @@ public class VnExpressDao {
 
 	protected Connection conn = null;
 	private static VnExpressDao _theInstance = null;
-	private volatile int workerCount = 0;
-	private static int count = 0;
+	private volatile static int workFinished = 0;
+	private volatile static int jobCount = 0;
+	private volatile static int totalJobCount = 0;
 	private volatile List<String> errorLinks = Collections.synchronizedList(new ArrayList<String>());
 	
 	public synchronized List<String> getErrorLinks() {
 		return errorLinks;
 	}
 
-	public synchronized int workFinished() {
-		workerCount++;
-		return workerCount;
+	protected synchronized static int workFinished() {
+		workFinished++;
+		return workFinished;
 	}
-
-	public synchronized int getWorkerCount() {
-		return workerCount;
+	
+	public synchronized static int getJobCount() {
+		return jobCount;
+	}
+	
+	public synchronized static int getWorkFinished() {
+		return workFinished;
+	}
+	
+	public synchronized static int getTotalJobCount() {
+		return totalJobCount;
 	}
 
 	public synchronized static VnExpressDao getInstance() throws Exception {
@@ -234,9 +245,10 @@ public class VnExpressDao {
 		int mod = total % NTHREDS;
 		print.println(" mod:" + mod);
 
-		total = 10000;
+		total = 1000;
 		int startIndex = 0;
 
+		totalJobCount = total;
 		while (startIndex < total) {
 			allowWorkersToPool(startIndex, NTHREDS, _theInstance, executor);
 			startIndex += NTHREDS;
@@ -269,8 +281,8 @@ public class VnExpressDao {
 				System.out.println(path);
 				Runnable worker = vnExpressDao.httpGetArticle(path);
 				executor.execute(worker);
-				count++;
-				print.println(" #executor count: " + count);
+				jobCount++;
+				print.println(" #executor count: " + jobCount);
 			}
 			print.println(" #Finished childWorker start: " + start);
 		} catch (Exception e) {
@@ -279,11 +291,21 @@ public class VnExpressDao {
 		}
 	}
 
+	
+	private static boolean isWorking = false;
+	
 	public static void main(String[] args) {
-		long start = System.nanoTime();
+		if( isWorking ){
+			return;
+		}
+		long start = System.nanoTime();		
 
 		try {
+			PrintStream statisticsPrint = new PrintStream(new FileOutputStream("statistics-data-log.txt"));			
+			statisticsPrint.println("#start-time: "+ (new SimpleDateFormat()).format(new Date()) );
+			
 			final VnExpressDao vnExpressDao = VnExpressDao.getInstance();
+			isWorking = true;
 			vnExpressDao.masterWorker();
 			
 			List<String> links = vnExpressDao.getErrorLinks();
@@ -294,9 +316,10 @@ public class VnExpressDao {
 			long end = System.nanoTime();
 			long elapsedTime = end - start;
 						
-			//convert to seconds
-			vnExpressDao.getPrintStream().println(" \n === Test done === in miliseconds:"	+ TimeUnit.NANOSECONDS.toSeconds(elapsedTime));
-			vnExpressDao.getPrintStream().println(" elapsed: " + elapsedTime + "nano seconds\n");
+			//convert to seconds			
+			statisticsPrint.println(" \n === Test done === \n === in seconds: "	+ TimeUnit.NANOSECONDS.toSeconds(elapsedTime));
+			statisticsPrint.println(" === in Minutes: "	+ TimeUnit.NANOSECONDS.toMinutes(elapsedTime));		
+			statisticsPrint.println("#end-time: "+ (new SimpleDateFormat()).format(new Date()) );
 			vnExpressDao.closeConnection();
 		} catch (Exception e) {
 			System.err.println("Error in writing to file");
