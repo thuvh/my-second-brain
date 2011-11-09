@@ -1,6 +1,11 @@
 package org.brain2.test.dao;
 
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -23,7 +28,9 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 public class VnExpressDao {
-	public static final int TIME_TO_SLEEP = 480;
+	public static final int TIME_TO_SLEEP = 500;
+	private static final int NTHREDS = 10;
+	
 	final PrintStream print; // declare a print stream object
 	final PrintStream errorPrint; // declare a print stream object
 
@@ -33,7 +40,7 @@ public class VnExpressDao {
 	private volatile static int jobCount = 0;
 	private volatile static int totalJobCount = 0;
 	private volatile List<String> errorLinks = Collections.synchronizedList(new ArrayList<String>());
-	
+
 	public synchronized List<String> getErrorLinks() {
 		return errorLinks;
 	}
@@ -42,15 +49,15 @@ public class VnExpressDao {
 		workFinished++;
 		return workFinished;
 	}
-	
+
 	public synchronized static int getJobCount() {
 		return jobCount;
 	}
-	
+
 	public synchronized static int getWorkFinished() {
 		return workFinished;
 	}
-	
+
 	public synchronized static int getTotalJobCount() {
 		return totalJobCount;
 	}
@@ -65,14 +72,15 @@ public class VnExpressDao {
 	protected VnExpressDao() throws Exception {
 		// Connect print stream to the output stream
 		print = new PrintStream(new FileOutputStream("import-data-log.txt"));
-		errorPrint = new PrintStream(new FileOutputStream("import-error-log.txt"));
+		errorPrint = new PrintStream(new FileOutputStream(
+				"import-error-log.txt"));
 		initConnection();
 	}
 
 	public void closeConnection() {
 		try {
 			print.close();
-			finalize();			
+			finalize();
 		} catch (Throwable e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -145,16 +153,24 @@ public class VnExpressDao {
 		Runnable thread = new Runnable() {
 			@Override
 			public void run() {
-				print.println("\n ==> theLink: " + theLink);				
+				print.println("\n ==> theLink: " + theLink);
 
 				try {
-					final String html = HttpClientUtil.executeGet(theLink);
-					if(html.isEmpty()){
-						throw new IllegalArgumentException(" http get fail, empty string");
+					String html = HttpClientUtil.executeGet(theLink);
+					if (html.isEmpty()) {
+						throw new IllegalArgumentException("http get fail, empty string");
+					} else if(html.equals("404")){
+						print.println(" 404 ### skip, workcount = " + VnExpressDao.workFinished());
+						print.flush();
+						return;
+					} else if(html.equals("500")){
+						print.println(" 500 ### skip, workcount = " + VnExpressDao.workFinished());
+						print.flush();
+						return;
 					}
-					final Document doc = Jsoup.parse(html, HTTP.UTF_8);
-					final String mainContentNodeId = "#content";
-					final String baseURL = "http://vnexpress.net";
+					Document doc = Jsoup.parse(html, HTTP.UTF_8);
+					String mainContentNodeId = "#content";
+					String baseURL = "http://vnexpress.net";
 
 					Elements metas = doc.select("meta");
 					String descriptionTxt = "";
@@ -167,10 +183,12 @@ public class VnExpressDao {
 						// System.out.println("meta name: " + metaName);
 						if (metaName.equals("description")) {
 							descriptionTxt = metaContent;
-							System.out.println("descriptionTxt: " + descriptionTxt);
+							System.out.println("descriptionTxt: "
+									+ descriptionTxt);
 						} else if (metaName.equals("keywords")) {
 							keywordsTxt = metaContent;
-							// System.out.println("descriptionTxt: " + keywordsTxt);
+							// System.out.println("descriptionTxt: " +
+							// keywordsTxt);
 						} else if (metaName.equals("robots")) {
 							robotsTxt = metaContent;
 							// System.out.println("robotsTxt: " + robotsTxt);
@@ -183,7 +201,7 @@ public class VnExpressDao {
 						titleTxt = title.get(0).text();
 						print.println("titleTxt: " + titleTxt);
 					}
-					
+
 					System.out.println(" BEGIN #####################");
 					Elements contentNode;
 					if (mainContentNodeId.isEmpty()) {
@@ -225,10 +243,10 @@ public class VnExpressDao {
 						String text = node.text();
 						System.out.println(" #cpms_content = " + text);
 					}
-					
-					print.println(" END ### workcount = "	+ VnExpressDao.workFinished());
-				} catch (Exception e) {					
-					e.printStackTrace();					
+					print.println(" END ### workcount = " + VnExpressDao.workFinished());
+					print.flush();
+				} catch (Exception e) {
+					e.printStackTrace();
 					errorPrint.println(theLink + " @@@ " + e.getMessage());
 					errorLinks.add(theLink);
 				}
@@ -237,7 +255,7 @@ public class VnExpressDao {
 		return thread;
 	}
 
-	private static final int NTHREDS = 10;
+	
 
 	public void masterWorker() throws Exception {
 		final ExecutorService executor = Executors.newFixedThreadPool(NTHREDS);
@@ -267,13 +285,12 @@ public class VnExpressDao {
 		}
 		System.out.println("Finished all threads");
 
-		_theInstance.closeConnection();		
+		_theInstance.closeConnection();
 	}
-	
-	public PrintStream getPrintStream(){
+
+	public PrintStream getPrintStream() {
 		return this.print;
 	}
-		
 
 	public void allowWorkersToPool(final int start, final int limit,
 			final VnExpressDao vnExpressDao, final ExecutorService executor) {
@@ -293,42 +310,99 @@ public class VnExpressDao {
 		}
 	}
 
-	
 	private static boolean isWorking = false;
-	public static void importVnExpressArticles(){
-		if( isWorking ){
+
+	public static void importVnExpressArticles() {
+		if (isWorking) {
 			return;
 		}
-		long start = System.nanoTime();	
+		long start = System.nanoTime();
 		try {
-			PrintStream statisticsPrint = new PrintStream(new FileOutputStream("statistics-data-log.txt"));			
-			statisticsPrint.println("#start-time: "+ (new SimpleDateFormat()).format(new Date()) );
+			PrintStream statisticsPrint = new PrintStream(new FileOutputStream("statistics-data-log.txt"));
+			statisticsPrint.println("#start-time: " + (new SimpleDateFormat()).format(new Date()));
 			isWorking = true;
-			final VnExpressDao vnExpressDao = VnExpressDao.getInstance();			
+			final VnExpressDao vnExpressDao = VnExpressDao.getInstance();
 			vnExpressDao.masterWorker();
-			
+
 			List<String> links = vnExpressDao.getErrorLinks();
 			for (String link : links) {
 				System.err.println(link);
 			}
-			
+
 			long end = System.nanoTime();
 			long elapsedTime = end - start;
-						
-			//convert to seconds			
-			statisticsPrint.println(" \n === Test done === \n === in seconds: "	+ TimeUnit.NANOSECONDS.toSeconds(elapsedTime));
-			statisticsPrint.println(" === in Minutes: "	+ TimeUnit.NANOSECONDS.toMinutes(elapsedTime));		
-			statisticsPrint.println("#end-time: "+ (new SimpleDateFormat()).format(new Date()) );
+
+			// convert to seconds
+			statisticsPrint.println(" \n === Test done === \n === in seconds: "
+					+ TimeUnit.NANOSECONDS.toSeconds(elapsedTime));
+			statisticsPrint.println(" === in Minutes: "
+					+ TimeUnit.NANOSECONDS.toMinutes(elapsedTime));
+			statisticsPrint.println("#end-time: "
+					+ (new SimpleDateFormat()).format(new Date()));
 			vnExpressDao.closeConnection();
 		} catch (Exception e) {
 			System.err.println("Error in writing to file");
-		} finally{
+		} finally {
 			isWorking = false;
 		}
 	}
 	
+	public static void resumeImportErrorLinks(){
+		try {
+			jobCount = 0;
+			workFinished = 0;
+
+			final FileInputStream fstream = new FileInputStream("import-error-log.txt");
+			// Get the object of DataInputStream
+			DataInputStream in = new DataInputStream(fstream);
+			BufferedReader br = new BufferedReader(new InputStreamReader(in));
+			String strLine;
+			// Read File Line By Line
+			List<String> paths = new ArrayList<String>();
+			while ((strLine = br.readLine()) != null) {
+				// Print the content on the console
+				String path  = strLine.split("@@@")[0].trim();				
+				System.out.println(path);
+				System.out.println("@@@ rusume link: " + path);
+				paths.add(path);
+			}
+			totalJobCount = paths.size();
+			// Close the input stream
+			in.close();
+			Thread.sleep(1000);			
+									
+			File yourFile = new File("import-error-log.txt");
+			yourFile.delete();
+			File yourNewFile = new File("import-error-log.txt");
+			yourNewFile.createNewFile();
+			
+			Thread.sleep(1000);
+			
+			System.out.println(" @@@ starting rusume error link: ");
+			final VnExpressDao vnExpressDao = VnExpressDao.getInstance();
+			final ExecutorService executor = Executors.newFixedThreadPool(NTHREDS);
+			int c = 0;
+			for (String path : paths) {
+				Runnable worker = vnExpressDao.httpGetArticle(path);
+				executor.execute(worker);
+				if(c % NTHREDS == 0){
+					Thread.sleep(TIME_TO_SLEEP);
+				}
+			}
+			executor.shutdown();
+
+			// Wait until all threads are finish
+			while (!executor.isTerminated()) {}
+			System.out.println("Finished all threads");
+			vnExpressDao.closeConnection();
+			
+		} catch (Exception e) {// Catch exception if any
+			System.err.println("Error: " + e.getMessage());
+		}
+	}
+
 	public static void main(String[] args) {
-		
+		resumeImportErrorLinks();		
 
 	}
 }

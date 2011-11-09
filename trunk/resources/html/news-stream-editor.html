@@ -47,19 +47,20 @@
 		}
 		
 		function requestLiveDataStatus(){
-			$.getScript("http://localhost:10001/?keep-alive=true&keep-time=3000", function() {				 
+			$.getScript("http://localhost:10001/?keep-alive=true&keep-time=2000", function() {				 
 				 if($('#jobCount').html() == $('#totalJobCount').html()){
 					 $("#statistics").append('<div><h1>All Jobs Done!</h1></div>');
 					 
-					 var checkErrorLink = function(){
+					 var checkErrorLink = function(){						 
 						 if($('#workFinished').html() == $('#totalJobCount').html()){
 							 $("#statistics").append('<div><h1>No error link!</h1></div>');
 						 } else {
 							 var errNum = totalJobCount - parseInt($('#workFinished').html(),10);
-							 $("#statistics").append('<div><h1>'+ errNum +' error links, resume ? </h1></div>');
+							 $("#statistics").append('<div><h1>'+ errNum +' error links, <a href="#" onclick="startResumeErrorLinks()">Resume ?</a> </h1></div>');							 
 						 }
+						 isWorking = false;
 					 };
-					 setTimeout(checkErrorLink,3000);
+					 setTimeout(checkErrorLink,5000);
 				 } else {
 					 requestLiveDataStatus();	 
 				 }				 
@@ -72,6 +73,19 @@
 				requestLiveDataStatus();
 				isWorking = true;	
 				var url = "http://localhost:10001/linkmarking/editor/html?action=importVnExpressArticles";
+				var iframe = $("<iframe/>").attr('src',url);
+				$('body').append(iframe);
+				iframe.hide();
+			} else {
+				alert('job is working ...');
+			}			
+		}
+		
+		function startResumeErrorLinks(){
+			if(!isWorking){
+				requestLiveDataStatus();
+				isWorking = true;	
+				var url = "http://localhost:10001/linkmarking/editor/html?action=resumeImportErrorLinks";
 				var iframe = $("<iframe/>").attr('src',url);
 				$('body').append(iframe);
 				iframe.hide();
