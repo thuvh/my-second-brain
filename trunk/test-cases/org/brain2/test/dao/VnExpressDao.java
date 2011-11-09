@@ -23,6 +23,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 public class VnExpressDao {
+	public static final int TIME_TO_SLEEP = 480;
 	final PrintStream print; // declare a print stream object
 	final PrintStream errorPrint; // declare a print stream object
 
@@ -147,11 +148,10 @@ public class VnExpressDao {
 				print.println("\n ==> theLink: " + theLink);				
 
 				try {
-					if(VnExpressDao.getJobCount() % 300 == 0){
-						throw new RuntimeException("test error log");
-					}
-					
 					final String html = HttpClientUtil.executeGet(theLink);
+					if(html.isEmpty()){
+						throw new IllegalArgumentException(" http get fail, empty string");
+					}
 					final Document doc = Jsoup.parse(html, HTTP.UTF_8);
 					final String mainContentNodeId = "#content";
 					final String baseURL = "http://vnexpress.net";
@@ -225,11 +225,9 @@ public class VnExpressDao {
 						String text = node.text();
 						System.out.println(" #cpms_content = " + text);
 					}
-
-					VnExpressDao instance = VnExpressDao.getInstance();
-					print.println(" END ### workcount = "	+ instance.workFinished());
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
+					
+					print.println(" END ### workcount = "	+ VnExpressDao.workFinished());
+				} catch (Exception e) {					
 					e.printStackTrace();					
 					errorPrint.println(theLink + " @@@ " + e.getMessage());
 					errorLinks.add(theLink);
@@ -257,7 +255,7 @@ public class VnExpressDao {
 			allowWorkersToPool(startIndex, NTHREDS, _theInstance, executor);
 			startIndex += NTHREDS;
 			System.out.println("sleeping zzz ...");
-			Thread.sleep(400);
+			Thread.sleep(TIME_TO_SLEEP);
 		}
 
 		// This will make the executor accept no new threads
