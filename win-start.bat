@@ -1,1 +1,1 @@
-java -jar agent.jar
+java -Xms256m -Xmx512M -jar agent.jar

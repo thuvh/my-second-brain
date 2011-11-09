@@ -29,6 +29,8 @@ public class LinkDataHandler extends ServiceHandler{
 		//int limit = Integer.parseInt(params.get("limit")+"") ;
 		if("importVnExpressArticles".equals(action)){
 			VnExpressDao.importVnExpressArticles();
+		} else if("resumeImportErrorLinks".equals(action)){
+			VnExpressDao.resumeImportErrorLinks();
 		}
 	}
 			

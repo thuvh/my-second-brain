@@ -4,23 +4,15 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import org.apache.http.protocol.HTTP;
-import org.brain2.ws.core.utils.HttpClientUtil;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 public class VnExpressDao {
 
 	protected Connection conn = null;
 	private static VnExpressDao _theInstance = null;
-
+	
 	public static VnExpressDao getInstance() throws Exception {
 		if (_theInstance == null) {
 			_theInstance = new VnExpressDao();
@@ -85,7 +77,7 @@ public class VnExpressDao {
 	}
 	
 	public ResultSet getSubjectPath(int begin, int total) throws Exception {
-		String sql = "SELECT ID,Title,Lead,CONCAT(\"http://vnexpress.net\", Path) as Path FROM vnemobile.subject0 LIMIT ?,? ";
+		String sql = "SELECT ID,Title,Lead,PostBy,Date,Modified,Path FROM vnemobile.subject0 LIMIT ?,? ";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		ps.setInt(1, begin);
 		ps.setInt(2, total);
@@ -102,129 +94,68 @@ public class VnExpressDao {
 //		ps.close();
 //		return list;
 	}
-	
-	
-	public Runnable httpGetArticle(final String theLink){
-		Runnable thread = new Runnable() {
-			@Override
-			public void run() {
-				//System.out.println("\n ==> theLink: " + theLink);
-				final String html = HttpClientUtil.executeGet(theLink);
-				final Document doc = Jsoup.parse(html, HTTP.UTF_8);
-				final String mainContentNodeId = "#content"; 
-				final String baseURL = "http://vnexpress.net";										
-
-				Elements metas = doc.select("meta");
-				String descriptionTxt = "";
-				String keywordsTxt = "";
-				String robotsTxt = "";
-
-				for (Element meta : metas) {
-					String metaName = meta.attr("name");
-					String metaContent = meta.attr("content");
-					// System.out.println("meta name: " + metaName);
-					if (metaName.equals("description")) {
-						descriptionTxt = metaContent;
-						System.out.println("descriptionTxt: " + descriptionTxt);
-					} else if (metaName.equals("keywords")) {
-						keywordsTxt = metaContent;
-						// System.out.println("descriptionTxt: " + keywordsTxt);
-					} else if (metaName.equals("robots")) {
-						robotsTxt = metaContent;
-						// System.out.println("robotsTxt: " + robotsTxt);
-					}
-				}
-
-				Elements title = doc.select("title");
-				String titleTxt = "";
-				if (title.size() > 0) {
-					titleTxt = title.get(0).text();
-					System.out.println("titleTxt: " + titleTxt);
-				}
-
-				try {
-					System.out.println(" BEGIN #####################");
-					Elements contentNode;
-					if (mainContentNodeId.isEmpty()) {
-						contentNode = doc.select("body");						
-					} else {						
-						contentNode = doc.select(mainContentNodeId);
-					}
-					
-					//get images in content
-					Elements imgs = contentNode.select("img[src]");
-					for (Element img : imgs) {
-						String src = img.attr("src");
-						//FIXME
-						if(src.startsWith("/Files/Subject/")){
-							System.out.println(" #img[src] = " + baseURL + src);
-						}
-					}
-					
-					Elements comments = contentNode.select("div.comment_ct");
-					for (Element comment : comments) {
-						String commentText = comment.html();
-						//FIXME
-						System.out.println(commentText + "\n");
-					}		
-					
-					final Elements linkNodes = contentNode.select("a[href]");
-					for (Element linkNode : linkNodes) {							
-						String href = linkNode.attr("href");
-						if(href.endsWith("#aComment")){
-							System.out.println(" #a[href] = " + href);
-						}
-					}
-					
-					final Elements cpms_content = contentNode.select("div[cpms_content]");
-					System.out.println(" #cpms_content = " + cpms_content.size());		
-					for (Element node : cpms_content) {						
-						String text = node.text();							
-						System.out.println(" #cpms_content = " + text);							
-					}
-
-					System.out.println(" END #####################");
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		};
-		return thread;		
-	}
-
-	private static final int NTHREDS = 10;
-	public static void main(String[] args) {
-		try {
-			VnExpressDao vnExpressDao = VnExpressDao.getInstance();
-			int total =  vnExpressDao.getTotalCount();
-			
-			//System.out.println("total article:" + total);
-			
-			ResultSet result = vnExpressDao.getSubjectPath(400000, NTHREDS);
-			ExecutorService executor = Executors.newFixedThreadPool(NTHREDS);
-			
-			Runnable worker = VneCrawler.httpGetArticle("http://vnexpress.net/gl/xa-hoi/2011/11/xe-container-tong-oto-khach-10-nguoi-chet-chay/", "title hji", "Leading");
-			executor.execute(worker);
-//			while (result.next()) {								
-//				Runnable worker = VneCrawler.httpGetArticle(result.getString("Path"), result.getString("Title"), result.getString("Lead"));
-//				executor.execute(worker);			
-//			}
-			
-			// This will make the executor accept no new threads
-			// and finish all existing threads in the queue	
-			executor.shutdown();			
-			
-			// Wait until all threads are finish
-			while (!executor.isTerminated()) {
-			}
-			System.out.println("Finished all threads");
-
-			vnExpressDao.closeConnection();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	public void saveArticle(List<Article> articles) throws SQLException{
+		System.out.println("BEGIN SAVE DB COMMENT");
+		conn.setAutoCommit(false);
+		String sql = "INSERT INTO article(article_id,headline, abstract,content,share_url,creation_time,update_time) VALUES(?,?,?,?,?,?,?) ";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		List<Comment> comments = new ArrayList<Comment>();
+		for(int i=0;i<=10&&i<articles.size();i++){
+			System.out.println("i :" +i);
+			Article article = articles.remove(0);
+			ps.setString(1, article.getId());
+			ps.setString(2, article.getHeadline());
+			ps.setString(3, article.getAbstractS());
+			ps.setString(4, article.getContent());
+			ps.setString(5, article.getSharedURL());
+			ps.setLong(6, article.getCreationDate().getTime());
+			ps.setLong(7, article.getUpdateDate().getTime());
+			ps.addBatch();
+			comments.addAll(article.getComments());
 		}
-
+		
+		ps.executeBatch();
+		conn.commit();
+		
+		saveComment(comments);
+		
+		//conn.setAutoCommit(true);
+		System.out.println("END SAVE DB ARTICLE");
+	}
+	public ResultSet getComment(String url) throws Exception {
+		String sql = "SELECT * FROM vnemobile.comment_vne where Link=? order by PublishDate asc";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setString(1, url);
+		
+		ResultSet rs = ps.executeQuery();
+		return rs;
+	}
+	public void saveComment(List<Comment> comments) throws SQLException{
+		System.out.println("BEGIN SAVE DB COMMENT");
+		System.out.println("COMMENT SIZE: " + comments.size());
+		conn.setAutoCommit(false);
+		String sql = "INSERT INTO comment VALUES(?,?,?,?,?,?,?,?,?,?,?);";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		for(int i=0,n=comments.size();i<n;i++){
+			System.out.println("ci :" +i);
+			Comment comment = comments.get(i);
+			ps.setString(1, comment.getCommentId());
+			ps.setString(2, comment.getArticleId());
+			ps.setString(3, comment.getTitle());
+			ps.setString(4, comment.getContent());
+			ps.setString(5, comment.getUserId());
+			ps.setString(6, comment.getFullname());
+			ps.setString(7, comment.getEmail());
+			ps.setInt(8, comment.getStatus());
+			ps.setLong(9, comment.getPublicTime().getTime());
+			ps.setLong(10, comment.getCreationTime().getTime());
+			ps.setLong(11, comment.getUpdateDate().getTime());
+			ps.addBatch();
+		}
+		ps.executeBatch();
+		conn.commit();
+		
+		//conn.setAutoCommit(true);
+		System.out.println("END SAVE DB COMMENT");
 	}
 }

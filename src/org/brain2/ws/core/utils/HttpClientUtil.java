@@ -31,12 +31,17 @@ public class HttpClientUtil {
 			httpget.setHeader("Cache-Control", "no-cache");			
 
 			HttpResponse response = getThreadSafeClient().execute(httpget);
-
-			if (response.getStatusLine().getStatusCode() == 200) {
+			int code = response.getStatusLine().getStatusCode(); 
+			System.out.println(code);
+			if (code == 200) {
 				HttpEntity entity = response.getEntity();
 				if (entity != null) {
 					return EntityUtils.toString(entity, HTTP.UTF_8);
 				}
+			} else if(code == 404) {
+				return "404";
+			} else {
+				return "500";
 			}
 		}  catch (HttpResponseException e) {
 		    System.err.println(e.getMessage());		  

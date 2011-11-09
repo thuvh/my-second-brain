@@ -1,178 +1,35 @@
 package org.brain2.test.vneappcrawler;
 
-import java.sql.DriverManager;
-
-import java.sql.Connection;
-
-import javax.swing.text.html.HTML;
-import javax.swing.text.html.HTML.Tag;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.http.protocol.HTTP;
 import org.brain2.ws.core.utils.HttpClientUtil;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
 import org.jsoup.select.Elements;
 
-
-public class VneCrawler {
-//	public static void main(String[] args) {
-//		try {
-//			Class.forName("com.mysql.jdbc.Driver");
-//			String database = "jdbc:mysql://10.254.53.216";
-//			String user = "vnemobile";
-//			String password = "vnemobile@123";
-//			Connection conn = DriverManager.getConnection(database, user, password);
-//			Statement state = conn.
-//		} catch (Exception e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//	}
-	
-	public static void main(String[] args) {
-		try {
-			final String theLink = "http://vnexpress.net/gl/phap-luat/2011/11/ke-tham-nhung-doi-pho-tinh-vi-voi-viec-bi-to-cao/";
-			
-
-			
-			Runnable thread = new Runnable() {
-
-				@Override
-				public void run() {
-					System.out.println("\n ==> theLink: " + theLink);
-					final String html = HttpClientUtil.executeGet(theLink);					//				
-					final Document doc = Jsoup.parse(html, HTTP.UTF_8);
-					final String baseURL = "http://vnexpress.net";										
-
-					try {
-						//System.out.println(" BEGIN #####################");
-						Elements contentNode;
-						contentNode = doc.select("#content");
-						
-						Elements cpms_content = contentNode.select("div[cpms_content=true]");						
-						
-						if(cpms_content.size() > 0)
-						{							
-							Element cpms = cpms_content.get(0);							
-							
-							//Get title
-							Element title = cpms.select("h1.Title").get(0);
-							
-							//Get lead
-							Element lead = cpms.select("h2.Lead").get(0);
-							
-							cpms.select("h1.Title").remove();
-							cpms.select("h2.Lead").remove();																	
-							
-							/**
-							 * Extract content
-							 */
-							//Images
-							Elements images = cpms.select("img");
-							cpms.select("img").remove();																									
-							
-							//Related links
-							Elements relatedLinks = lead.select("a");														
-							relatedLinks.addAll(cpms.select("a[class!=Normal]"));
-							lead.select("a").remove();
-							cpms.select("a[class!=Normal]").remove();
-							
-//							for(Element link : cpms.select("a[class=Normal]"))
-//							{																
-//								link.replaceWith(DataNode.createFromEncoded(link.html(), ""));
-//							}							
-							
-							for(Element p : cpms.select("p"))
-							{
-								p.html(Jsoup.parse(p.html()).text());
-							}								
-							
-							System.out.println("Title: " + title.text());
-							System.out.println("Lead: " + lead.text());
-							System.out.println("Content: " + cpms.html());
-							System.out.println("List images:");
-							for(Element image : images)
-							{								
-								System.out.println("img source: " + image.attr("src"));
-							}
-							System.out.println("List links:");
-							for(Element link : relatedLinks)
-							{
-								System.out.println("link source: " + link.attr("href"));
-							}
-							System.exit(1);
-							
-//							//get images in content
-//							Elements imgs = contentNode.select("img[src]");
-//							for (Element img : imgs) {
-//								String src = img.attr("src");
-//								//FIXME
-//								if(src.startsWith("/Files/Subject/")){
-//									System.out.println(" #img[src] = " + baseURL + src);
-//								}
-//							}
-//							
-//							Elements comments = contentNode.select("div.comment_ct");
-//							for (Element comment : comments) {
-//								String commentText = comment.html();
-//								//FIXME
-//								System.out.println(commentText + "\n");
-//							}		
-//							
-//							final Elements linkNodes = contentNode.select("a[href]");
-//							for (Element linkNode : linkNodes) {							
-//								String href = linkNode.attr("href");
-//								if(href.endsWith("#aComment")){
-//									System.out.println(" #a[href] = " + href);
-//								}
-//							}
-//							
-//							final Elements cpms_content = contentNode.select("div[cpms_content]");
-//							System.out.println(" #cpms_content = " + cpms_content.size());		
-//							for (Element node : cpms_content) {						
-//								String text = node.text();							
-//								System.out.println(" #cpms_content = " + text);							
-//							}
-						}
-						
-						
-						
-						
-
-//						String content = DefaultExtractor.INSTANCE.getText(contentNode.html());
-//						System.out.println(content);
-//						org.apache.lucene.document.Document newDoc = MetaDataUtil
-//								.createDocumentForLink(theLink, titleTxt,
-//										descriptionTxt, keywordsTxt, content);
-//						indexWriter.addDocument(newDoc);
-//						indexWriter.commit();
-						//System.out.println(" END #####################");
-					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-			};
-			new Thread(thread).start();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	public static Runnable httpGetArticle(final String theLink, final String title, final String lead){
+public class VneCrawler {	
+	private static int concurrentThreads =10;
+	public static List<Article> articles=new ArrayList<Article>();
+	private static String baseURL = "http://vnexpress.net";
+	public static Runnable httpGetArticle(final VnExpressDao vnExpressDao, final Article article){
+		final String theLink = baseURL + article.getSharedURL();
+		final String title = article.getHeadline();
+		final String lead = article.getAbstractS();
+		
 		Runnable thread = new Runnable() {
 
 			@Override
 			public void run() {
-				//System.out.println("\n ==> theLink: " + theLink);
-				final String html = HttpClientUtil.executeGet(theLink);					//				
-				final Document doc = Jsoup.parse(html, HTTP.UTF_8);				
-				final String baseURL = "http://vnexpress.net";										
-
+				final String html = HttpClientUtil.executeGet(theLink);	
 				try {
+				final Document doc = Jsoup.parse(html, HTTP.UTF_8);				
+
 					System.out.println("BEGIN #####################");					
 					Element content = doc.select(".content").get(0);
 					
@@ -180,19 +37,28 @@ public class VneCrawler {
 					
 					if(cpms_content.size() > 0)
 					{							
-						Element cpms = cpms_content.get(0);							
+						Element cpms = cpms_content.get(0);	
+						/**
+						 * remove script links in content
+						 */
 						cpms.select("script").remove();												
 						
+						/**
+						 * split related link from lead
+						 */
 						String[] leadParts = lead.split("<BR>>",2);
 						String _abstract = Jsoup.parse(leadParts[0]).text();						
-						
+						article.setAbstractS(_abstract);
 						Elements _related_links = null;
 						
 						if(leadParts.length > 1)
 						{							
 							_related_links = Jsoup.parse(leadParts[1]).select("a");												
-						}												
-																
+						}									
+						
+						/**
+						 * remove title and lead from content								
+						 */
 						cpms.select("h1.Title").remove();
 						cpms.select("h2.Lead").remove();																	
 						
@@ -252,6 +118,7 @@ public class VneCrawler {
 						System.out.println("Title: " + title);
 						System.out.println("Abstract: " + _abstract);
 						System.out.println("Content: " + cpms.html());
+						article.setContent(cpms.html());
 						System.out.println("List images:");
 						
 						for(Element image : _images)
@@ -291,56 +158,28 @@ public class VneCrawler {
 							}
 						}
 						
-						if(_comments != null)
-						{
-							System.out.println("total of comments: " + _comments.size() + " --- " + theLink);
+						if(_comments != null && _comments.size() > 0)
+						{							
+							ResultSet dbComments = vnExpressDao.getComment(article.getSharedURL());
+							int i=0;																
+							List<Comment> comments = new ArrayList<Comment>();								
+							while(dbComments.next()){
+								Comment comment = new Comment(dbComments.getString("ID"), article.getId(), dbComments.getString("Title"), _comments.get(i).select(".Normal").html(), "0", dbComments.getString("Name"), dbComments.getString("Email"), dbComments.getInt("Status"), dbComments.getDate("PublishDate"), dbComments.getDate("Date"), dbComments.getDate("Modified"));
+								comments.add(comment);
+								i++;									
+							}
+							article.setComments(comments);
 						}
 						else
 						{
-							System.out.println("don't allow comment :(( --- " + theLink);
+							//System.out.println("don't allow comment :(( --- " + theLink);
 						}
-						
-						
-//						//get images in content
-//						Elements imgs = contentNode.select("img[src]");
-//						for (Element img : imgs) {
-//							String src = img.attr("src");
-//							//FIXME
-//							if(src.startsWith("/Files/Subject/")){
-//								System.out.println(" #img[src] = " + baseURL + src);
-//							}
-//						}
-//						
-//						Elements comments = contentNode.select("div.comment_ct");
-//						for (Element comment : comments) {
-//							String commentText = comment.html();
-//							//FIXME
-//							System.out.println(commentText + "\n");
-//						}		
-//						
-//						final Elements linkNodes = contentNode.select("a[href]");
-//						for (Element linkNode : linkNodes) {							
-//							String href = linkNode.attr("href");
-//							if(href.endsWith("#aComment")){
-//								System.out.println(" #a[href] = " + href);
-//							}
-//						}
-//						
-//						final Elements cpms_content = contentNode.select("div[cpms_content]");
-//						System.out.println(" #cpms_content = " + cpms_content.size());		
-//						for (Element node : cpms_content) {						
-//							String text = node.text();							
-//							System.out.println(" #cpms_content = " + text);							
-//						}
 					}
-//					String content = DefaultExtractor.INSTANCE.getText(contentNode.html());
-//					System.out.println(content);
-//					org.apache.lucene.document.Document newDoc = MetaDataUtil
-//							.createDocumentForLink(theLink, titleTxt,
-//									descriptionTxt, keywordsTxt, content);
-//					indexWriter.addDocument(newDoc);
-//					indexWriter.commit();
 					System.out.println(" END #####################");
+					articles.add(article);
+					if(articles.size()>=10)
+						vnExpressDao.saveArticle(articles);
+					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -348,6 +187,27 @@ public class VneCrawler {
 			}
 		};
 		return thread;
+		
+	}
+	public static void httpGetArticles(ResultSet resultSet,ExecutorService executor, VnExpressDao vnExpressDao){
+		try {
+			int i=0;
+			while (resultSet.next()) {
+				Article article =new Article(resultSet.getString("ID"), resultSet.getString("Title"), resultSet.getString("Lead"),resultSet.getString("Path"),0,resultSet.getDate("Date"),resultSet.getDate("Modified"));
+				Runnable worker = VneCrawler.httpGetArticle(vnExpressDao,article);
+				executor.execute(worker);
+				i++;
+			}
+			System.out.println("SIZE :"+i);
+			resultSet.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		// This will make the executor accept no new threads
+		// and finish all existing threads in the queue
+		executor.shutdown();			
+		
 		
 	}
 
