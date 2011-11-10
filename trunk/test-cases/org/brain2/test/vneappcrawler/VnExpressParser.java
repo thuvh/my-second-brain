@@ -133,8 +133,8 @@ public class VnExpressParser {
 
 					if (totalPages > 1) {
 						for (int p = 2; p <= totalPages; p++) {
-							String commentPages = HttpClientUtil
-									.executeGet(theLink + "?p=" + p);
+							
+							String commentPages = HttpClientUtil.executeGet("http://vnexpress.net"+theLink + "?p=" + p);
 							_comments.addAll(Jsoup.parse(commentPages).select(
 									".comment_ct"));
 						}
