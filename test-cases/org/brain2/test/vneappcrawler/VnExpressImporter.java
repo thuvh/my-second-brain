@@ -42,7 +42,7 @@ public class VnExpressImporter {
 	private volatile static int totalJobFailed = 0;
 	private volatile static int totalDieLinks = 0;
 	private volatile static Queue<String> errorLinks = new ConcurrentLinkedQueue<String>();
-	private volatile static Queue<Article> articleQueue = new ConcurrentLinkedQueue<Article>();
+	
 
 	public synchronized Queue<String> getErrorLinks() {
 		return errorLinks;
@@ -103,8 +103,9 @@ public class VnExpressImporter {
 		
 	}
 
-	public void closeConnection() {
+	public void cleanResources() {
 		try {
+			_vnExpressDao.closeConnection();
 			linksDBManager.close();
 			print.close();
 			finalize();
@@ -140,20 +141,16 @@ public class VnExpressImporter {
 						print.flush();
 						saveLogDB(theLink, ImportStatus.DEAD_LINK);
 						return;
-					}					
-					Article newArticle = VnExpressParser.parseHtmlToArticle(theLink, html, oldArticle, _vnExpressDao);
-					articleQueue.add(newArticle);
-					
-					//TODO save DB here		
-					
-					if(articleQueue.size()>=10){
-						_vnExpressDao.saveArticle(articleQueue);
-						articleQueue.clear();
 					}
 					
 					saveLogDB(theLink, ImportStatus.PARSED_OK);
-					print.println(" 200 ### workcount = " + VnExpressImporter.workFinished()+" => theLink: " + theLink);					
+					print.println(" 200 ### workcount = " + VnExpressImporter.workFinished()+" => theLink: " + theLink);
 					print.flush();
+					
+					Article newArticle = VnExpressParser.parseHtmlToArticle(theLink, html, oldArticle, _vnExpressDao);
+					if(_vnExpressDao.saveArticle(newArticle)){
+						saveLogDB(theLink, ImportStatus.SAVED_OK);
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 					errorPrint.println(theLink + " @@@ " + e.getMessage());
@@ -169,14 +166,15 @@ public class VnExpressImporter {
 		int total = _vnExpressDao.getTotalCount();
 		print.println("## total article ## = " + total);
 
-		int mod = total % NTHREDS;
+		//int mod = total % NTHREDS;
 		//print.println(" mod:" + mod);
 
-		total = SAMPLE_TEST_NUM;//FIXME
-		int startIndex = 0;
-
-		totalJobCount = total;
-		while (startIndex < total) {
+		//FIXME
+		totalJobCount = total - SAMPLE_TEST_NUM;
+		int startIndex = totalJobCount;
+		
+		int limit = total+NTHREDS;
+		while (startIndex <= limit) {
 			allowWorkersToPool(startIndex, NTHREDS, _theInstance, executor);
 			startIndex += NTHREDS;
 			System.out.println("sleeping zzz ...");
@@ -197,11 +195,13 @@ public class VnExpressImporter {
 		
 		System.out.println(" === total linksDB size: " + linksDB.size());
 		System.out.println(" === total errorLinks size: " + errorLinks.size());
-		
+				
+		//retry
 		checksumAllLinks();		
-		//retry 		
-
-		_theInstance.closeConnection();
+		
+		//flush all				
+		
+		_theInstance.cleanResources();
 	}
 
 	public PrintStream getPrintStream() {
@@ -301,7 +301,7 @@ public class VnExpressImporter {
 	}
 	
 	protected void checksumAllLinks() throws Exception{
-		int c1 = 0, c2 =0, c3 =0, c4 =0;
+		int c1 = 0, c2 =0, c3 =0, c4 =0,c5 =0;
 		Set<String> links = linksDB.keySet();
 		final ExecutorService executor = Executors.newFixedThreadPool(1);
 		for (String link : links) {
@@ -318,12 +318,15 @@ public class VnExpressImporter {
 					executor.execute(this.processArticle(link, article));
 				}
 				c4++;
-			}			
+			} else if(status == ImportStatus.SAVED_OK){
+				c5++;
+			}
 		}
 		System.out.println("FETCHED = "+ c1);
 		System.out.println("PARSED_OK = "+ c2);
 		System.out.println("DEAD_LINK = "+ c3);
 		System.out.println("SERVER_ERROR = "+ c4);
+		System.out.println("SAVED_OK = "+ c5);
 		
 		executor.shutdown();
 		while(!executor.isTerminated()){}		

@@ -107,6 +107,25 @@ public class VnExpressDao {
 		return rs;
 	}
 	
+	public boolean saveArticle(Article article) throws SQLException{
+		System.out.println("SAVE DB article"+article.getSharedURL());
+		conn.setAutoCommit(false);
+		String sql = "INSERT INTO article(article_id,headline, abstract,content,share_url,creation_time,update_time) VALUES(?,?,?,?,?,?,?) ";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		List<Comment> comments = new ArrayList<Comment>(article.getComments());			
+		ps.setString(1, article.getId());
+		ps.setString(2, article.getHeadline());
+		ps.setString(3, article.getAbstractS());
+		ps.setString(4, article.getContent());
+		ps.setString(5, article.getSharedURL());
+		ps.setLong(6, article.getCreationDate().getTime());
+		ps.setLong(7, article.getUpdateDate().getTime());
+		boolean rs = ps.execute();			
+		conn.commit();		
+		saveComment(comments);				
+		return rs;
+	}
+	
 	public void saveArticle(final Queue<Article> articles) throws SQLException{
 		System.out.println("BEGIN SAVE DB COMMENT");
 		conn.setAutoCommit(false);
