@@ -44,6 +44,8 @@ public class ServiceNodeStarter extends AbstractHandler {
 					writer.print("setTotalJobCount("+VnExpressDao.getTotalJobCount()+");");
 					writer.print("setJobCount("+VnExpressDao.getJobCount()+");");
 					writer.print("setWorkFinished("+VnExpressDao.getWorkFinished()+");");
+					writer.print("setTotalJobFailed("+VnExpressDao.getTotalJobFailed()+");");
+					writer.print("setTotalDieLinks("+VnExpressDao.getTotalDieLinks()+");");
 					
 				}
 				writer.flush();
