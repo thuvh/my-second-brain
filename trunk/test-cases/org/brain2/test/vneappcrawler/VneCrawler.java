@@ -4,6 +4,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.http.protocol.HTTP;
@@ -15,7 +17,7 @@ import org.jsoup.select.Elements;
 
 public class VneCrawler {	
 	private static int concurrentThreads =10;
-	public static List<Article> articles=new ArrayList<Article>();
+	public static Queue<Article> articleQueue = new ConcurrentLinkedQueue<Article>();
 	private static String baseURL = "http://vnexpress.net";
 	public static Runnable httpGetArticle(final VnExpressDao vnExpressDao, final Article article){
 		final String theLink = baseURL + article.getSharedURL();
@@ -176,9 +178,9 @@ public class VneCrawler {
 						}
 					}
 					System.out.println(" END #####################");
-					articles.add(article);
-					if(articles.size()>=10)
-						vnExpressDao.saveArticle(articles);
+					articleQueue.add(article);
+					if(articleQueue.size()>=10)
+						vnExpressDao.saveArticle(articleQueue);
 					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block

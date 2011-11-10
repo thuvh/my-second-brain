@@ -26,6 +26,7 @@ import jdbm.RecordManager;
 import jdbm.RecordManagerFactory;
 
 import org.apache.http.protocol.HTTP;
+import org.brain2.test.vneappcrawler.ImportStatus;
 import org.brain2.ws.core.utils.HttpClientUtil;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -33,13 +34,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 public class VnExpressDao {
-	public static class ImportStatus {
-		public static final int FETCHED = 0;
-		public static final int PARSED_OK = 200;
-		public static final int DEAD_LINK = 404;
-		public static final int SERVER_ERROR = 500;
-	}
-	
+		
 	public static final int TIME_TO_SLEEP = 600;
 	private static final int NTHREDS = 8;
 	public static int SAMPLE_TEST_NUM = 3000;

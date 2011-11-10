@@ -10,7 +10,7 @@ import java.util.zip.CRC32;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.lucene.document.Document;
-import org.brain2.test.dao.VnExpressDao;
+import org.brain2.test.vneappcrawler.VnExpressImporter;
 import org.brain2.ws.core.ServiceHandler;
 import org.brain2.ws.core.annotations.RestHandler;
 import org.brain2.ws.core.search.IndexMetaData;
@@ -28,9 +28,10 @@ public class LinkDataHandler extends ServiceHandler{
 		Object action = params.get("action");
 		//int limit = Integer.parseInt(params.get("limit")+"") ;
 		if("importVnExpressArticles".equals(action)){
-			VnExpressDao.importVnExpressArticles();
+			VnExpressImporter.importVnExpressArticles();
 		} else if("resumeImportErrorLinks".equals(action)){
-			VnExpressDao.resumeImportErrorLinks();
+			//VnExpressDao.resumeImportErrorLinks();
+			System.out.println("TODO here");
 		}
 	}
 			

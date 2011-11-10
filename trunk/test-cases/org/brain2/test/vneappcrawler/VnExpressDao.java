@@ -7,8 +7,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 
 public class VnExpressDao {
+	//DELETE FROM `comment`; DELETE FROM `article`;
 
 	protected Connection conn = null;
 	private static VnExpressDao _theInstance = null;
@@ -76,6 +78,24 @@ public class VnExpressDao {
 		return total;
 	}
 	
+	
+	public Article getArticleByPath(String path) throws Exception {
+		String sql = "SELECT ID,Title,Lead,PostBy,Date,Modified,Path FROM vnemobile.subject0 WHERE subject0.Path = ?";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setString(1, path);		
+		
+		ResultSet resultSet = ps.executeQuery();
+		Article article = null;
+		while (resultSet.next()) {
+			article = new Article(resultSet.getString("ID"), resultSet.getString("Title"), resultSet.getString("Lead"),resultSet.getString("Path"),0,resultSet.getDate("Date"),resultSet.getDate("Modified"));
+			break;
+		}
+		
+		ps.close();
+		resultSet.close();		
+		return article;
+	}
+	
 	public ResultSet getSubjectPath(int begin, int total) throws Exception {
 		String sql = "SELECT ID,Title,Lead,PostBy,Date,Modified,Path FROM vnemobile.subject0 LIMIT ?,? ";
 		PreparedStatement ps = conn.prepareStatement(sql);
@@ -83,18 +103,11 @@ public class VnExpressDao {
 		ps.setInt(2, total);
 		
 		ResultSet rs = ps.executeQuery();
-		//ps.close();
-		//rs.close();		
+		//ps.close();				
 		return rs;
-//		List<String> list = new ArrayList<String>(1000);
-//		while (rs.next()) {
-//			list.add("http://vnexpress.net" + rs.getString("Path"));
-//		}
-//		rs.close();
-//		ps.close();
-//		return list;
 	}
-	public void saveArticle(List<Article> articles) throws SQLException{
+	
+	public void saveArticle(final Queue<Article> articles) throws SQLException{
 		System.out.println("BEGIN SAVE DB COMMENT");
 		conn.setAutoCommit(false);
 		String sql = "INSERT INTO article(article_id,headline, abstract,content,share_url,creation_time,update_time) VALUES(?,?,?,?,?,?,?) ";
@@ -102,7 +115,7 @@ public class VnExpressDao {
 		List<Comment> comments = new ArrayList<Comment>();
 		for(int i=0;i<=10&&i<articles.size();i++){
 			System.out.println("i :" +i);
-			Article article = articles.remove(0);
+			Article article = articles.poll();
 			ps.setString(1, article.getId());
 			ps.setString(2, article.getHeadline());
 			ps.setString(3, article.getAbstractS());
@@ -125,11 +138,11 @@ public class VnExpressDao {
 	public ResultSet getComment(String url) throws Exception {
 		String sql = "SELECT * FROM vnemobile.comment_vne where Link=? order by PublishDate asc";
 		PreparedStatement ps = conn.prepareStatement(sql);
-		ps.setString(1, url);
-		
+		ps.setString(1, url);		
 		ResultSet rs = ps.executeQuery();
 		return rs;
 	}
+	
 	public void saveComment(List<Comment> comments) throws SQLException{
 		System.out.println("BEGIN SAVE DB COMMENT");
 		System.out.println("COMMENT SIZE: " + comments.size());

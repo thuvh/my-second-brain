@@ -26,8 +26,8 @@ public class CrawlerTest {
 			while (!executor.isTerminated()) {
 			}
 			System.out.println("Finished all threads");
-			if(VneCrawler.articles.size()>0)
-				vnExpressDao.saveArticle(VneCrawler.articles);
+			if(VneCrawler.articleQueue.size()>0)
+				vnExpressDao.saveArticle(VneCrawler.articleQueue);
 			vnExpressDao.closeConnection();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
