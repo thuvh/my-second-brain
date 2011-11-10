@@ -16,9 +16,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import jdbm.PrimaryTreeMap;
+import jdbm.RecordManager;
+import jdbm.RecordManagerFactory;
 
 import org.apache.http.protocol.HTTP;
 import org.brain2.ws.core.utils.HttpClientUtil;
@@ -28,8 +33,20 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 public class VnExpressDao {
-	public static final int TIME_TO_SLEEP = 500;
-	private static final int NTHREDS = 10;
+	public static class ImportStatus {
+		public static final int FETCHED = 0;
+		public static final int PARSED_OK = 200;
+		public static final int DEAD_LINK = 404;
+		public static final int SERVER_ERROR = 500;
+	}
+	
+	public static final int TIME_TO_SLEEP = 600;
+	private static final int NTHREDS = 8;
+	public static int SAMPLE_TEST_NUM = 3000;
+	
+	//dblog
+	private final RecordManager linksDBManager;
+	private final PrimaryTreeMap<String,Integer> linksDB;
 	
 	final PrintStream print; // declare a print stream object
 	final PrintStream errorPrint; // declare a print stream object
@@ -39,10 +56,20 @@ public class VnExpressDao {
 	private volatile static int workFinished = 0;
 	private volatile static int jobCount = 0;
 	private volatile static int totalJobCount = 0;
-	private volatile List<String> errorLinks = Collections.synchronizedList(new ArrayList<String>());
+	private volatile static int totalJobFailed = 0;
+	private volatile static int totalDieLinks = 0;
+	private volatile List<String> errorLinks = Collections.synchronizedList(new ArrayList<String>(1000));
 
 	public synchronized List<String> getErrorLinks() {
 		return errorLinks;
+	}
+	
+	public synchronized static int getTotalJobFailed() {
+		return totalJobFailed;
+	}
+	
+	public synchronized static int getTotalDieLinks() {
+		return totalDieLinks;
 	}
 
 	protected synchronized static int workFinished() {
@@ -70,15 +97,27 @@ public class VnExpressDao {
 	}
 
 	protected VnExpressDao() throws Exception {
+		/** clear all current database */
+		clearLogDB();
+		
+		/** create (or open existing) database */
+		String fileName = "log/vne_importer";
+		linksDBManager = RecordManagerFactory.createRecordManager(fileName);		
+		
+		/** Creates TreeMap which stores data in database.  
+		 *  Constructor method takes recordName (something like SQL table name)*/
+		String recordName = "vne_importer_log";
+		linksDB = linksDBManager.treeMap(recordName);
+		
 		// Connect print stream to the output stream
 		print = new PrintStream(new FileOutputStream("import-data-log.txt"));
-		errorPrint = new PrintStream(new FileOutputStream(
-				"import-error-log.txt"));
+		errorPrint = new PrintStream(new FileOutputStream("import-error-log.txt"));
 		initConnection();
 	}
 
 	public void closeConnection() {
 		try {
+			linksDBManager.close();
 			print.close();
 			finalize();
 		} catch (Throwable e) {
@@ -152,22 +191,24 @@ public class VnExpressDao {
 	public Runnable httpGetArticle(final String theLink) {
 		Runnable thread = new Runnable() {
 			@Override
-			public void run() {
-				print.println("\n ==> theLink: " + theLink);
+			public void run() {				
 
 				try {
 					String html = HttpClientUtil.executeGet(theLink);
-					if (html.isEmpty()) {
-						throw new IllegalArgumentException("http get fail, empty string");
+					if (html.isEmpty()||html.equals("500")) {
+						totalJobFailed++;
+						print.println(" 500 ### FAIL LINK, => theLink: " + theLink);
+						print.flush();
+						saveLogDB(theLink, ImportStatus.SERVER_ERROR);
+						throw new IllegalArgumentException("http get fail, 500 server error");
 					} else if(html.equals("404")){
-						print.println(" 404 ### skip, workcount = " + VnExpressDao.workFinished());
+						totalDieLinks++;
+						print.println(" 404 ### skip, workcount = " + VnExpressDao.workFinished()+ " => theLink: " + theLink);
 						print.flush();
-						return;
-					} else if(html.equals("500")){
-						print.println(" 500 ### skip, workcount = " + VnExpressDao.workFinished());
-						print.flush();
+						saveLogDB(theLink, ImportStatus.DEAD_LINK);
 						return;
 					}
+					
 					Document doc = Jsoup.parse(html, HTTP.UTF_8);
 					String mainContentNodeId = "#content";
 					String baseURL = "http://vnexpress.net";
@@ -199,7 +240,7 @@ public class VnExpressDao {
 					String titleTxt = "";
 					if (title.size() > 0) {
 						titleTxt = title.get(0).text();
-						print.println("titleTxt: " + titleTxt);
+						//print.println("titleTxt: " + titleTxt);
 					}
 
 					System.out.println(" BEGIN #####################");
@@ -243,7 +284,12 @@ public class VnExpressDao {
 						String text = node.text();
 						System.out.println(" #cpms_content = " + text);
 					}
-					print.println(" END ### workcount = " + VnExpressDao.workFinished());
+					
+					//TODO save DB here
+					
+					
+					saveLogDB(theLink, ImportStatus.PARSED_OK);
+					print.println(" 200 ### workcount = " + VnExpressDao.workFinished()+" => theLink: " + theLink);					
 					print.flush();
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -253,19 +299,17 @@ public class VnExpressDao {
 			}
 		};
 		return thread;
-	}
-
-	
+	}	
 
 	public void masterWorker() throws Exception {
 		final ExecutorService executor = Executors.newFixedThreadPool(NTHREDS);
 		int total = _theInstance.getTotalCount();
-		print.println("total article:" + total);
+		print.println("## total article ## = " + total);
 
 		int mod = total % NTHREDS;
-		print.println(" mod:" + mod);
+		//print.println(" mod:" + mod);
 
-		total = 1000;
+		total = SAMPLE_TEST_NUM;//FIXME
 		int startIndex = 0;
 
 		totalJobCount = total;
@@ -282,8 +326,18 @@ public class VnExpressDao {
 
 		// Wait until all threads are finish
 		while (!executor.isTerminated()) {
+			//wait here
 		}
-		System.out.println("Finished all threads");
+		System.out.println("Finished all jobs");
+		linksDBManager.commit();
+		totalJobFailed =  errorLinks.size();
+		
+		System.out.println(" === total linksDB size: " + linksDB.size());
+		System.out.println(" === total errorLinks size: " + errorLinks.size());
+		
+		checksumAllLinks();		
+		//retry 
+		
 
 		_theInstance.closeConnection();
 	}
@@ -296,14 +350,32 @@ public class VnExpressDao {
 			final VnExpressDao vnExpressDao, final ExecutorService executor) {
 		try {
 			List<String> paths = vnExpressDao.getSubjectPath(start, limit);
-			for (String path : paths) {
-				System.out.println(path);
-				Runnable worker = vnExpressDao.httpGetArticle(path);
+			for (String theLink : paths) {
+				System.out.println("#Fetching: "+theLink);
+				Runnable worker = vnExpressDao.httpGetArticle(theLink);
 				executor.execute(worker);
 				jobCount++;
-				print.println(" #executor count: " + jobCount);
+				saveLogDB(theLink, ImportStatus.FETCHED);
+				//print.println(" #executor count: " + jobCount);
 			}
-			print.println(" #Finished childWorker start: " + start);
+			
+			if(jobCount%100 == 0){
+				linksDBManager.commit();
+			}
+			
+			
+			//try to resume error links
+			List<String> errorLinks = vnExpressDao.getErrorLinks();
+			if(errorLinks.size()>0){
+				for (String link : errorLinks) {
+					totalJobFailed--;
+					Runnable worker = vnExpressDao.httpGetArticle(link);
+					executor.execute(worker);
+					errorLinks.remove(link);
+				}
+				Thread.sleep(TIME_TO_SLEEP);
+			}
+			//print.println(" #Finished childWorker start: " + start);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -338,8 +410,7 @@ public class VnExpressDao {
 			statisticsPrint.println(" === in Minutes: "
 					+ TimeUnit.NANOSECONDS.toMinutes(elapsedTime));
 			statisticsPrint.println("#end-time: "
-					+ (new SimpleDateFormat()).format(new Date()));
-			vnExpressDao.closeConnection();
+					+ (new SimpleDateFormat()).format(new Date()));			
 		} catch (Exception e) {
 			System.err.println("Error in writing to file");
 		} finally {
@@ -393,16 +464,87 @@ public class VnExpressDao {
 
 			// Wait until all threads are finish
 			while (!executor.isTerminated()) {}
-			System.out.println("Finished all threads");
-			vnExpressDao.closeConnection();
+			System.out.println("Finished all threads");			
 			
 		} catch (Exception e) {// Catch exception if any
 			System.err.println("Error: " + e.getMessage());
 		}
 	}
+	
+	protected final synchronized boolean saveLogDB(final String link,final int status) {
+		boolean ok = linksDB.put(link, status) != null;		
+		return ok;
+	}
+	
+	protected void clearLogDB() {
+		File directory = new File("log");		
+		File[] files = directory.listFiles();
+		for (File file : files)
+		{
+		   if (!file.delete())
+		   {
+			   // Failed to delete file
+		       System.out.println("Failed to delete "+file);
+		   }
+		}
+	}
+	
+	protected void checksumAllLinks(){
+		int c1 = 0, c2 =0, c3 =0, c4 =0;
+		Set<String> links = linksDB.keySet();
+		final ExecutorService executor = Executors.newFixedThreadPool(1);
+		for (String link : links) {
+			int status = linksDB.get(link);
+			if(status == ImportStatus.FETCHED){
+				c1++;
+			} else if(status == ImportStatus.PARSED_OK){
+				c2++;
+			} else if(status == ImportStatus.DEAD_LINK){
+				c3++;
+			} else if(status == ImportStatus.SERVER_ERROR){
+				executor.execute(this.httpGetArticle(link));
+				c4++;
+			}			
+		}
+		System.out.println("c1 = "+ c1);
+		System.out.println("c2 = "+ c2);
+		System.out.println("c3 = "+ c3);
+		System.out.println("c4 = "+ c4);
+		
+		executor.shutdown();
+		while(!executor.isTerminated()){}		
+		int total = c2+c3+c4;
+		System.out.println("total = "+ total);
+	}
+	
 
-	public static void main(String[] args) {
-		resumeImportErrorLinks();		
-
+	public static void main(String[] args) throws Exception {
+		
+		final RecordManager linksDBManager;
+		final PrimaryTreeMap<String,Integer> linksDB;
+		
+		/** create (or open existing) database */
+		String fileName = "log/vne_importer";
+		linksDBManager = RecordManagerFactory.createRecordManager(fileName);		
+		
+		/** Creates TreeMap which stores data in database.  
+		 *  Constructor method takes recordName (something like SQL table name)*/
+		String recordName = "vne_importer_log";
+		linksDB = linksDBManager.treeMap(recordName); 
+		
+		int c1 = 0, c2 =0;
+		Set<String> links = linksDB.keySet();
+		for (String link : links) {
+			int status = linksDB.get(link);
+			if(status == 1){
+				c1++;
+			} else if(status == 2){
+				c2++;
+			}
+		}
+		System.out.println("c1 = "+ c1);
+		System.out.println("c2 = "+ c2);
+		int total = c1 + c2;
+		System.out.println("total = "+ total);
 	}
 }

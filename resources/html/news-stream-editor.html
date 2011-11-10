@@ -94,6 +94,14 @@
 			}			
 		}
 		
+		function setTotalDieLinks(c){
+			$('#totalDieLinks').html(c);
+		}
+		
+		function setTotalJobFailed(c){
+			$('#totalJobFailed').html(c);
+		}
+		
 		$(function() {
 			$( "#progressbar" ).progressbar({value: 0 });
 		});
@@ -142,9 +150,14 @@
 		<div id="maincontent" style="width: 75%; position: relative;float: left;">		
 			Statistics: jobCount/totalJobCount <br>	
 			<div id="statistics" style="font-size: 15;font-weight: bold;">
+				totalJobCount: <span id="totalJobCount" >0</span><br>
+				
 				jobCount: <span id="jobCount" >0</span><br>	
 				workFinished: <span id="workFinished" >0</span><br>					
-				totalJobCount: <span id="totalJobCount" >0</span><br>								
+				
+				totalJobFailed: <span id="totalJobFailed" >0</span><br>
+				totalDieLinks: <span id="totalDieLinks" >0</span><br>				
+				
 			</div>
 			<div id="progressbar" style="width:1000px !important;"></div>
 			
