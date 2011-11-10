@@ -11,7 +11,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.brain2.test.dao.VnExpressDao;
+import org.brain2.test.vneappcrawler.VnExpressImporter;
 import org.brain2.ws.core.utils.FileUtils;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
@@ -41,11 +41,11 @@ public class ServiceNodeStarter extends AbstractHandler {
 					
 					writer.print("");
 					Thread.sleep(timeSleep);
-					writer.print("setTotalJobCount("+VnExpressDao.getTotalJobCount()+");");
-					writer.print("setJobCount("+VnExpressDao.getJobCount()+");");
-					writer.print("setWorkFinished("+VnExpressDao.getWorkFinished()+");");
-					writer.print("setTotalJobFailed("+VnExpressDao.getTotalJobFailed()+");");
-					writer.print("setTotalDieLinks("+VnExpressDao.getTotalDieLinks()+");");
+					writer.print("setTotalJobCount("+VnExpressImporter.getTotalJobCount()+");");
+					writer.print("setJobCount("+VnExpressImporter.getJobCount()+");");
+					writer.print("setWorkFinished("+VnExpressImporter.getWorkFinished()+");");
+					writer.print("setTotalJobFailed("+VnExpressImporter.getTotalJobFailed()+");");
+					writer.print("setTotalDieLinks("+VnExpressImporter.getTotalDieLinks()+");");
 					
 				}
 				writer.flush();
