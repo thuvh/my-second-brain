@@ -65,8 +65,8 @@ public class VnExpressDao {
 	 * @return int
 	 * @throws Exception
 	 */
-	public int getTotalCount() throws Exception {
-		String sql = "SELECT count(`ID`) as total FROM `vnemobile`.`subject0`";
+	public int getTotalCount() throws SQLException {
+		String sql = "SELECT count(ID) as total FROM subject0";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		ResultSet rs = ps.executeQuery();
 		int total = 0;
@@ -78,7 +78,7 @@ public class VnExpressDao {
 		return total;
 	}
 	
-	public boolean isExistArticle(Article article) throws Exception {
+	public boolean isExistArticle(Article article) throws SQLException {
 		String sql = "SELECT count(`article_id`) as total FROM article WHERE article_id = ? ";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		ps.setString(1, article.getId());
@@ -93,8 +93,8 @@ public class VnExpressDao {
 	}
 	
 	
-	public Article getArticleByPath(String path) throws Exception {
-		String sql = "SELECT ID,Title,Lead,PostBy,Date,Modified,Path FROM vnemobile.subject0 WHERE subject0.Path = ?";
+	public Article getOldSubjectByPath(String path) throws SQLException {
+		String sql = "SELECT ID,Title,Lead,PostBy,Date,Modified,Path FROM subject0 WHERE subject0.Path = ?";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		ps.setString(1, path);		
 		
@@ -110,8 +110,38 @@ public class VnExpressDao {
 		return article;
 	}
 	
-	public ResultSet getSubjectPath(int begin, int total) throws Exception {
-		String sql = "SELECT ID,Title,Lead,PostBy,Date,Modified,Path FROM vnemobile.subject0 LIMIT ?,? ";
+	public String getOldSubjectIdByPath(String path) throws SQLException {
+		String sql = "SELECT ID FROM subject0 WHERE subject0.Path = ? ";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setString(1, path);		
+		
+		ResultSet resultSet = ps.executeQuery();
+		String id = path;
+		while (resultSet.next()) {			
+			id = resultSet.getString("ID");			
+		}		
+		ps.close();
+		resultSet.close();		
+		return id;
+	}
+	
+	public long getArticleIdByPath(String path) throws SQLException {
+		String sql = "SELECT article_id FROM article WHERE share_url = ?";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setString(1, path);		
+		
+		ResultSet resultSet = ps.executeQuery();
+		long id = 0;
+		while (resultSet.next()) {			
+			id = resultSet.getLong("article_id");			
+		}		
+		ps.close();
+		resultSet.close();		
+		return id;
+	}
+	
+	public ResultSet getSubjectPath(int begin, int total) throws SQLException {
+		String sql = "SELECT ID,Title,Lead,PostBy,Date,Modified,Path FROM subject0 LIMIT ?,? ";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		ps.setInt(1, begin);
 		ps.setInt(2, total);
@@ -121,17 +151,40 @@ public class VnExpressDao {
 		return rs;
 	}
 	
+	public boolean deleteReferDataOfArticle(Article article) throws SQLException{
+		conn.setAutoCommit(false);
+		
+		String sql = "DELETE FROM comment WHERE article_id = ? ";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setString(1, article.getId());
+		ps.execute();	
+		
+		String sql2 = "DELETE FROM object_reference WHERE article_id = ? ";
+		PreparedStatement ps2 = conn.prepareStatement(sql2);
+		ps2.setString(1, article.getId());
+		ps2.execute();			
+		
+		conn.commit();
+		ps.close();
+		ps2.close();
+		return true;
+	}
+	
 	public boolean updateArticle(Article article) throws SQLException{
 		//FIXME
+		deleteReferDataOfArticle(article);
 		System.out.println("UPDATE DB article: "+article.getSharedURL());
 		conn.setAutoCommit(false);
-		String sql = "UPDATE article SET thumbnail_md5 = ?,thumbnail_url = ? WHERE article_id = ? ";
+		String sql = "UPDATE article SET thumbnail_md5 = ?,thumbnail_url = ?,content=?  WHERE article_id = ? ";
 		PreparedStatement ps = conn.prepareStatement(sql);		
 		ps.setString(1, article.getThumbnailMD5());
 		ps.setString(2, article.getThumbnailURL());
-		ps.setString(3, article.getId());
+		ps.setString(3, article.getContent());
+		ps.setString(4, article.getId());
 		boolean rs = ps.execute();			
 		conn.commit();
+		saveComment(new ArrayList<Comment>(article.getComments()));		
+		saveRefObj(article.getRefObj());
 		return rs;
 	}
 	
@@ -139,8 +192,7 @@ public class VnExpressDao {
 		System.out.println("SAVE DB article: "+article.getSharedURL());
 		conn.setAutoCommit(false);
 		String sql = "INSERT INTO article(article_id,headline, abstract,content,is_delete,share_url,thumbnail_md5,thumbnail_url,creation_time,update_time) VALUES(?,?,?,?,?,?,?,?,?,?) ";
-		PreparedStatement ps = conn.prepareStatement(sql);
-		List<Comment> comments = new ArrayList<Comment>(article.getComments());			
+		PreparedStatement ps = conn.prepareStatement(sql);			
 		ps.setString(1, article.getId());
 		ps.setString(2, article.getHeadline());
 		ps.setString(3, article.getAbstractS());
@@ -153,7 +205,7 @@ public class VnExpressDao {
 		ps.setLong(10, article.getUpdateDate()!=null ? article.getUpdateDate().getTime():0);
 		boolean rs = ps.execute();			
 		conn.commit();		
-		saveComment(comments);		
+		saveComment(new ArrayList<Comment>(article.getComments()));		
 		saveRefObj(article.getRefObj());
 		return rs;
 	}
@@ -189,8 +241,8 @@ public class VnExpressDao {
 		//conn.setAutoCommit(true);
 		System.out.println("END SAVE DB ARTICLE");
 	}
-	public ResultSet getComment(String url) throws Exception {
-		String sql = "SELECT * FROM vnemobile.comment_vne where Link=? order by PublishDate asc";
+	public ResultSet getComment(String url) throws SQLException {
+		String sql = "SELECT * FROM comment_vne where Link=? order by PublishDate asc";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		ps.setString(1, url);		
 		ResultSet rs = ps.executeQuery();
@@ -236,7 +288,16 @@ public class VnExpressDao {
 			ReferenceObject obj = objs.get(i);
 			ps.setString(1, obj.getArticleID());
 			ps.setString(2, obj.getMd5());
-			ps.setString(3, obj.getUrl());
+			
+			
+			String url = obj.getUrl();
+			
+			if(url.startsWith("/gl/")){	
+				ps.setString(3, getOldSubjectIdByPath(url) );
+			} else {
+				ps.setString(3, url);	
+			}
+			
 			ps.setString(4, obj.getCredit());
 			ps.setString(5, obj.getCaption());
 			ps.setInt(6, obj.getType().index());

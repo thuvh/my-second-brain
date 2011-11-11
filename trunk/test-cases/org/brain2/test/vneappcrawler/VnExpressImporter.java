@@ -23,7 +23,7 @@ public class VnExpressImporter {
 	
 	public static final int TIME_TO_SLEEP = 650;
 	private static final int NTHREDS = 5;
-	public static int SAMPLE_TEST_NUM = 1000;
+	public static int SAMPLE_TEST_NUM = 200;
 	public static boolean CLEAN_LOG_DB = true;
 	
 	//dblog
@@ -33,14 +33,14 @@ public class VnExpressImporter {
 	final PrintStream print; // declare a print stream object
 	final PrintStream errorPrint; // declare a print stream object
 	
-	private static boolean isWorking = false;
+	
 	private volatile static VnExpressImporter _theInstance = null;
 	private volatile static VnExpressDao _vnExpressDao = null;
 	
+	private volatile static boolean isWorking = false;
 	private volatile static int workFinished = 0;
 	private volatile static int jobCount = 0;
-	private volatile static int totalJobCount = 0;
-	private volatile static int totalJobFailed = 0;
+	private volatile static int totalJobCount = 0;	
 	private volatile static int totalDieLinks = 0;
 	private volatile static Queue<String> errorLinks = new ConcurrentLinkedQueue<String>();
 	
@@ -50,11 +50,15 @@ public class VnExpressImporter {
 	}
 	
 	public synchronized static int getTotalJobFailed() {
-		return totalJobFailed;
+		return errorLinks.size();
 	}
 	
 	public synchronized static int getTotalDieLinks() {
 		return totalDieLinks;
+	}
+	
+	public synchronized static boolean isWorking() {
+		return isWorking;
 	}
 
 	protected synchronized static int workFinished() {
@@ -132,8 +136,7 @@ public class VnExpressImporter {
 
 				try {
 					String html = HttpClientUtil.executeGet("http://vnexpress.net"+theLink);
-					if (html.isEmpty()||html.equals("500")) {
-						totalJobFailed++;
+					if (html.isEmpty()||html.equals("500")) {						
 						print.println(" 500 ### FAIL LINK, => theLink: " + theLink);
 						print.flush();
 						saveLogDB(theLink, ImportStatus.SERVER_ERROR);
@@ -152,12 +155,16 @@ public class VnExpressImporter {
 					
 					Article newArticle = VnExpressParser.parseHtmlToArticle(theLink, html, oldArticle, _vnExpressDao);
 					if( ! _vnExpressDao.isExistArticle(newArticle)){
-						_vnExpressDao.saveArticle(newArticle);						
+						_vnExpressDao.saveArticle(newArticle);
+						saveLogDB(theLink, ImportStatus.SAVED_OK);
 					} else {
 						_vnExpressDao.updateArticle(newArticle);						
 						System.out.println(" => theLink: " + theLink + " isExistArticle = true");
+						saveLogDB(theLink, ImportStatus.UPDATE_OK);
 					}
-					saveLogDB(theLink, ImportStatus.SAVED_OK);
+					if(newArticle.isGeneralParsed()){
+						saveLogDB(theLink, ImportStatus.UNCOMPLETE_PARSED);	
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 					errorPrint.println(theLink + " @@@ " + e.getMessage());
@@ -177,8 +184,8 @@ public class VnExpressImporter {
 		//print.println(" mod:" + mod);
 
 		//FIXME
-		totalJobCount = total - SAMPLE_TEST_NUM;
-		int startIndex = totalJobCount;
+		totalJobCount = SAMPLE_TEST_NUM;
+		int startIndex = total - SAMPLE_TEST_NUM;
 				
 		while (getJobCount() < SAMPLE_TEST_NUM) {
 			allowWorkersToPool(startIndex, NTHREDS, _theInstance, executor);
@@ -196,8 +203,7 @@ public class VnExpressImporter {
 			//wait here
 		}
 		System.out.println("Finished all jobs");
-		linksDBManager.commit();
-		totalJobFailed =  errorLinks.size();
+		linksDBManager.commit();		
 		
 		System.out.println(" === total linksDB size: " + linksDB.size());
 		System.out.println(" === total errorLinks size: " + errorLinks.size());
@@ -238,9 +244,8 @@ public class VnExpressImporter {
 			//try to resume error links
 			final Queue<String> errorLinks = this.getErrorLinks();
 			if(errorLinks.size()>0){
-				for (String theLink : errorLinks) {
-					totalJobFailed--;
-					Article article = _vnExpressDao.getArticleByPath(theLink);
+				for (String theLink : errorLinks) {					
+					Article article = _vnExpressDao.getOldSubjectByPath(theLink);
 					Runnable worker = this.processArticle(theLink,article);
 					executor.execute(worker);
 					errorLinks.remove(theLink);
@@ -319,7 +324,7 @@ public class VnExpressImporter {
 			} else if(status == ImportStatus.DEAD_LINK){
 				c3++;
 			} else if(status == ImportStatus.SERVER_ERROR){
-				Article article = _vnExpressDao.getArticleByPath(link);
+				Article article = _vnExpressDao.getOldSubjectByPath(link);
 				if(article != null){
 					executor.execute(this.processArticle(link, article));
 				}
@@ -343,6 +348,7 @@ public class VnExpressImporter {
 	public static void main(String[] args) throws Exception {
 		VnExpressImporter.CLEAN_LOG_DB = false;
 		VnExpressImporter.getInstance().checksumAllLinks();
+		System.out.println(VnExpressImporter.isWorking());
 	}
 	
 }

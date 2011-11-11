@@ -18,6 +18,9 @@ public class Article {
 	private String thumbnailURL;
 	private List<Comment> comments=new ArrayList<Comment>();
 	private List<ReferenceObject> refObj=new ArrayList<ReferenceObject>();
+	
+	private boolean generalParsed = false;
+	
 	public Article() {
 		super();
 	}
@@ -125,7 +128,14 @@ public class Article {
 	public void addRefObj(ReferenceObject obj){
 		this.refObj.add(obj);
 	}
-	
+
+	public boolean isGeneralParsed() {
+		return generalParsed;
+	}
+
+	public void setGeneralParsed(boolean generalParsed) {
+		this.generalParsed = generalParsed;
+	}
 	
 
 }

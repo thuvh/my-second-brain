@@ -34,12 +34,16 @@
 			totalJobCount = c;
 		}
 		
+		var jobCount = 0;
 		function setJobCount(c){
 			$('#jobCount').html(c);
+			jobCount = c;
 		}
 		
+		var workFinished = 0;
 		function setWorkFinished(c){
 			$('#workFinished').html(c);
+			workFinished = c;
 			if(totalJobCount > 0){
 				var percent = (c * 100)/totalJobCount;
 				$( "#progressbar" ).progressbar({value: percent });	
@@ -51,11 +55,11 @@
 				 if($('#jobCount').html() == $('#totalJobCount').html()){
 					 $("#statistics").append('<div><h1>All Jobs Done!</h1></div>');
 					 
-					 var checkErrorLink = function(){						 
-						 if($('#workFinished').html() == $('#totalJobCount').html()){
+					 var checkErrorLink = function(){			
+						 var errNum = parseInt($('#totalJobFailed').html(),10);
+						 if(errNum === 0){
 							 $("#statistics").append('<div><h1>No error link!</h1></div>');
-						 } else {
-							 var errNum = totalJobCount - parseInt($('#workFinished').html(),10);
+						 } else {							
 							 $("#statistics").append('<div><h1>'+ errNum +' error links, <a href="#" onclick="startResumeErrorLinks()">Resume ?</a> </h1></div>');							 
 						 }
 						 isWorking = false;
@@ -155,7 +159,7 @@
 				jobCount: <span id="jobCount" >0</span><br>	
 				workFinished: <span id="workFinished" >0</span><br>					
 				
-				totalJobFailed: <span id="totalJobFailed" >0</span><br>
+				totalJobFailed(the number of jobs in resume queue): <span id="totalJobFailed" >0</span><br>
 				totalDieLinks: <span id="totalDieLinks" >0</span><br>				
 				
 			</div>

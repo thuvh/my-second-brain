@@ -21,7 +21,7 @@ public class VnExpressDaoJUnit {
 	@Test
 	public void testDate() {
 		try {
-			Article article = _vnExpressDao.getArticleByPath("/gl/suc-khoe/2011/10/tim-ra-thu-pham-khien-co-gai-26-tuoi-hoa-ba-lao");
+			Article article = _vnExpressDao.getOldSubjectByPath("/gl/suc-khoe/2011/10/tim-ra-thu-pham-khien-co-gai-26-tuoi-hoa-ba-lao");
 			
 			SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd");
 			
