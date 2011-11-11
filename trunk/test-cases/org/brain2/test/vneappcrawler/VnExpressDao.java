@@ -38,7 +38,7 @@ public class VnExpressDao {
 	protected Connection initConnection() throws Exception {
 		String userName = "vnemobile";
 		String password = "vnemobile@123";
-		String url = "jdbc:mysql://10.254.53.216/vnemobile2";
+		String url = "jdbc:mysql://10.254.53.216/vnemobile";
 		Class.forName("com.mysql.jdbc.Driver").newInstance();
 		this.conn = DriverManager.getConnection(url, userName, password);
 		System.out.println("Database connection established");
