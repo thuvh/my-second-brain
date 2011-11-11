@@ -292,7 +292,10 @@ public class VnExpressDao {
 			
 			String url = obj.getUrl();
 			
-			if(url.startsWith("/gl/")){	
+			if(url.startsWith("/gl/")){						
+				if(url.endsWith("/")){
+					url = url.substring(0, url.lastIndexOf("/") - 1);
+				}
 				ps.setString(3, getOldSubjectIdByPath(url) );
 			} else {
 				ps.setString(3, url);	

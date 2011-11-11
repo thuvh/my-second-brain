@@ -23,7 +23,7 @@ public class VnExpressImporter {
 	
 	public static final int TIME_TO_SLEEP = 650;
 	private static final int NTHREDS = 5;
-	public static int SAMPLE_TEST_NUM = 200;
+	public static int SAMPLE_TEST_NUM = 2000;
 	public static boolean CLEAN_LOG_DB = true;
 	
 	//dblog
@@ -312,7 +312,7 @@ public class VnExpressImporter {
 	}
 	
 	protected void checksumAllLinks() throws Exception{
-		int c1 = 0, c2 =0, c3 =0, c4 =0,c5 =0;
+		int c1 = 0, c2 =0, c3 =0, c4 =0,c5 =0,c6=0;
 		Set<String> links = linksDB.keySet();
 		final ExecutorService executor = Executors.newFixedThreadPool(1);
 		for (String link : links) {
@@ -326,11 +326,13 @@ public class VnExpressImporter {
 			} else if(status == ImportStatus.SERVER_ERROR){
 				Article article = _vnExpressDao.getOldSubjectByPath(link);
 				if(article != null){
-					executor.execute(this.processArticle(link, article));
+					//executor.execute(this.processArticle(link, article));
 				}
 				c4++;
 			} else if(status == ImportStatus.SAVED_OK){
 				c5++;
+			} else if(status == ImportStatus.UNCOMPLETE_PARSED){
+				c6++;
 			}
 		}
 		System.out.println("FETCHED = "+ c1);
@@ -338,10 +340,11 @@ public class VnExpressImporter {
 		System.out.println("DEAD_LINK = "+ c3);
 		System.out.println("SERVER_ERROR = "+ c4);
 		System.out.println("SAVED_OK = "+ c5);
+		System.out.println("UNCOMPLETE_PARSED = "+ c6);
 		
 		executor.shutdown();
 		while(!executor.isTerminated()){}		
-		int total = c2+c3+c4;
+		int total = c2+c3+c4+c5+c6;
 		System.out.println("total = "+ total);
 	}
 	
