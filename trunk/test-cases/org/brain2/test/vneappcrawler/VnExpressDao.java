@@ -78,6 +78,20 @@ public class VnExpressDao {
 		return total;
 	}
 	
+	public boolean isExistArticle(Article article) throws Exception {
+		String sql = "SELECT count(`article_id`) as total FROM article WHERE article_id = ? ";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setString(1, article.getId());
+		ResultSet rs = ps.executeQuery();
+		int total = 0;
+		while (rs.next()) {
+			total = rs.getInt("total");
+		}
+		rs.close();
+		ps.close();
+		return total == 1;
+	}
+	
 	
 	public Article getArticleByPath(String path) throws Exception {
 		String sql = "SELECT ID,Title,Lead,PostBy,Date,Modified,Path FROM vnemobile.subject0 WHERE subject0.Path = ?";
@@ -107,8 +121,22 @@ public class VnExpressDao {
 		return rs;
 	}
 	
+	public boolean updateArticle(Article article) throws SQLException{
+		//FIXME
+		System.out.println("UPDATE DB article: "+article.getSharedURL());
+		conn.setAutoCommit(false);
+		String sql = "UPDATE article SET thumbnail_md5 = ?,thumbnail_url = ? WHERE article_id = ? ";
+		PreparedStatement ps = conn.prepareStatement(sql);		
+		ps.setString(1, article.getThumbnailMD5());
+		ps.setString(2, article.getThumbnailURL());
+		ps.setString(3, article.getId());
+		boolean rs = ps.execute();			
+		conn.commit();
+		return rs;
+	}
+	
 	public boolean saveArticle(Article article) throws SQLException{
-		System.out.println("SAVE DB article"+article.getSharedURL());
+		System.out.println("SAVE DB article: "+article.getSharedURL());
 		conn.setAutoCommit(false);
 		String sql = "INSERT INTO article(article_id,headline, abstract,content,is_delete,share_url,thumbnail_md5,thumbnail_url,creation_time,update_time) VALUES(?,?,?,?,?,?,?,?,?,?) ";
 		PreparedStatement ps = conn.prepareStatement(sql);
