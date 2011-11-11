@@ -14,6 +14,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
 
+import de.l3s.boilerpipe.extractors.ArticleExtractor;
+
 public class VnExpressParser {
 	public static Article parseHtmlToArticle(String theLink, String html,
 			Article article, VnExpressDao _vnExpressDao) throws Exception {
@@ -77,15 +79,16 @@ public class VnExpressParser {
 						obj.setArticleID(article.getId());
 						obj.setType(ReferenceType.IMG);
 						obj.setUpdateTime(new Date());
-						String src = imgs.get(0).attr("src");
+						String src = img.attr("src");
 						obj.setUrl(src);
 						obj.setMd5(StringUtil.md5(src));
 						Elements parents = img.parents();
-						if(parents != null && parents.size()>=3 &&
-								"table".equalsIgnoreCase(parents.get(3).nodeName())){
+						if(parents.size()>=3 &&	"table".equalsIgnoreCase(parents.get(3).nodeName())){
 							Element parentTable= parents.get(3);
 							obj.setCaption(parentTable.select(".Image").text());
-							parentTable.remove();
+							if(parentTable != null){
+								parentTable.remove();
+							}
 						}else{
 							img.remove();
 						}
@@ -174,7 +177,7 @@ public class VnExpressParser {
 				/**
 				 * Get thumbnail 
 				 */
-				String thumbnailPage = HttpClientUtil.executeGet(theLink + "/page_1.asp");
+				String thumbnailPage = HttpClientUtil.executeGet( "http://vnexpress.net"+ theLink + "/page_1.asp");
 				if(!thumbnailPage.isEmpty()){
 					Elements cpmsThumbnailPage = Jsoup.parse(thumbnailPage).select("div[cpms_content=true]");
 					if(cpmsThumbnailPage !=null && cpmsThumbnailPage.size()>0){
@@ -241,6 +244,11 @@ public class VnExpressParser {
 			} else {
 				System.out.println("NO CMPS " + theLink);
 			}
+		} else {
+			String text = ArticleExtractor.INSTANCE.getText(html);
+			//doc.select("img")
+			article.setContent(text);
+			article.setGeneralParsed(true);
 		}
 		return article;
 	}

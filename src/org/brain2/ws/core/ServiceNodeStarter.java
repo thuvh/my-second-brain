@@ -46,7 +46,7 @@ public class ServiceNodeStarter extends AbstractHandler {
 					writer.print("setWorkFinished("+VnExpressImporter.getWorkFinished()+");");
 					writer.print("setTotalJobFailed("+VnExpressImporter.getTotalJobFailed()+");");
 					writer.print("setTotalDieLinks("+VnExpressImporter.getTotalDieLinks()+");");
-					
+					writer.print("window.isWorking = "+VnExpressImporter.isWorking() + " ;");
 				}
 				writer.flush();
 			} catch (Exception e) {				
