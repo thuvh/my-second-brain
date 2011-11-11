@@ -14,8 +14,10 @@ public class Article {
 	private Date creationDate;
 	private Date updateDate;
 	private String sharedURL;
+	private String thumbnailMD5;
+	private String thumbnailURL;
 	private List<Comment> comments=new ArrayList<Comment>();
-	
+	private List<ReferenceObject> refObj=new ArrayList<ReferenceObject>();
 	public Article() {
 		super();
 	}
@@ -39,6 +41,21 @@ public class Article {
 
 	public void setSharedURL(String sharedURL) {
 		this.sharedURL = sharedURL;
+	}
+	public String getThumbnailMD5() {
+		return thumbnailMD5;
+	}
+
+	public void setThumbnailMD5(String thumbnailMD5) {
+		this.thumbnailMD5 = thumbnailMD5;
+	}
+
+	public String getThumbnailURL() {
+		return thumbnailURL;
+	}
+
+	public void setThumbnailURL(String thumbnailURL) {
+		this.thumbnailURL = thumbnailURL;
 	}
 
 	public List<Comment> getComments() {
@@ -96,6 +113,17 @@ public class Article {
 	}
 	public void setUpdateDate(Date updateDate) {
 		this.updateDate = updateDate;
+	}
+
+	public List<ReferenceObject> getRefObj() {
+		return refObj;
+	}
+
+	public void setRefObj(List<ReferenceObject> refObj) {
+		this.refObj = refObj;
+	}
+	public void addRefObj(ReferenceObject obj){
+		this.refObj.add(obj);
 	}
 	
 	

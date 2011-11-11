@@ -172,9 +172,8 @@ public class VnExpressImporter {
 		//FIXME
 		totalJobCount = total - SAMPLE_TEST_NUM;
 		int startIndex = totalJobCount;
-		
-		int limit = total+NTHREDS;
-		while (startIndex <= limit) {
+				
+		while (getJobCount() < SAMPLE_TEST_NUM) {
 			allowWorkersToPool(startIndex, NTHREDS, _theInstance, executor);
 			startIndex += NTHREDS;
 			System.out.println("sleeping zzz ...");
