@@ -23,7 +23,8 @@ public class VnExpressImporter {
 	
 	public static final int TIME_TO_SLEEP = 650;
 	private static final int NTHREDS = 5;
-	public static int SAMPLE_TEST_NUM = 10000;
+	public static int SAMPLE_TEST_NUM = 1000;
+	public static boolean CLEAN_LOG_DB = true;
 	
 	//dblog
 	private final RecordManager linksDBManager;
@@ -85,8 +86,10 @@ public class VnExpressImporter {
 			_vnExpressDao = VnExpressDao.getInstance();
 		}
 		
-		/** clear all current database */
-		clearLogDB();
+		if(CLEAN_LOG_DB){
+			/** clear all current database */
+			clearLogDB();
+		}
 		
 		/** create (or open existing) database */
 		String fileName = "log/vne_importer";
@@ -148,9 +151,13 @@ public class VnExpressImporter {
 					print.flush();
 					
 					Article newArticle = VnExpressParser.parseHtmlToArticle(theLink, html, oldArticle, _vnExpressDao);
-					if(_vnExpressDao.saveArticle(newArticle)){
-						saveLogDB(theLink, ImportStatus.SAVED_OK);
+					if( ! _vnExpressDao.isExistArticle(newArticle)){
+						_vnExpressDao.saveArticle(newArticle);						
+					} else {
+						_vnExpressDao.updateArticle(newArticle);						
+						System.out.println(" => theLink: " + theLink + " isExistArticle = true");
 					}
+					saveLogDB(theLink, ImportStatus.SAVED_OK);
 				} catch (Exception e) {
 					e.printStackTrace();
 					errorPrint.println(theLink + " @@@ " + e.getMessage());
@@ -331,6 +338,11 @@ public class VnExpressImporter {
 		while(!executor.isTerminated()){}		
 		int total = c2+c3+c4;
 		System.out.println("total = "+ total);
+	}
+	
+	public static void main(String[] args) throws Exception {
+		VnExpressImporter.CLEAN_LOG_DB = false;
+		VnExpressImporter.getInstance().checksumAllLinks();
 	}
 	
 }

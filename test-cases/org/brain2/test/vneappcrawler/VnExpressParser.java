@@ -55,7 +55,6 @@ public class VnExpressParser {
 						String href =  ele.attr("href");
 						ReferenceObject obj = new ReferenceObject(article.getId(), StringUtil.md5(href),href.replaceAll("http://vnexpress.net", ""), ReferenceType.RELATED_LINK, new Date());
 						article.addRefObj(obj);
-						System.out.println("# href: "+ href);
 					}
 				}
 				
@@ -70,42 +69,57 @@ public class VnExpressParser {
 				 * Extract content
 				 */
 				// Images
-				Elements _images = cpms.select("img");
-
-				if (_images.size() > 0) {
-					cpms.select("img").parents().get(2).remove();
+				Elements imgs = cpms.select("img");
+				if(imgs != null && imgs.size()>0){
+					System.out.println("IMGS SIZE"+imgs.size());
+					for(Element img : imgs){
+						ReferenceObject obj = new ReferenceObject();
+						obj.setArticleID(article.getId());
+						obj.setType(ReferenceType.IMG);
+						obj.setUpdateTime(new Date());
+						String src = imgs.get(0).attr("src");
+						obj.setUrl(src);
+						obj.setMd5(StringUtil.md5(src));
+						Elements parents = img.parents();
+						if(parents != null && parents.size()>=3 &&
+								"table".equalsIgnoreCase(parents.get(3).nodeName())){
+							Element parentTable= parents.get(3);
+							obj.setCaption(parentTable.select(".Image").text());
+							parentTable.remove();
+						}else{
+							img.remove();
+						}
+						article.addRefObj(obj);
+					}
 				}
+				/**
+				 * remove * Clip + video link
+				 */
 				Elements tables = cpms.select("table");
 				if(tables != null && tables.size()>0){
 					for(Element table : tables){
-						Elements imgs = table.select("img");
 						boolean remove=false;
-						if(imgs != null && imgs.size()>0){
-							ReferenceObject obj = new ReferenceObject();
-							obj.setArticleID(article.getId());
-							obj.setType(ReferenceType.IMG);
-							obj.setUpdateTime(new Date());
-							String src = imgs.get(0).attr("src");
-							obj.setUrl(src);
-							obj.setMd5(StringUtil.md5(src));
-							obj.setCaption(table.select(".Image").text());
-							article.addRefObj(obj);
+						System.out.println("TableHHHHHH :"+table.html());
+						
+						Elements videos = table.select("a[href$=page_2.asp]");
+						if(videos != null && videos.size()>0){
 							remove = true;
 						}
-//						Elements videos = table.select("a[href=*page_2.asp]");
-//						if(videos != null && videos.size()>0){
-//							ReferenceObject obj = new ReferenceObject();
-//							obj.setArticleID(article.getId());
-//							obj.setType(ReferenceType.IMG);
-//							obj.setUpdateTime(new Date());
-//							String src = imgs.get(0).attr("src");
-//							obj.setUrl(src);
-//							obj.setMd5(StringUtil.md5(src));
-//							obj.setCaption(table.select(".Image").text());
-//							article.addRefObj(obj);
-//						}
+						
 						if(remove)
 							table.remove();
+					}
+				}
+				/**
+				 * Remove Tai Day
+				 */
+				Elements contactLink = cpms.select("a[href$=/ContactUs/?id=cuoi@vnexpress.net]");
+				if(contactLink !=null && contactLink.size()>0){
+					Element pEle = contactLink.get(0).parent();
+					if(pEle !=null){
+						pEle.remove();
+					}else{
+						contactLink.remove();
 					}
 				}
 				/**
@@ -126,13 +140,14 @@ public class VnExpressParser {
 				 */
 				Elements tdskTopicTitle = content.select("a.TopicTitle");
 				Elements tdskOther = content.select("a.Other");
-				
+				tdskTopicTitle.remove();
+				tdskOther.remove();
 				
 				cpms.select("a[class!=Normal]").remove();
 
-//				for (Element p : cpms.select("p")) {
-//					p.html(Jsoup.parse(p.html()).text());
-//				}
+				for (Element p : cpms.select("p")) {
+					p.html(Jsoup.parse(p.html()).text());
+				}
 				Whitelist whiteList = new Whitelist();
 				whiteList.addTags("p");
 				String newContent = Jsoup.clean(cpms.html(), whiteList);
@@ -159,17 +174,17 @@ public class VnExpressParser {
 				/**
 				 * Get thumbnail 
 				 */
-				String thumbnailPage = HttpClientUtil.executeGet("http://vnexpress.net" + theLink + "/page_1.asp");
+				String thumbnailPage = HttpClientUtil.executeGet(theLink + "/page_1.asp");
 				if(!thumbnailPage.isEmpty()){
 					Elements cpmsThumbnailPage = Jsoup.parse(thumbnailPage).select("div[cpms_content=true]");
 					if(cpmsThumbnailPage !=null && cpmsThumbnailPage.size()>0){
-						Elements imgs = cpmsThumbnailPage.get(0).select("img");
-						if(imgs.size()==2){
-							String urlThumbnail = imgs.get(1).attr("src");
+						Elements thumbs = cpmsThumbnailPage.get(0).select("img");
+						if(thumbs.size()>=2){
+							String urlThumbnail = thumbs.get(1).attr("src");
 							article.setThumbnailURL(urlThumbnail);
 							article.setThumbnailMD5(StringUtil.md5(urlThumbnail));
-						} else if(imgs.size()==1){
-							String urlThumbnail = imgs.get(0).attr("src");
+						} else if(thumbs.size()>=1){
+							String urlThumbnail = thumbs.get(0).attr("src");
 							article.setThumbnailURL(urlThumbnail);
 							article.setThumbnailMD5(StringUtil.md5(urlThumbnail));
 						}
@@ -232,15 +247,15 @@ public class VnExpressParser {
 	
 	public static void main(String[] args) throws Exception {
 		///gl/xa-hoi/2011/11/un-xe-keo-xe-3-km-tren-tinh-lo : test thumbnail
-		String theLink= "/gl/xa-hoi/nhip-dieu-tre/2011/11/nu-cu-nhan-luat-tuong-lai-khoe-net-duyen/";
-//		String theLink= "/gl/cuoi/2011/11/ai-la-nan-nhan";
+//		String theLink= "/gl/cuoi/2011/06/bi-kip-tro-thanh-trieu-phu/";
+		String theLink= "/gl/cuoi/2011/11/ai-la-nan-nhan";
 		String html = HttpClientUtil.executeGet("http://vnexpress.net"+theLink);
-		System.out.println("html"+html);
+//		System.out.println("html"+html);
 		VnExpressDao _vnExpressDao = VnExpressDao.getInstance();
 //		Article article = _vnExpressDao.getArticleByPath(theLink);
 		Article article =new Article();
 		article.setId("1");
-		article.setSharedURL("/gl/xa-hoi/nhip-dieu-tre/2011/11/nu-cu-nhan-luat-tuong-lai-khoe-net-duyen/");
+		article.setSharedURL("/gl/cuoi/2011/06/bi-kip-tro-thanh-trieu-phu/");
 		VnExpressParser.parseHtmlToArticle("http://vnexpress.net"+theLink, html, article, _vnExpressDao);
 		_vnExpressDao.saveArticle(article);
 	}
