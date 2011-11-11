@@ -55,7 +55,7 @@ public class VnExpressParser {
 						String href =  ele.attr("href");
 						ReferenceObject obj = new ReferenceObject(article.getId(), StringUtil.md5(href),href.replaceAll("http://vnexpress.net", ""), ReferenceType.RELATED_LINK, new Date());
 						article.addRefObj(obj);
-						System.out.println("OOOOO"+ href);
+						System.out.println("# href: "+ href);
 					}
 				}
 				
@@ -159,13 +159,20 @@ public class VnExpressParser {
 				/**
 				 * Get thumbnail 
 				 */
-				String thumbnailPage = HttpClientUtil.executeGet(theLink + "/page_1.asp");
+				String thumbnailPage = HttpClientUtil.executeGet("http://vnexpress.net" + theLink + "/page_1.asp");
 				if(!thumbnailPage.isEmpty()){
 					Elements cpmsThumbnailPage = Jsoup.parse(thumbnailPage).select("div[cpms_content=true]");
 					if(cpmsThumbnailPage !=null && cpmsThumbnailPage.size()>0){
-						String urlThumbnail = cpmsThumbnailPage.get(0).select("img").get(1).attr("src");
-						article.setThumbnailURL(urlThumbnail);
-						article.setThumbnailMD5(StringUtil.md5(urlThumbnail));
+						Elements imgs = cpmsThumbnailPage.get(0).select("img");
+						if(imgs.size()==2){
+							String urlThumbnail = imgs.get(1).attr("src");
+							article.setThumbnailURL(urlThumbnail);
+							article.setThumbnailMD5(StringUtil.md5(urlThumbnail));
+						} else if(imgs.size()==1){
+							String urlThumbnail = imgs.get(0).attr("src");
+							article.setThumbnailURL(urlThumbnail);
+							article.setThumbnailMD5(StringUtil.md5(urlThumbnail));
+						}
 					}
 				}
 				/**

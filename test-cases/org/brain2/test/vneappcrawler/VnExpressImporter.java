@@ -21,9 +21,9 @@ import org.brain2.ws.core.utils.HttpClientUtil;
 
 public class VnExpressImporter {
 	
-	public static final int TIME_TO_SLEEP = 600;
+	public static final int TIME_TO_SLEEP = 650;
 	private static final int NTHREDS = 5;
-	public static int SAMPLE_TEST_NUM = 1000;
+	public static int SAMPLE_TEST_NUM = 10000;
 	
 	//dblog
 	private final RecordManager linksDBManager;
