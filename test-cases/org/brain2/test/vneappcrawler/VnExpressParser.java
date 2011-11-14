@@ -9,6 +9,7 @@ import org.apache.http.protocol.HTTP;
 import org.brain2.test.vneappcrawler.ReferenceObject.ReferenceType;
 import org.brain2.ws.core.utils.HttpClientUtil;
 import org.jsoup.Jsoup;
+import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.safety.Whitelist;
@@ -66,6 +67,8 @@ public class VnExpressParser {
 				 */
 				cpms.select(".Title").remove();
 				cpms.select(".Lead").remove();
+				
+				
 
 				/**
 				 * Extract content
@@ -75,24 +78,29 @@ public class VnExpressParser {
 				if(imgs != null && imgs.size()>0){
 					System.out.println("IMGS SIZE"+imgs.size());
 					for(Element img : imgs){
-						ReferenceObject obj = new ReferenceObject();
-						obj.setArticleID(article.getId());
-						obj.setType(ReferenceType.IMG);
-						obj.setUpdateTime(new Date());
-						String src = img.attr("src");
-						obj.setUrl(src);
-						obj.setMd5(StringUtil.md5(src));
-						Elements parents = img.parents();
-						if(parents.size()>=3 &&	"table".equalsIgnoreCase(parents.get(3).nodeName())){
-							Element parentTable= parents.get(3);
-							obj.setCaption(parentTable.select(".Image").text());
-							if(parentTable != null){
-								parentTable.remove();
+						try {
+							ReferenceObject obj = new ReferenceObject();
+							obj.setArticleID(article.getId());
+							obj.setType(ReferenceType.IMG);
+							obj.setUpdateTime(new Date());
+							String src = img.attr("src");
+							obj.setUrl(src);
+							obj.setMd5(StringUtil.md5(src));
+							Elements parents = img.parents();
+							if(parents.size()>=3 &&	"table".equalsIgnoreCase(parents.get(3).nodeName())){
+								Element parentTable= parents.get(3);
+								obj.setCaption(parentTable.select(".Image").text());
+								if(parentTable != null){
+									Validate.notNull(parentTable);
+									parentTable.remove();
+								}
+							}else{
+								img.remove();
 							}
-						}else{
-							img.remove();
+							article.addRefObj(obj);
+						} catch (java.lang.IllegalArgumentException e) {
+							// TODO: handle exception
 						}
-						article.addRefObj(obj);
 					}
 				}
 				/**

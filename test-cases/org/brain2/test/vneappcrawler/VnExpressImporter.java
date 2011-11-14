@@ -186,7 +186,7 @@ public class VnExpressImporter {
 		//FIXME
 		totalJobCount = SAMPLE_TEST_NUM;
 		int startIndex = total - SAMPLE_TEST_NUM;
-				
+		startIndex = 400000;		
 		while (getJobCount() < SAMPLE_TEST_NUM) {
 			allowWorkersToPool(startIndex, NTHREDS, _theInstance, executor);
 			startIndex += NTHREDS;
