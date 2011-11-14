@@ -10,6 +10,7 @@ import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
+import org.brain2.test.vneappcrawler.VnExpressParser;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
@@ -28,6 +29,10 @@ public class HttpClientUtil {
 	
 	public static String executeGet(String url){
 		try {
+			if( ! url.startsWith(VnExpressParser.BASE_URL)){
+				url = VnExpressParser.BASE_URL + url;
+			}
+			
 			HttpGet httpget = new HttpGet(url);
 			
 			httpget.setHeader("User-Agent", USER_AGENT);

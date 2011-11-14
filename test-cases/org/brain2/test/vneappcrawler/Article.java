@@ -16,6 +16,7 @@ public class Article {
 	private String sharedURL;
 	private String thumbnailMD5;
 	private String thumbnailURL;
+	private String topicID;
 	private List<Comment> comments=new ArrayList<Comment>();
 	private List<ReferenceObject> refObj=new ArrayList<ReferenceObject>();
 	
@@ -37,6 +38,14 @@ public class Article {
 		this.sharedURL = sharedURL;
 	}
 	
+
+	public String getTopicID() {
+		return topicID;
+	}
+
+	public void setTopicID(String topicID) {
+		this.topicID = topicID;
+	}
 
 	public String getSharedURL() {
 		return sharedURL;
@@ -127,6 +136,10 @@ public class Article {
 	}
 	public void addRefObj(ReferenceObject obj){
 		this.refObj.add(obj);
+	}
+
+	public void addAll(List<ReferenceObject> refObj2) {
+		this.refObj.addAll(refObj2);
 	}
 
 	public boolean isGeneralParsed() {

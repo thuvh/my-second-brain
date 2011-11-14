@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Queue;
@@ -23,7 +24,7 @@ public class VnExpressImporter {
 	
 	public static final int TIME_TO_SLEEP = 650;
 	private static final int NTHREDS = 5;
-	public static int SAMPLE_TEST_NUM = 2000;
+	public static int SAMPLE_TEST_NUM = 500;
 	public static boolean CLEAN_LOG_DB = true;
 	
 	//dblog
@@ -36,6 +37,7 @@ public class VnExpressImporter {
 	
 	private volatile static VnExpressImporter _theInstance = null;
 	private volatile static VnExpressDao _vnExpressDao = null;
+	private final ExecutorService saveDBExecutor = Executors.newSingleThreadExecutor();
 	
 	private volatile static boolean isWorking = false;
 	private volatile static int workFinished = 0;
@@ -148,27 +150,38 @@ public class VnExpressImporter {
 						saveLogDB(theLink, ImportStatus.DEAD_LINK);
 						return;
 					}
-					
+					final Article newArticle = VnExpressParser.parseHtmlToArticle(theLink, html, oldArticle, _vnExpressDao);
 					saveLogDB(theLink, ImportStatus.PARSED_OK);
-					print.println(" 200 ### workcount = " + VnExpressImporter.workFinished()+" => theLink: " + theLink);
-					print.flush();
 					
-					Article newArticle = VnExpressParser.parseHtmlToArticle(theLink, html, oldArticle, _vnExpressDao);
-					if( ! _vnExpressDao.isExistArticle(newArticle)){
-						_vnExpressDao.saveArticle(newArticle);
-						saveLogDB(theLink, ImportStatus.SAVED_OK);
-					} else {
-						_vnExpressDao.updateArticle(newArticle);						
-						System.out.println(" => theLink: " + theLink + " isExistArticle = true");
-						saveLogDB(theLink, ImportStatus.UPDATE_OK);
-					}
-					if(newArticle.isGeneralParsed()){
-						saveLogDB(theLink, ImportStatus.UNCOMPLETE_PARSED);	
-					}
+					saveDBExecutor.execute(new Runnable() {						
+						@Override
+						public void run() {
+							try {
+								if( ! _vnExpressDao.isExistArticle(newArticle)){
+									_vnExpressDao.saveArticle(newArticle);
+									saveLogDB(theLink, ImportStatus.SAVED_OK);
+								} else {
+									_vnExpressDao.updateArticle(newArticle);						
+									System.out.println(" => theLink: " + theLink + " isExistArticle = true");
+									saveLogDB(theLink, ImportStatus.UPDATE_OK);
+								}
+								if(newArticle.isGeneralParsed()){
+									saveLogDB(theLink, ImportStatus.UNCOMPLETE_PARSED);	
+								}
+								print.println(" 200 ### workcount = " + VnExpressImporter.workFinished()+" SAVE OK => theLink: " + theLink);
+								print.flush();
+							} catch (SQLException e) {
+								errorPrint.println(theLink + " @@@ " + e.getMessage() );
+								e.printStackTrace();
+								saveLogDB(theLink, ImportStatus.SAVE_FAIL);	
+								System.exit(1);
+							}							
+						}
+					});
 				} catch (Exception e) {
 					e.printStackTrace();
 					errorPrint.println(theLink + " @@@ " + e.getMessage());
-					errorLinks.add(theLink);
+					errorLinks.add(theLink);					
 				}
 			}
 		};
@@ -186,7 +199,7 @@ public class VnExpressImporter {
 		//FIXME
 		totalJobCount = SAMPLE_TEST_NUM;
 		int startIndex = total - SAMPLE_TEST_NUM;
-		startIndex = 400000;		
+		startIndex = 310000;		
 		while (getJobCount() < SAMPLE_TEST_NUM) {
 			allowWorkersToPool(startIndex, NTHREDS, _theInstance, executor);
 			startIndex += NTHREDS;
@@ -196,12 +209,13 @@ public class VnExpressImporter {
 
 		// This will make the executor accept no new threads
 		// and finish all existing threads in the queue
-		executor.shutdown();
+		//FIXME
+		executor.shutdown();		
 
 		// Wait until all threads are finish
 		while (!executor.isTerminated()) {
-			//wait here
-		}
+			//wait here for all links parsed
+		}		
 		System.out.println("Finished all jobs");
 		linksDBManager.commit();		
 		
@@ -284,7 +298,8 @@ public class VnExpressImporter {
 			statisticsPrint.println(" === in Minutes: "
 					+ TimeUnit.NANOSECONDS.toMinutes(elapsedTime));
 			statisticsPrint.println("#end-time: "
-					+ (new SimpleDateFormat()).format(new Date()));			
+					+ (new SimpleDateFormat()).format(new Date()));		
+			statisticsPrint.flush();
 		} catch (Exception e) {
 			System.err.println("Error in writing to file");
 		} finally {
@@ -312,7 +327,7 @@ public class VnExpressImporter {
 	}
 	
 	protected void checksumAllLinks() throws Exception{
-		int c1 = 0, c2 =0, c3 =0, c4 =0,c5 =0,c6=0;
+		int c1 = 0, c2 =0, c3 =0, c4 =0,c5 =0,c6=0,c7=0,c8=0;
 		Set<String> links = linksDB.keySet();
 		final ExecutorService executor = Executors.newFixedThreadPool(1);
 		for (String link : links) {
@@ -333,6 +348,10 @@ public class VnExpressImporter {
 				c5++;
 			} else if(status == ImportStatus.UNCOMPLETE_PARSED){
 				c6++;
+			} else if(status == ImportStatus.SAVE_FAIL){
+				c7++;
+			} else if(status == ImportStatus.UPDATE_OK){
+				c8++;
 			}
 		}
 		System.out.println("FETCHED = "+ c1);
@@ -341,10 +360,12 @@ public class VnExpressImporter {
 		System.out.println("SERVER_ERROR = "+ c4);
 		System.out.println("SAVED_OK = "+ c5);
 		System.out.println("UNCOMPLETE_PARSED = "+ c6);
+		System.out.println("SAVE_FAIL = "+ c7);
+		System.out.println("UPDATE_OK = "+ c8);
 		
 		executor.shutdown();
 		while(!executor.isTerminated()){}		
-		int total = c2+c3+c4+c5+c6;
+		int total = c2+c3+c4+c5+c6+c7+c8;
 		System.out.println("total = "+ total);
 	}
 	
