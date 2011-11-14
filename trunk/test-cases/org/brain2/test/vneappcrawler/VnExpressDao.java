@@ -140,8 +140,17 @@ public class VnExpressDao {
 		return id;
 	}
 	
-	public ResultSet getSubjectPath(int begin, int total) throws SQLException {
-		String sql = "SELECT ID,Title,Lead,PostBy,Date,Modified,Path FROM subject0 LIMIT ?,? ";
+	/**
+	 * 
+	 * all links in domain vnexpress.net only
+	 * 
+	 * @param begin
+	 * @param total
+	 * @return
+	 * @throws SQLException
+	 */
+	public ResultSet getSubjectPathInVnExpress(int begin, int total) throws SQLException {
+		String sql = "SELECT ID,Title,Lead,PostBy,Date,Modified,Path FROM subject0 WHERE Path LIKE '/gl/%' LIMIT ?,? ";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		ps.setInt(1, begin);
 		ps.setInt(2, total);

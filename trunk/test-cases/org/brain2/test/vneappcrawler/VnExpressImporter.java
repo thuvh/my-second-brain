@@ -222,7 +222,7 @@ public class VnExpressImporter {
 
 	public synchronized void allowWorkersToPool(final int start, final int limit, final VnExpressImporter vnExpressDao, final ExecutorService executor) {
 		try {
-			ResultSet resultSet = _vnExpressDao.getSubjectPath(start, limit);
+			ResultSet resultSet = _vnExpressDao.getSubjectPathInVnExpress(start, limit);
 			while (resultSet.next()) {
 				String theLink = resultSet.getString("Path");
 				System.out.println("#Fetching: "+theLink );				
