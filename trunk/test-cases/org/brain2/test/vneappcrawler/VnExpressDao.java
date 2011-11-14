@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Queue;
 
@@ -216,9 +217,26 @@ public class VnExpressDao {
 		conn.commit();		
 		saveComment(new ArrayList<Comment>(article.getComments()));		
 		saveRefObj(article.getRefObj());
+		saveTopicArticle(article.getTopicID(),article.getId());
 		return rs;
 	}
 	
+	public boolean saveTopicArticle(String topicID, String articleId) throws SQLException {
+		if(topicID == null || articleId == null){
+			return false;
+		}
+		String sql = "INSERT INTO topic_article VALUES(?,?,?,?,?) ";
+		PreparedStatement ps = conn.prepareStatement(sql);			
+		ps.setString(1, topicID);
+		ps.setString(2, articleId);
+		ps.setInt(3, 0);
+		ps.setLong(4, new Date().getTime());
+		ps.setLong(5, new Date().getTime());
+		boolean rs = ps.execute();			
+		conn.commit();
+		return rs;
+	}
+
 	public void saveArticle(final Queue<Article> articles) throws SQLException{
 		System.out.println("BEGIN SAVE DB COMMENT");
 		conn.setAutoCommit(false);
