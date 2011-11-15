@@ -50,9 +50,10 @@
 			}			
 		}
 		
+		var numRequestLive = 0;
 		function requestLiveDataStatus(){
-			$.getScript("http://localhost:10001/?keep-alive=true&keep-time=2000", function() {				 
-				 if($('#jobCount').html() == $('#totalJobCount').html()){
+			$.getScript("http://localhost:10001/?keep-alive=true&keep-time=2500", function() {				 
+				 if(isWorking || numRequestLive < 3 ){
 					 $("#statistics").append('<div><h1>All Jobs Done!</h1></div>');
 					 
 					 var checkErrorLink = function(){			
@@ -60,22 +61,22 @@
 						 if(errNum === 0){
 							 $("#statistics").append('<div><h1>No error link!</h1></div>');
 						 } else {							
-							 $("#statistics").append('<div><h1>'+ errNum +' error links, <a href="#" onclick="startResumeErrorLinks()">Resume ?</a> </h1></div>');							 
-						 }
-						 isWorking = false;
+							 $("#statistics").append('<div><h1>'+ errNum +' still error links queue, <a href="#" onclick="startResumeErrorLinks()">Resume ?</a> </h1></div>');							 
+						 }						 
 					 };
 					 setTimeout(checkErrorLink,5000);
 				 } else {
-					 requestLiveDataStatus();	 
+					 requestLiveDataStatus();
+					 numRequestLive++;					 
 				 }				 
 			});
 		}
 		
-		var isWorking = false;
+		window.isWorking = false;
 		function startImporterEngine(){
-			if(!isWorking){
-				requestLiveDataStatus();
-				isWorking = true;	
+			if(!window.isWorking){
+				window.isWorking = true;	
+				requestLiveDataStatus();				
 				var url = "http://localhost:10001/linkmarking/editor/html?action=importVnExpressArticles";
 				var iframe = $("<iframe/>").attr('src',url);
 				$('body').append(iframe);
@@ -86,9 +87,9 @@
 		}
 		
 		function startResumeErrorLinks(){
-			if(!isWorking){
-				requestLiveDataStatus();
-				isWorking = true;	
+			if(!window.isWorking){
+				window.isWorking = true;	
+				requestLiveDataStatus();				
 				var url = "http://localhost:10001/linkmarking/editor/html?action=resumeImportErrorLinks";
 				var iframe = $("<iframe/>").attr('src',url);
 				$('body').append(iframe);
