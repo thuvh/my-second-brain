@@ -1,9 +1,6 @@
 package org.brain2.test.vneappcrawler;
 
-import java.sql.ResultSet;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import org.apache.http.protocol.HTTP;
 import org.brain2.test.vneappcrawler.ReferenceObject.ReferenceType;
@@ -16,14 +13,13 @@ import org.jsoup.nodes.Element;
 import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
 
-public class VnExpressParser {
+public class VnExpressParser extends MainParser{
 	public static  final String BASE_URL = "http://vnexpress.net";  
 	
 	public static Article parseHtmlToArticle(String theLink, String html,
 			Article article, VnExpressDao _vnExpressDao) throws Exception {
 		final Document doc = Jsoup.parse(html, HTTP.UTF_8);
 		final String lead = article.getAbstractS();
-		// Log.println("BEGIN #####################");
 
 		Elements contents = doc.select(".content");
 
@@ -103,8 +99,7 @@ public class VnExpressParser {
 				 * Get thumbnail 
 				 * TODO : case : page_2.asp luu thumnail
 				 */
-				getThumbnail(BASE_URL + theLink,article);
-				
+				getThumbnail(theLink,article,"div[cpms_content=true]",130);
 				
 				/**
 				 * Remove all , just get <p>
@@ -120,7 +115,9 @@ public class VnExpressParser {
 				/**
 				 * Comment
 				 */
-				getComment(content,article,_vnExpressDao,BASE_URL + theLink);
+				Elements boxItems = content.select(".box-item");
+				if(boxItems.size()>0)
+					getComment(boxItems.get(0),article,_vnExpressDao,theLink);
 				
 			} else {
 				Log.println("NO CMPS " + theLink);
@@ -145,28 +142,29 @@ public class VnExpressParser {
 			Elements exPageLinks= element.select("a[href~=page_[1,2,3].asp]");
 			Log.println("exPageLinks: "+exPageLinks.size());
 			if(exPageLinks.size()>0){
-				
-				String pageHtml = HttpClientUtil.executeGet(exPageLinks.get(0).attr("href"));
-				if (!pageHtml.isEmpty()&& !pageHtml.equals("500")&&!pageHtml.equals("404")) {
-					Document docPage2 = Jsoup.parse(pageHtml, HTTP.UTF_8);
-					Elements contents = docPage2.select(".content");
-					if(contents.size()>0){
-						Elements cpmsExPage = contents.select("div[cpms_content=true]");
-						if(cpmsExPage.size()>0){
-							Article extraArticle = new Article();
-							extraArticle.setId(article.getId());
-							
-							processExtraPageLink(cpmsExPage.get(0),extraArticle);
-							
-							extractIMG(cpmsExPage.get(0),article);
-							article.addAll(extraArticle.getRefObj());
-							extraArticle=null;
-							
+				for(Element exElement:exPageLinks){
+					String pageHtml = HttpClientUtil.executeGet(exElement.attr("href"));
+					if (!pageHtml.isEmpty()&& !pageHtml.equals("500")&&!pageHtml.equals("404")) {
+						Document docPage2 = Jsoup.parse(pageHtml, HTTP.UTF_8);
+						Elements contents = docPage2.select(".content");
+						if(contents.size()>0){
+							Elements cpmsExPage = contents.select("div[cpms_content=true]");
+							if(cpmsExPage.size()>0){
+								Article extraArticle = new Article();
+								extraArticle.setId(article.getId());
+								
+								processExtraPageLink(cpmsExPage.get(0),extraArticle);
+								
+								extractIMG(cpmsExPage.get(0),article);
+								article.addAll(extraArticle.getRefObj());
+								extraArticle=null;
+								
+							}
 						}
+						
 					}
-					
+					exElement.parent().remove();
 				}
-				exPageLinks.get(0).parent().remove();
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -243,7 +241,6 @@ public class VnExpressParser {
 			tdskTopicTitle.remove();
 			tdskOther.remove();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			Log.println("::::PROCESS TDSK EXCEPTION:::::");
 		}
@@ -271,76 +268,5 @@ public class VnExpressParser {
 			e.printStackTrace();
 			Log.println("::::GET THUMBNAIL EXCEPTION ::::");
 		}
-	}
-	public static void getComment(Element element,Article article,VnExpressDao _vnExpressDao,String theLink){
-		try {
-			Log.println("the link commmment :"+ theLink);
-			Elements _comments = null;
-			Elements boxComments = element.select(".box-item");
-
-			if (boxComments.size() > 0) {
-				Element boxComment = boxComments.get(0);
-				// Count pages
-				int totalPages = boxComment.select("a.Paging").size() + 1;
-
-				// Get comment of current page (1)
-				_comments = boxComment.select(".comment_ct");
-
-				if (totalPages > 1) {
-					for (int p = 2; p <= totalPages; p++) {
-						
-						String commentPages = HttpClientUtil.executeGet(theLink + "?p=" + p);
-						_comments.addAll(Jsoup.parse(commentPages).select(
-								".comment_ct"));
-					}
-				}
-			}
-
-			if (_comments != null && _comments.size() > 0) {
-				ResultSet dbComments = _vnExpressDao.getComment(article
-						.getSharedURL());
-				int i = 0;
-				List<Comment> comments = new ArrayList<Comment>();
-				while (dbComments.next()) {
-					Element nodes = _comments.get(i);					
-					Comment comment = new Comment(
-							dbComments.getString("ID"), article.getId(),
-							dbComments.getString("Title"), nodes.select(".Normal").html(), "0",
-							dbComments.getString("Name"),
-							dbComments.getString("Email"),
-							dbComments.getInt("Status"),
-							dbComments.getDate("PublishDate"),
-							dbComments.getDate("Date"),
-							dbComments.getDate("Modified"));
-					comments.add(comment);
-					i++;
-				}
-				article.setComments(comments);
-			} else {
-				// Log.println("don't allow comment :(( --- " +
-				// theLink);
-			}
-		
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			Log.println(":::COMMENT EXCEPTION:::");
-		}
-	}
-	
-	public static void main(String[] args) throws Exception {
-		///gl/xa-hoi/2011/11/un-xe-keo-xe-3-km-tren-tinh-lo : test thumbnail
-//		String theLink= "/gl/cuoi/2011/06/bi-kip-tro-thanh-trieu-phu/";
-//		String theLink= "/gl/vi-tinh/san-pham-moi/2011/11/can-canh-samsung-galaxy-tab-7-plus-o-viet-nam";
-		String theLink="/gl/the-gioi/nguoi-viet-5-chau/2011/11/hungary-thanh-binh/";
-		String html = HttpClientUtil.executeGet("http://vnexpress.net"+theLink);
-//		Log.println("html"+html);
-		VnExpressDao _vnExpressDao = VnExpressDao.getInstance();
-//		Article article = _vnExpressDao.getArticleByPath(theLink);
-		Article article =new Article();
-		article.setId("1");
-		article.setSharedURL("/gl/the-gioi/nguoi-viet-5-chau/2011/11/hungary-thanh-binh/");
-		VnExpressParser.parseHtmlToArticle("http://vnexpress.net"+theLink, html, article, _vnExpressDao);
-		_vnExpressDao.saveArticle(article);
 	}
 }
