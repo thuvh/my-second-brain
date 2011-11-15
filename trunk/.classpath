@@ -44,5 +44,42 @@
 	<classpathentry kind="lib" path="lib/mysql-connector-java-5.1.18-bin.jar"/>
 	<classpathentry kind="lib" path="lib/jericho-html-3.2.jar"/>
 	<classpathentry kind="lib" path="lib/jdbm-2.2.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/akka-actor-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/akka-actor-tests-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/akka-beanstalk-mailbox-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/akka-file-mailbox-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/akka-http-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/akka-mailboxes-common-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/akka-redis-mailbox-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/akka-remote-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/akka-slf4j-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/akka-stm-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/akka-testkit-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/akka-typed-actor-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/aopalliance-1.0.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/aspectwerkz-2.2.3.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/beanstalk_client-1.4.5.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/commons-codec-1.4.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/commons-io-2.0.1.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/commons-pool-1.5.5.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/dispatch-json_2.9.0-0.8.1.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/guice-all-2.0.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/h2-lzf-1.0.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/jackson-core-asl-1.8.0.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/jackson-mapper-asl-1.8.0.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/jsr250-api-1.0.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/jsr311-api-1.1.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/junit-4.8.1.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/log4j-1.2.16.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/multiverse-alpha-0.6.2.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/netty-3.2.5.Final.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/objenesis-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/protobuf-java-2.4.1.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/redisclient_2.9.0-2.3.1.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/scala-library.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/sjson_2.9.0-0.11.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/slf4j-api-1.5.8.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/slf4j-api-1.6.0.jar"/>
+	<classpathentry kind="lib" path="lib/akka-core-1.2/slf4j-log4j12-1.5.8.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
