@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.apache.http.protocol.HTTP;
 import org.brain2.ws.core.utils.HttpClientUtil;
+import org.brain2.ws.core.utils.Log;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -186,4 +187,20 @@ public class VnExpressParserTest {
 //			e.printStackTrace();
 //		}
 //	}
+	
+	@Test
+	public void testGetImagesWithVideo(){
+		String theLink="/gl/the-thao/bong-da/2011/11/20-pha-bong-bat-ngo-va-hai-huoc-nhat-trong-tuan/";
+		String html = HttpClientUtil.executeGet("http://vnexpress.net"+theLink);
+		
+		try {
+		
+			Log.MODE = Log.PRINT_CONSOLE;
+			VnExpressParser.parseHtmlToArticle("http://vnexpress.net"+theLink, html, new Article(), VnExpressDao.getInstance());
+		
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }
