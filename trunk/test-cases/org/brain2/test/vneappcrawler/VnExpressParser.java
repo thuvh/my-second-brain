@@ -8,7 +8,9 @@ import java.util.List;
 import org.apache.http.protocol.HTTP;
 import org.brain2.test.vneappcrawler.ReferenceObject.ReferenceType;
 import org.brain2.ws.core.utils.HttpClientUtil;
+import org.brain2.ws.core.utils.Log;
 import org.jsoup.Jsoup;
+import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.safety.Whitelist;
@@ -21,7 +23,7 @@ public class VnExpressParser {
 			Article article, VnExpressDao _vnExpressDao) throws Exception {
 		final Document doc = Jsoup.parse(html, HTTP.UTF_8);
 		final String lead = article.getAbstractS();
-		// System.out.println("BEGIN #####################");
+		// Log.println("BEGIN #####################");
 
 		Elements contents = doc.select(".content");
 
@@ -121,7 +123,7 @@ public class VnExpressParser {
 				getComment(content,article,_vnExpressDao,BASE_URL + theLink);
 				
 			} else {
-				System.out.println("NO CMPS " + theLink);
+				Log.println("NO CMPS " + theLink);
 			}
 		}
 		return article;
@@ -131,22 +133,17 @@ public class VnExpressParser {
 			Elements contactLinks = element.select("a[href*="+pattern+"]");
 			for(Element lnk: contactLinks){
 				Element pEle = lnk.parent();
-				if(pEle !=null){
-					pEle.remove();
-				}else{
-					lnk.remove();
-				}
+				Validate.notNull(pEle);
+				pEle.remove();
 			}
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			System.out.println("::::processContact EXCEPTION ::::: ");
+		} catch (java.lang.IllegalArgumentException e) {
+			//skip
 		}
 	}
 	public static void processExtraPageLink(Element element,Article article){
 		try {
 			Elements exPageLinks= element.select("a[href~=page_[1,2,3].asp]");
-			System.out.println("exPageLinks: "+exPageLinks.size());
+			Log.println("exPageLinks: "+exPageLinks.size());
 			if(exPageLinks.size()>0){
 				
 				String pageHtml = HttpClientUtil.executeGet(exPageLinks.get(0).attr("href"));
@@ -174,14 +171,14 @@ public class VnExpressParser {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			System.out.println("::::processExtraPageLink EXCEPTION ::::: ");
+			Log.println("::::processExtraPageLink EXCEPTION ::::: ");
 		}
 	}
 	public static void extractIMG(Element element, Article article){
 		try {
 			Elements imgs = element.select("img");
 			if(imgs != null && imgs.size()>0){
-				System.out.println("IMGS SIZE"+imgs.size());
+				Log.println("IMGS SIZE"+imgs.size());
 				for(Element img : imgs){
 					ReferenceObject obj = new ReferenceObject();
 					obj.setArticleID(article.getId());
@@ -203,7 +200,7 @@ public class VnExpressParser {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.out.println("EXTRACT IMG EXCEPTION :"+e.getMessage());
+			Log.println("EXTRACT IMG EXCEPTION :"+e.getMessage());
 		}
 	}
 	public static void processLead(String lead,Article article){
@@ -230,7 +227,7 @@ public class VnExpressParser {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			System.out.println("::::::PROCESS LEAD EXCEPTION::::::");
+			Log.println("::::::PROCESS LEAD EXCEPTION::::::");
 		}
 	}
 	public static void processTDSK(Element element,Article article){
@@ -248,7 +245,7 @@ public class VnExpressParser {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			System.out.println("::::PROCESS TDSK EXCEPTION:::::");
+			Log.println("::::PROCESS TDSK EXCEPTION:::::");
 		}
 	}
 	public static void getThumbnail(String theLink,Article article){
@@ -272,12 +269,12 @@ public class VnExpressParser {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			System.out.println("::::GET THUMBNAIL EXCEPTION ::::");
+			Log.println("::::GET THUMBNAIL EXCEPTION ::::");
 		}
 	}
 	public static void getComment(Element element,Article article,VnExpressDao _vnExpressDao,String theLink){
 		try {
-			System.out.println("the link commmment :"+ theLink);
+			Log.println("the link commmment :"+ theLink);
 			Elements _comments = null;
 			Elements boxComments = element.select(".box-item");
 
@@ -320,14 +317,14 @@ public class VnExpressParser {
 				}
 				article.setComments(comments);
 			} else {
-				// System.out.println("don't allow comment :(( --- " +
+				// Log.println("don't allow comment :(( --- " +
 				// theLink);
 			}
 		
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			System.out.println(":::COMMENT EXCEPTION:::");
+			Log.println(":::COMMENT EXCEPTION:::");
 		}
 	}
 	
@@ -337,7 +334,7 @@ public class VnExpressParser {
 //		String theLink= "/gl/vi-tinh/san-pham-moi/2011/11/can-canh-samsung-galaxy-tab-7-plus-o-viet-nam";
 		String theLink="/gl/the-gioi/nguoi-viet-5-chau/2011/11/hungary-thanh-binh/";
 		String html = HttpClientUtil.executeGet("http://vnexpress.net"+theLink);
-//		System.out.println("html"+html);
+//		Log.println("html"+html);
 		VnExpressDao _vnExpressDao = VnExpressDao.getInstance();
 //		Article article = _vnExpressDao.getArticleByPath(theLink);
 		Article article =new Article();
