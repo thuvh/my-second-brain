@@ -61,13 +61,13 @@ public class VnExpressDao {
 	}
 
 	/**
-	 * total records of vnexpress subject
+	 * total records of vnexpress subject, domain vnexpress.net only
 	 * 
 	 * @return int
 	 * @throws Exception
 	 */
-	public int getTotalCount() throws SQLException {
-		String sql = "SELECT count(ID) as total FROM subject0";
+	public int getTotalCountInVnExpress() throws SQLException {
+		String sql = "SELECT count(ID) as total FROM subject0 WHERE subject0.Path LIKE '/gl/%'";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		ResultSet rs = ps.executeQuery();
 		int total = 0;
@@ -172,11 +172,17 @@ public class VnExpressDao {
 		String sql2 = "DELETE FROM object_reference WHERE article_id = ? ";
 		PreparedStatement ps2 = conn.prepareStatement(sql2);
 		ps2.setString(1, article.getId());
-		ps2.execute();			
+		ps2.execute();	
+		
+		String sql3 = "DELETE FROM topic_article WHERE article_id = ? ";
+		PreparedStatement ps3 = conn.prepareStatement(sql3);
+		ps3.setString(1, article.getId());
+		ps3.execute();
 		
 		conn.commit();
 		ps.close();
 		ps2.close();
+		ps3.close();
 		return true;
 	}
 	
@@ -195,6 +201,7 @@ public class VnExpressDao {
 		conn.commit();
 		saveComment(new ArrayList<Comment>(article.getComments()));		
 		saveRefObj(article.getRefObj());
+		saveTopicArticle(article.getTopicID(),article.getId());
 		return rs;
 	}
 	
