@@ -259,6 +259,7 @@ public class VnExpressImporter {
 				Log.println("#mod: "+mod);
 				Log.println("#mod/poolNum: "+poolIndex+"-"+poolNum);
 				jobAllowcated += allowWorkersToPool(startIndex+mod, mod, _theInstance, executor);
+				linksDBManager.commit();
 			}
 			
 			Log.println("#jobcount/total: "+getJobCount() + " - " + getTotalJobCount());
