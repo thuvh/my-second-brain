@@ -47,21 +47,24 @@ public abstract class MainParser implements Parser{
 			if(imgs != null && imgs.size()>0){
 				System.out.println("IMGS SIZE"+imgs.size());
 				for(Element img : imgs){
-					ReferenceObject obj = new ReferenceObject();
-					obj.setArticleID(article.getId());
-					obj.setType(ReferenceType.IMG);
-					obj.setUpdateTime(new Date());
 					String src = img.attr("src");
-					obj.setUrl(src);
-					obj.setMd5(StringUtil.md5(src));
-					if(img.parents()!=null &&img.parents().size()>=2){
-						Element trNext = img.parents().get(1).nextElementSibling(); 
-						if(trNext != null && (trNext.select(".Image").size()>0||trNext.select("img").size()==0)){
-							obj.setCaption(trNext.text());
-							trNext.remove();
+					if(src.startsWith("/Files/Subject/")){
+						ReferenceObject obj = new ReferenceObject();
+						obj.setArticleID(article.getId());
+						obj.setType(ReferenceType.IMG);
+						obj.setUpdateTime(new Date());
+						
+						obj.setUrl(src);
+						obj.setMd5(StringUtil.md5(src));
+						if(img.parents()!=null &&img.parents().size()>=2){
+							Element trNext = img.parents().get(1).nextElementSibling(); 
+							if(trNext != null && (trNext.select(".Image").size()>0||trNext.select("img").size()==0)){
+								obj.setCaption(trNext.text());
+								trNext.remove();
+							}
+							img.remove();
+							article.addRefObj(obj);
 						}
-						img.remove();
-						article.addRefObj(obj);
 					}
 				}
 			}
@@ -70,7 +73,7 @@ public abstract class MainParser implements Parser{
 			System.out.println("EXTRACT IMG EXCEPTION :"+e.getMessage());
 		}
 	}
-	public static void getThumbnail(String theLink,Article article,String parentSelectPaterrn, int widthImg){
+	public static void getThumbnail(String theLink,Article article,String parentSelectPaterrn, int widthImg,int heightImg){
 		try {
 			String thumbnailPage = HttpClientUtil.executeGet(theLink + "/page_1.asp");
 			if(!thumbnailPage.isEmpty()){
@@ -82,6 +85,13 @@ public abstract class MainParser implements Parser{
 							String urlThumbnail = thum.attr("src");
 							article.setThumbnailURL(urlThumbnail);
 							article.setThumbnailMD5(StringUtil.md5(urlThumbnail));
+							break;
+						}
+						if(String.valueOf(heightImg).equals(thum.attr("height"))){
+							String urlThumbnail = thum.attr("src");
+							article.setThumbnailURL(urlThumbnail);
+							article.setThumbnailMD5(StringUtil.md5(urlThumbnail));
+							break;
 						}
 					}
 				}

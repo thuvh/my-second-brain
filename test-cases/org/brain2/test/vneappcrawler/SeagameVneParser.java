@@ -77,7 +77,7 @@ public class SeagameVneParser extends MainParser{
 			 * Get thumbnail 
 			 * TODO : case : page_2.asp luu thumnail
 			 */
-			getThumbnail(theLink,article,".ctdt",130);
+			getThumbnail(theLink,article,".ctdt",130,100);
 			
 			/**
 			 * Remove all , just get <p>
@@ -128,7 +128,7 @@ public class SeagameVneParser extends MainParser{
 	}
 	public static void processExtraPageLink(Element element,Article article,String parentContent,String parent){
 		try {
-			Elements exPageLinks= element.select("a[href~=page_[1,2,3].asp]");
+			Elements exPageLinks= element.select("a[href~=page_[1-9].asp]");
 			System.out.println("exPageLinks: "+exPageLinks.size());
 			if(exPageLinks.size()>0){
 				for(Element exPageLink:exPageLinks){
