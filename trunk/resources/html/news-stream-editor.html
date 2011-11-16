@@ -49,33 +49,34 @@
 				$( "#progressbar" ).progressbar({value: percent });	
 			}			
 		}
+			
 		
-		var numRequestLive = 0;
 		function requestLiveDataStatus(){
-			$.getScript("http://localhost:10001/?keep-alive=true&keep-time=2500", function() {				 
-				 if(isWorking || numRequestLive < 3 ){
-					 $("#statistics").append('<div><h1>All Jobs Done!</h1></div>');
+			$.getScript("http://localhost:10001/?keep-alive=true&keep-time=2500", function() {
+				console.log(isWorking);
+				 if( ! isWorking ){					 
+					 $("#error_log").html("<br>");
+					 $("#error_log").append('<div><h1>All Jobs Done!</h1></div>');
 					 
 					 var checkErrorLink = function(){			
 						 var errNum = parseInt($('#totalJobFailed').html(),10);
 						 if(errNum === 0){
-							 $("#statistics").append('<div><h1>No error link!</h1></div>');
+							 $("#error_log").append('<div><h1>No error link!</h1></div>');
 						 } else {							
-							 $("#statistics").append('<div><h1>'+ errNum +' still error links queue, <a href="#" onclick="startResumeErrorLinks()">Resume ?</a> </h1></div>');							 
+							 $("#error_log").append('<div><h1>'+ errNum +' still error links queue, <a href="#" onclick="startResumeErrorLinks()">Resume ?</a> </h1></div>');							 
 						 }						 
 					 };
 					 setTimeout(checkErrorLink,5000);
 				 } else {
-					 requestLiveDataStatus();
-					 numRequestLive++;					 
+					 requestLiveDataStatus();					 
 				 }				 
 			});
 		}
 		
-		window.isWorking = false;
+		var isWorking = false;
 		function startImporterEngine(){
-			if(!window.isWorking){
-				window.isWorking = true;	
+			if(!isWorking){
+				isWorking = true;	
 				requestLiveDataStatus();				
 				var url = "http://localhost:10001/linkmarking/editor/html?action=importVnExpressArticles";
 				var iframe = $("<iframe/>").attr('src',url);
@@ -87,8 +88,8 @@
 		}
 		
 		function startResumeErrorLinks(){
-			if(!window.isWorking){
-				window.isWorking = true;	
+			if(!isWorking){
+				isWorking = true;	
 				requestLiveDataStatus();				
 				var url = "http://localhost:10001/linkmarking/editor/html?action=resumeImportErrorLinks";
 				var iframe = $("<iframe/>").attr('src',url);
@@ -164,6 +165,7 @@
 				totalDieLinks: <span id="totalDieLinks" >0</span><br>				
 				
 			</div>
+			<div id="error_log" style="font-size: 15;font-weight: bold;"></div>
 			<div id="progressbar" style="width:1000px !important;"></div>
 			
 		</div>

@@ -34,6 +34,7 @@ public class VnExpressParser extends MainParser{
 				 * remove script links in content
 				 */
 				cpms.select("script").remove();
+				cpms.select("#flashContent").remove();
 				/**
 				 * split related link from lead
 				 */
@@ -99,7 +100,7 @@ public class VnExpressParser extends MainParser{
 				 * Get thumbnail 
 				 * TODO : case : page_2.asp luu thumnail
 				 */
-				getThumbnail(theLink,article,"div[cpms_content=true]",130);
+				getThumbnail(theLink,article,"div[cpms_content=true]",130,100);
 				
 				/**
 				 * Remove all , just get <p>
@@ -139,7 +140,7 @@ public class VnExpressParser extends MainParser{
 	}
 	public static void processExtraPageLink(Element element,Article article){
 		try {
-			Elements exPageLinks= element.select("a[href~=page_[1,2,3].asp]");
+			Elements exPageLinks= element.select("a[href~=page_[1-9].asp]");
 			Log.println("exPageLinks: "+exPageLinks.size());
 			if(exPageLinks.size()>0){
 				for(Element exElement:exPageLinks){
