@@ -1,0 +1,8 @@
+{
+	username : "vnemobile"
+	,password : "vnemobile@123"
+	,database : "vnemobile"
+	,host : "10.254.53.216"
+	,dbdriver : "mysql"
+	,dbdriverclasspath : "com.mysql.jdbc.Driver"
+}

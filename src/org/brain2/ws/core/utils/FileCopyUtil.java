@@ -168,6 +168,9 @@ public class FileCopyUtil {
     static void buildCrawler() {
         excludedDirList.add(".svn");
         excludedDirList.add("agent.jar");
+        excludedDirList.add("vne_impoter.jar");
+        excludedDirList.add("import-data-log.txt");
+        
 
         String src = "D:\\Researchs\\my-second-brain";
         String des = "D:\\Researchs\\news-crawler";
