@@ -23,8 +23,8 @@ import org.brain2.ws.core.utils.Log;
 
 public class VnExpressImporter {
 	
-	public static final int TIME_TO_SLEEP = 650;
-	private static final int NTHREDS = 6;
+	public static final int TIME_TO_SLEEP = 680;
+	private static int NTHREDS = 10;
 	public static int SAMPLE_TEST_NUM = 1000;
 	public static boolean CLEAN_LOG_DB = true;
 	
@@ -209,6 +209,12 @@ public class VnExpressImporter {
 	}	
 
 	public void masterWorker() throws Exception {
+		final int numberOfCores = Runtime.getRuntime().availableProcessors();
+		System.out.println(numberOfCores);
+		final double blockingCoefficient = 0.9;
+		final int poolSize = (int)(numberOfCores / (1 - blockingCoefficient));
+		NTHREDS = poolSize;
+		
 		masterJobStarted();	
 		final ExecutorService executor = Executors.newFixedThreadPool(NTHREDS);
 		int totalArticle = _vnExpressDao.getTotalCountInVnExpress();
@@ -218,7 +224,8 @@ public class VnExpressImporter {
 		//print.println(" mod:" + mod);
 
 						
-		int startIndex = totalArticle - SAMPLE_TEST_NUM;
+		int startIndex = 0;
+		//startIndex = totalArticle - SAMPLE_TEST_NUM;
 		//startIndex = 432000; //TODO
 		
 		int totalJob = totalArticle - startIndex;
@@ -226,9 +233,9 @@ public class VnExpressImporter {
 		Log.println("jobcount/total: "+getJobCount() + " - " + totalJob);
 		
 		//TODO
-		if(totalJob > SAMPLE_TEST_NUM){			
-			totalJob = SAMPLE_TEST_NUM;
-		}
+//		if(totalJob > SAMPLE_TEST_NUM){			
+//			totalJob = SAMPLE_TEST_NUM;
+//		}
 		
 		setJobCount(0);
 		setTotalJobCount(totalJob);
@@ -236,26 +243,27 @@ public class VnExpressImporter {
 		
 		double poolNum = Math.floor( totalJob / NTHREDS );
 		int mod = totalJob%NTHREDS;
-		int poolIndex = 0;
-		while ( poolIndex < poolNum ) {
-			int jobAllowcated = 0;
+		int poolIndex = 0, jobAllowcated = 0;
+		while ( poolIndex <= poolNum ) {
+			jobAllowcated = 0;
 			
 			jobAllowcated = allowWorkersToPool(startIndex, NTHREDS, _theInstance, executor);
 			poolIndex++;
-							
-			Log.println("#jobcount/total: "+getJobCount() + " - " + getTotalJobCount());
-			Log.println("#jobAllowcated: "+jobAllowcated);
-			Log.println("#startIndex/totalArticle: " + startIndex + " - " + totalArticle);
 												
 			if(startIndex < totalArticle ){
 				startIndex += NTHREDS;	
 			} 
 			Thread.sleep(TIME_TO_SLEEP);
 			
-			if(mod > 0 && poolIndex>=poolNum){
+			if(mod > 0 && poolIndex>poolNum){
+				Log.println("#mod: "+mod);
+				Log.println("#mod/poolNum: "+poolIndex+"-"+poolNum);
 				jobAllowcated += allowWorkersToPool(startIndex+mod, mod, _theInstance, executor);
 			}
 			
+			Log.println("#jobcount/total: "+getJobCount() + " - " + getTotalJobCount());
+			Log.println("#jobAllowcated: "+jobAllowcated);
+			Log.println("#startIndex/totalArticle: " + startIndex + " - " + totalArticle);			
 		}
 		Log.println("### out the queue jobs");
 
@@ -271,25 +279,25 @@ public class VnExpressImporter {
 		
 		Log.println(" === total linksDB size: " + linksDB.size());
 		Log.println(" === total errorLinks size: " + errorLinks.size());
+		
+		Thread.sleep(2500);
 				
 		//retry
+		checksumAllLinks();
+		
+		//flush all		
+		masterJobDone();
+		
 		new Thread(new Runnable() {			
 			@Override
-			public void run() {				
-				while (linksDB.size() < getTotalJobCount() ) {}
-				
+			public void run() {
 				try {
-					checksumAllLinks();
-				} catch (Exception e) {					
-					e.printStackTrace();
-					print.println(e.getCause().getMessage());
-				}
+					Thread.sleep(2000);
+				} catch (InterruptedException e) {}
 				_theInstance.cleanResources();//FIXME
-				
-				//flush all		
-				masterJobDone();
 			}
-		}).start();	}
+		}).start();	
+	}
 
 	public PrintStream getPrintStream() {
 		return this.print;
@@ -437,7 +445,7 @@ public class VnExpressImporter {
 		Log.println("total = "+ total);		
 	}
 	
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) throws Exception {		
 		VnExpressImporter.CLEAN_LOG_DB = false;		
 		VnExpressImporter.getInstance().checksumAllLinks();
 		Log.println(VnExpressImporter.isWorking());

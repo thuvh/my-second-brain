@@ -1,1 +1,1 @@
-java  -jar vne_impoter.jar
+java -jar -Xms512m -Xmx1024m vne_impoter.jar
