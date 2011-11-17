@@ -8,20 +8,17 @@ import org.jsoup.nodes.Element;
 import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
 
-public class VnExpressParser extends MainParser{
-	public static  final String BASE_URL = "http://vnexpress.net";  
-	
+public class NhaDepVneParser extends MainParser{
 	public Article parseHtmlToArticle(String theLink, String html,
 			Article article, VnExpressDao _vnExpressDao) throws Exception {
 		final Document doc = Jsoup.parse(html, HTTP.UTF_8);
-		final String lead = article.getAbstractS();
 
-		Elements contents = doc.select(".content");
+		Elements contents = doc.select(".content-left");
 
 		if (contents.size() > 0) {
 			Element content = contents.get(0);
 
-			Elements cpms_content = content.select("div[cpms_content=true]");
+			Elements cpms_content = content.select(".PT-top-c3");
 
 			if (cpms_content.size() > 0) {
 				Element cpms = cpms_content.get(0);
@@ -34,7 +31,7 @@ public class VnExpressParser extends MainParser{
 				 * split related link from lead
 				 */
 				
-				processLead(lead,article);
+				processLead(cpms,article,"p.Lead");
 
 				/**
 				 * remove title and lead from content
@@ -47,20 +44,12 @@ public class VnExpressParser extends MainParser{
 				 */
 				
 				/**
-				 * remove Danh Gia IMGS
-				 */
-				
-				Elements pointImg = cpms.select(".Point");
-				if(pointImg.size()>0)
-					pointImg.remove();
-				
-				/**
 				 * Process page_2.asp and page_1.asp is a link in content
 				 * Get Image from page_2.asp ,remove * Clip + video link
 				 */
 				Article exArticle = new Article();
 				exArticle.setId(article.getId());
-				processExtraPageLink(cpms,exArticle,".content","div[cpms_content=true]");
+				processExtraPageLink(cpms,exArticle,".content-left",".PT-top-c3");
 				
 				/**
 				 * Images
@@ -81,13 +70,6 @@ public class VnExpressParser extends MainParser{
 				 */
 				processContact(cpms,"mailto:");
 				
-				
-				/**
-				 * Detect "Theo dong su kien"
-				 */
-				processTDSK(cpms,article);
-				
-				
 				cpms.select("a[class!=Normal]").remove();
 
 				/**
@@ -95,7 +77,7 @@ public class VnExpressParser extends MainParser{
 				 * Get thumbnail 
 				 * TODO : case : page_2.asp luu thumnail
 				 */
-				getThumbnail(theLink,article,"div[cpms_content=true]",130,100);
+				getThumbnail(theLink,article,".PT-top-c3",130,100);
 				
 				/**
 				 * Remove all , just get <p>
@@ -108,12 +90,6 @@ public class VnExpressParser extends MainParser{
 				String newContent = Jsoup.clean(cpms.html(), whiteList);
 				article.setContent(newContent);
 				
-				/**
-				 * Comment
-				 */
-				Elements boxItems = content.select(".box-item");
-				if(boxItems.size()>0)
-					getComment(boxItems.get(0),article,_vnExpressDao,theLink);
 				
 			} else {
 				Log.println("NO CMPS " + theLink);

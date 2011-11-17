@@ -8,13 +8,11 @@ import org.jsoup.nodes.Element;
 import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
 
-public class VnExpressParser extends MainParser{
-	public static  final String BASE_URL = "http://vnexpress.net";  
+public class EbankVneParser extends MainParser{
 	
 	public Article parseHtmlToArticle(String theLink, String html,
 			Article article, VnExpressDao _vnExpressDao) throws Exception {
 		final Document doc = Jsoup.parse(html, HTTP.UTF_8);
-		final String lead = article.getAbstractS();
 
 		Elements contents = doc.select(".content");
 
@@ -34,7 +32,7 @@ public class VnExpressParser extends MainParser{
 				 * split related link from lead
 				 */
 				
-				processLead(lead,article);
+				processLead(cpms,article,"h2.Lead");
 
 				/**
 				 * remove title and lead from content
@@ -111,7 +109,7 @@ public class VnExpressParser extends MainParser{
 				/**
 				 * Comment
 				 */
-				Elements boxItems = content.select(".box-item");
+				Elements boxItems = content.select(".bgComment");
 				if(boxItems.size()>0)
 					getComment(boxItems.get(0),article,_vnExpressDao,theLink);
 				

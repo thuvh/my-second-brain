@@ -169,7 +169,8 @@ public class VnExpressImporter {
 						return;
 					}
 					Log.MODE = Log.NO_LOG;
-					final Article newArticle = VnExpressParser.parseHtmlToArticle(theLink, html, oldArticle, _vnExpressDao);
+					Parser vneParser = new VnExpressParser();
+					final Article newArticle = vneParser.parseHtmlToArticle(theLink, html, oldArticle, _vnExpressDao);
 					Log.MODE = Log.PRINT_CONSOLE;
 					saveLogDB(theLink, ImportStatus.PARSED_OK);
 					
