@@ -81,5 +81,6 @@
 	<classpathentry kind="lib" path="lib/akka-core-1.2/slf4j-api-1.5.8.jar"/>
 	<classpathentry kind="lib" path="lib/akka-core-1.2/slf4j-api-1.6.0.jar"/>
 	<classpathentry kind="lib" path="lib/akka-core-1.2/slf4j-log4j12-1.5.8.jar"/>
+	<classpathentry kind="lib" path="lib/json-org.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
