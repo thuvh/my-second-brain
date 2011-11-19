@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -24,7 +25,7 @@ import org.brain2.ws.core.utils.Log;
 public class VnExpressImporter {
 	
 	public static final int TIME_TO_SLEEP = 680;
-	private static int NTHREDS = 10;
+	private static int NTHREDS = 8;
 	public static int SAMPLE_TEST_NUM = 1000;
 	public static boolean CLEAN_LOG_DB = true;
 	
@@ -155,7 +156,7 @@ public class VnExpressImporter {
 			public void run() {				
 
 				try {
-					String html = HttpClientUtil.executeGet("http://vnexpress.net"+theLink);
+					final String html = HttpClientUtil.executeGet("http://vnexpress.net"+theLink);
 					if (html.isEmpty()||html.equals("500")) {						
 						print.println("500 ### FAIL LINK, => theLink: " + theLink);
 						print.flush();
@@ -169,7 +170,13 @@ public class VnExpressImporter {
 						return;
 					}
 					Log.MODE = Log.NO_LOG;
-					Parser vneParser = new VnExpressParser();
+					Parser vneParser;
+					if(theLink.startsWith("/tin/")){
+						vneParser = new SeagameVneParser();
+					} else {
+						vneParser = new VnExpressParser();
+					}
+					
 					final Article newArticle = vneParser.parseHtmlToArticle(theLink, html, oldArticle, _vnExpressDao);
 					Log.MODE = Log.PRINT_CONSOLE;
 					saveLogDB(theLink, ImportStatus.PARSED_OK);
@@ -178,7 +185,10 @@ public class VnExpressImporter {
 						@Override
 						public void run() {
 							try {
-								if( ! _vnExpressDao.isExistArticle(newArticle)){
+								Log.println("BEGIN SAVE DB "+ theLink);
+								Log.println("# "+ newArticle.getContent());
+								
+								if( ! _vnExpressDao.isExistedArticle(newArticle)){
 									_vnExpressDao.saveArticle(newArticle);
 									saveLogDB(theLink, ImportStatus.SAVED_OK);
 								} else {
@@ -210,12 +220,7 @@ public class VnExpressImporter {
 	}	
 
 	public void masterWorker() throws Exception {
-		final int numberOfCores = Runtime.getRuntime().availableProcessors();
-		System.out.println(numberOfCores);
-		final double blockingCoefficient = 0.9;
-		final int poolSize = (int)(numberOfCores / (1 - blockingCoefficient));
-		NTHREDS = poolSize;
-		
+				
 		masterJobStarted();	
 		final ExecutorService executor = Executors.newFixedThreadPool(NTHREDS);
 		int totalArticle = _vnExpressDao.getTotalCountInVnExpress();
@@ -376,6 +381,53 @@ public class VnExpressImporter {
 			statisticsPrint.println("#end-time: "
 					+ (new SimpleDateFormat()).format(new Date()));		
 			statisticsPrint.flush();			
+		} catch (Exception e) {
+			System.err.println("Error in writing to file");
+		}		
+		System.gc();
+	}	
+	
+	public static void importHotArticles() {
+		if (isWorking()) {
+			return;
+		}
+		Log.MODE = Log.PRINT_CONSOLE;
+		long start = System.nanoTime();
+		try {								
+			PrintStream statisticsPrint = new PrintStream(new FileOutputStream("statistics-data-log.txt"));
+			statisticsPrint.println("#start-time: " + (new SimpleDateFormat()).format(new Date()));			
+			final VnExpressImporter importer = VnExpressImporter.getInstance();
+			final ExecutorService executor = Executors.newFixedThreadPool(1);
+			//trigger the master
+			//TODO
+			masterJobStarted();
+					
+			List<Article> hotArticles = VnExpressHotNewsParser.parseHotArticle();
+			
+			setJobCount(0);
+			setTotalJobCount(hotArticles.size());
+			
+			for (Article article : hotArticles) {								
+				Runnable worker = importer.processArticle(article.getSharedURL(),article);
+				executor.execute(worker);
+				Thread.sleep(200);
+			}
+			executor.shutdown();	
+			while (!executor.isTerminated()) {} 		
+			Log.println("Finished all jobs");				
+
+			long end = System.nanoTime();
+			long elapsedTime = end - start;
+
+			// convert to seconds
+			statisticsPrint.println(" \n === Test done === \n === in seconds: "
+					+ TimeUnit.NANOSECONDS.toSeconds(elapsedTime));
+			statisticsPrint.println(" === in Minutes: "
+					+ TimeUnit.NANOSECONDS.toMinutes(elapsedTime));
+			statisticsPrint.println("#end-time: "
+					+ (new SimpleDateFormat()).format(new Date()));		
+			statisticsPrint.flush();	
+			masterJobDone();
 		} catch (Exception e) {
 			System.err.println("Error in writing to file");
 		}		

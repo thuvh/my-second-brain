@@ -7,6 +7,7 @@ import org.brain2.ws.core.utils.FileUtils;
 import com.google.gson.Gson;
 
 public class ImporterConfigs {
+	
 	private String username;
 	private String password;
 	private String database;
@@ -16,9 +17,9 @@ public class ImporterConfigs {
 	
 	public static ImporterConfigs loadFromFile(String filePath){		
 		try {
-			String json = FileUtils.readFileAsString(filePath);			
+			String json = FileUtils.readFileAsString(filePath);
 			return new Gson().fromJson(json, ImporterConfigs.class);
-		} catch (IOException e) {			
+		} catch (IOException e) {
 			e.printStackTrace();		
 		}
 		return null;

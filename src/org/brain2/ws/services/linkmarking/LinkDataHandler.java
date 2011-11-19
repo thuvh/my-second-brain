@@ -32,6 +32,8 @@ public class LinkDataHandler extends ServiceHandler{
 		} else if("resumeImportErrorLinks".equals(action)){
 			//VnExpressDao.resumeImportErrorLinks();
 			System.out.println("TODO here");
+		} else if("importHotArticles".equals(action)){
+			VnExpressImporter.importHotArticles();
 		}
 	}
 			

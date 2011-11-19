@@ -100,6 +100,19 @@
 			}			
 		}
 		
+		function startImportHotArticles(){
+			if(!isWorking){
+				isWorking = true;	
+				requestLiveDataStatus();				
+				var url = "http://localhost:10001/linkmarking/editor/html?action=importHotArticles";
+				var iframe = $("<iframe/>").attr('src',url);
+				$('body').append(iframe);
+				iframe.hide();
+			} else {
+				alert('job is working ...');
+			}			
+		}
+		
 		function setTotalDieLinks(c){
 			$('#totalDieLinks').html(c);
 		}
@@ -130,6 +143,9 @@
 			<ul id="tree">
 				<li>
 					<strong><a href="#" onclick="startImporterEngine()">startImporterEngine</a></strong>
+				</li>
+				<li>
+					<strong><a href="#" onclick="startImportHotArticles()">startImportHotArticles</a></strong>
 				</li>
 				
 				<li>
