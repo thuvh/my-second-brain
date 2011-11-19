@@ -1,5 +1,6 @@
 package org.brain2.test.xml;
 
+import org.brain2.test.vneappcrawler.VnExpressDao;
 import org.brain2.ws.core.utils.HttpClientUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -15,13 +16,23 @@ public class XmlParserTest {
 		System.out.println(xml);
 		JSONObject jsonObject = XML.toJSONObject(xml);
 		JSONArray items =  jsonObject.getJSONObject("XML").getJSONArray("I");
+		
+		VnExpressDao dao = VnExpressDao.getInstance();
+		
+		
 		for (int i = 0; i < items.length(); i++) {
 			JSONObject item = items.getJSONObject(i);
+			String path = item.getString("P");
+			
 			System.out.print( item.getString("T") );
-			System.out.print("\t" + item.getString("P") );
+			System.out.print("\t" + path );
 			System.out.print("\t" + item.getString("L") );
 			System.out.println();
-		}
-		
+			
+			
+			
+			int id =  dao.getHotArticleId(path);
+			System.out.println(id);
+		}		
 	}
 }

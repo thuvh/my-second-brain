@@ -1,0 +1,19 @@
+[
+	 {id:0, name: "Trang chủ", feed : "http://vnexpress.net/listfile/subject/00/sd_ts.xml" }
+	,{id:2, name: "Thế giới", feed : "http://vnexpress.net/listfile/subject/00/sd_2.xml" } 
+	,{id:18, name: "Xã hội", feed : "http://vnexpress.net/listfile/subject/00/sd_18.xml" }
+	,{id:3, name: "Kinh doanh", feed : "http://vnexpress.net/listfile/subject/00/sd_3.xml" }
+	,{id:51, name: "Văn hóa", feed : "http://vnexpress.net/listfile/subject/00/sd_51.xml" }
+	,{id:47, name: "Pháp luật", feed : "http://vnexpress.net/listfile/subject/00/sd_47.xml" }
+]
+
+
+Thể thao à http://vnexpress.net/listfile/subject/00/sd_9.xml
+SEA Games 26 à http://vnexpress.net/listfile/subject/00/sd_ts_seagames.xml
+Đời sống à http://vnexpress.net/listfile/subject/00/sd_110.xml
+Khoa học à http://vnexpress.net/listfile/subject/00/sd_83.xml
+Vi tính à http://vnexpress.net/listfile/subject/00/sd_89.xml
+Ôtô - Xe máy à http://vnexpress.net/listfile/subject/00/sd_38.xml
+Bạn đọc viết à http://vnexpress.net/listfile/subject/00/sd_109.xml
+Tâm sự à http://vnexpress.net/listfile/subject/00/sd_127.xml
+Cười à http://vnexpress.net/listfile/subject/00/sd_105.xml

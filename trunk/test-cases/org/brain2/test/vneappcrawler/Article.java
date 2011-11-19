@@ -4,6 +4,8 @@ import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gson.Gson;
+
 public class Article {
 	private String id;
 	private String authorID;
@@ -150,5 +152,9 @@ public class Article {
 		this.generalParsed = generalParsed;
 	}
 	
+	@Override
+	public String toString() {		
+		return new Gson().toJson(this);
+	}
 
 }

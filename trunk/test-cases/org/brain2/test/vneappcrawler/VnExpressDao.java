@@ -80,10 +80,11 @@ public class VnExpressDao {
 		return total;
 	}
 	
-	public boolean isExistArticle(Article article) throws SQLException {
-		String sql = "SELECT count(`article_id`) as total FROM article WHERE article_id = ? ";
+	public boolean isExistedArticle(Article article) throws SQLException {
+		String sql = "SELECT count(`article_id`) as total FROM article WHERE article_id = ? OR share_url = ? ";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		ps.setString(1, article.getId());
+		ps.setString(2, article.getSharedURL());
 		ResultSet rs = ps.executeQuery();
 		int total = 0;
 		while (rs.next()) {
@@ -92,6 +93,61 @@ public class VnExpressDao {
 		rs.close();
 		ps.close();
 		return total == 1;
+	}
+	
+	public boolean isExistedArticleByID(String id) throws SQLException {
+		String sql = "SELECT count(`article_id`) as total FROM article WHERE article_id = ? ";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setString(1, id);		
+		ResultSet rs = ps.executeQuery();
+		int total = 0;
+		while (rs.next()) {
+			total = rs.getInt("total");
+		}
+		rs.close();
+		ps.close();
+		return total == 1;
+	}
+	
+	public boolean isExistedArticle(String path) throws SQLException {
+		String sql = "SELECT count(`article_id`) as total FROM article WHERE share_url = ? ";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setString(1, path);
+		ResultSet rs = ps.executeQuery();
+		int total = 0;
+		while (rs.next()) {
+			total = rs.getInt("total");
+		}
+		rs.close();
+		ps.close();
+		return total > 0;
+	}
+	
+	/**
+	 * generate temp ID for hot news (mostly not in DB VnExpress)
+	 * 
+	 * @param path
+	 * @return
+	 * @throws SQLException
+	 */
+	public int getHotArticleId(String path) throws SQLException {
+		if(isExistedArticle(path)){
+			return 0;
+		}		
+		String sql = "SELECT MAX(article.article_id)+1 as nextHotArticleId FROM article WHERE article.article_id < 1000000000";
+		PreparedStatement ps = conn.prepareStatement(sql);		
+		ResultSet rs = ps.executeQuery();
+		int id = 0;
+		if(rs.next()) {
+			System.out.println("ss");
+			id = rs.getInt("nextHotArticleId");
+		} else {
+			System.out.println("ss4");
+			return 1;
+		}
+		rs.close();
+		ps.close();		
+		return id;
 	}
 	
 	
@@ -206,8 +262,7 @@ public class VnExpressDao {
 		return rs;
 	}
 	
-	public boolean saveArticle(Article article) throws SQLException{
-		System.out.println("SAVE DB article: "+article.getSharedURL());
+	public boolean saveArticle(Article article) throws SQLException{		
 		conn.setAutoCommit(false);
 		String sql = "INSERT INTO article(article_id,headline, abstract,content,is_delete,share_url,thumbnail_md5,thumbnail_url,creation_time,update_time) VALUES(?,?,?,?,?,?,?,?,?,?) ";
 		PreparedStatement ps = conn.prepareStatement(sql);			
@@ -222,10 +277,15 @@ public class VnExpressDao {
 		ps.setLong(9, article.getCreationDate()!=null ? article.getCreationDate().getTime():0);
 		ps.setLong(10, article.getUpdateDate()!=null ? article.getUpdateDate().getTime():0);
 		boolean rs = ps.execute();			
-		conn.commit();		
-		saveComment(new ArrayList<Comment>(article.getComments()));		
+		conn.commit();
 		saveRefObj(article.getRefObj());
-		saveTopicArticle(article.getTopicID(),article.getId());
+		saveComment(new ArrayList<Comment>(article.getComments()));
+		try {		
+			//can skip this if save fail
+			saveTopicArticle(article.getTopicID(),article.getId());
+		} catch (Exception e) {			
+			e.printStackTrace();
+		}
 		return rs;
 	}
 	
