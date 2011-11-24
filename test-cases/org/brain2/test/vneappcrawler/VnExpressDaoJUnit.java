@@ -32,7 +32,7 @@ public class VnExpressDaoJUnit {
 			System.out.println(d.getTime());
 			
 			System.out.println(formater.format(new Date(1319994000000L)));
-			
+			System.out.println(formater.format(new Date(1320638940L)));
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}

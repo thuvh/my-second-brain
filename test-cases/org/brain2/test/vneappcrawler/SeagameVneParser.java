@@ -1,5 +1,9 @@
 package org.brain2.test.vneappcrawler;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.http.protocol.HTTP;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -58,7 +62,7 @@ public class SeagameVneParser extends MainParser{
 			 */
 			Article exArticle = new Article();
 			exArticle.setId(article.getId());
-			processExtraPageLink(content,exArticle,".bodypage",".ctdt");
+			List<String> extraHrefs =processExtraPageLink(content,exArticle,".bodypage",".ctdt",new ArrayList<String>());
 			
 			/**
 			 * Images
@@ -73,7 +77,7 @@ public class SeagameVneParser extends MainParser{
 			 * Get thumbnail 
 			 * TODO : case : page_2.asp luu thumnail
 			 */
-			getThumbnail(theLink,article,".ctdt",130,100);
+			getThumbnail(getThumbnailPageURL(theLink, extraHrefs),theLink,article,".ctdt",130,100);
 			
 			/**
 			 * Remove all , just get <p>
@@ -84,6 +88,7 @@ public class SeagameVneParser extends MainParser{
 			Whitelist whiteList = new Whitelist();
 			whiteList.addTags("p");
 			String newContent = Jsoup.clean(content.html(), whiteList);
+			newContent = newContent.replaceAll("\\*Clip:", "");
 			article.setContent(newContent);
 			
 		}

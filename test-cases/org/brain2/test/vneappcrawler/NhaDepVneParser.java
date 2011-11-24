@@ -1,5 +1,8 @@
 package org.brain2.test.vneappcrawler;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.http.protocol.HTTP;
 import org.brain2.ws.core.utils.Log;
 import org.jsoup.Jsoup;
@@ -49,7 +52,7 @@ public class NhaDepVneParser extends MainParser{
 				 */
 				Article exArticle = new Article();
 				exArticle.setId(article.getId());
-				processExtraPageLink(cpms,exArticle,".content-left",".PT-top-c3");
+				List<String> extraHrefs = processExtraPageLink(cpms,exArticle,".content-left",".PT-top-c3",new ArrayList<String>());
 				
 				/**
 				 * Images
@@ -77,7 +80,7 @@ public class NhaDepVneParser extends MainParser{
 				 * Get thumbnail 
 				 * TODO : case : page_2.asp luu thumnail
 				 */
-				getThumbnail(theLink,article,".PT-top-c3",130,100);
+				getThumbnail(getThumbnailPageURL(theLink, extraHrefs),theLink,article,".PT-top-c3",130,100);
 				
 				/**
 				 * Remove all , just get <p>
@@ -88,6 +91,7 @@ public class NhaDepVneParser extends MainParser{
 				Whitelist whiteList = new Whitelist();
 				whiteList.addTags("p");
 				String newContent = Jsoup.clean(cpms.html(), whiteList);
+				newContent = newContent.replaceAll("\\*Clip:", "");
 				article.setContent(newContent);
 				
 				

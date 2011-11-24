@@ -156,59 +156,57 @@ public class VnExpressImporter {
 			public void run() {				
 
 				try {
-					final String html = HttpClientUtil.executeGet("http://vnexpress.net"+theLink);
-					if (html.isEmpty()||html.equals("500")) {						
-						print.println("500 ### FAIL LINK, => theLink: " + theLink);
-						print.flush();
-						saveLogDB(theLink, ImportStatus.SERVER_ERROR);
-						throw new IllegalArgumentException("http get fail, 500 server error");
-					} else if(html.equals("404")){
-						totalDieLinks++;
-						print.println("404 ### skip, workcount = " + VnExpressImporter.workFinished()+ " => theLink: " + theLink);
-						print.flush();
-						saveLogDB(theLink, ImportStatus.DEAD_LINK);
-						return;
-					}
-					Log.MODE = Log.NO_LOG;
-					Parser vneParser;
-					if(theLink.startsWith("/tin/")){
-						vneParser = new SeagameVneParser();
-					} else {
-						vneParser = new VnExpressParser();
-					}
-					
-					final Article newArticle = vneParser.parseHtmlToArticle(theLink, html, oldArticle, _vnExpressDao);
-					Log.MODE = Log.PRINT_CONSOLE;
-					saveLogDB(theLink, ImportStatus.PARSED_OK);
-					
-					saveDBExecutor.execute(new Runnable() {						
-						@Override
-						public void run() {
-							try {
-								Log.println("BEGIN SAVE DB "+ theLink);
-								Log.println("# "+ newArticle.getContent());
-								
-								if( ! _vnExpressDao.isExistedArticle(newArticle)){
-									_vnExpressDao.saveArticle(newArticle);
-									saveLogDB(theLink, ImportStatus.SAVED_OK);
-								} else {
-									_vnExpressDao.updateArticle(newArticle);						
-									Log.println(" => theLink: " + theLink + " isExistArticle = true");
-									saveLogDB(theLink, ImportStatus.UPDATE_OK);
-								}
-								if(newArticle.isGeneralParsed()){
-									saveLogDB(theLink, ImportStatus.UNCOMPLETE_PARSED);	
-								}
-								print.println("200 ### workcount = " + VnExpressImporter.workFinished()+" SAVE OK => theLink: " + theLink);
-								print.flush();
-							} catch (SQLException e) {
-								errorPrint.println(theLink + " @@@ SQLException: " + e.getClass().getName()+ "-" + e.getMessage() );
-								e.printStackTrace();
-								saveLogDB(theLink, ImportStatus.SAVE_FAIL);	
-								//System.exit(1);
-							}							
+					String fulLink = VnExpressUtils.getFullLink(theLink);
+					if(!fulLink.isEmpty()){
+						String html = HttpClientUtil.executeGet(fulLink);
+						if (html.isEmpty()||html.equals("500")) {						
+							print.println("500 ### FAIL LINK, => theLink: " + theLink);
+							print.flush();
+							saveLogDB(theLink, ImportStatus.SERVER_ERROR);
+							throw new IllegalArgumentException("http get fail, 500 server error");
+						} else if(html.equals("404")){
+							totalDieLinks++;
+							print.println("404 ### skip, workcount = " + VnExpressImporter.workFinished()+ " => theLink: " + theLink);
+							print.flush();
+							saveLogDB(theLink, ImportStatus.DEAD_LINK);
+							return;
 						}
-					});
+						//Log.MODE = Log.NO_LOG;
+						
+						Parser parser = VnExpressUtils.getParser(theLink);
+						if(parser!=null){
+							final Article newArticle = parser.parseHtmlToArticle(fulLink, html, oldArticle, _vnExpressDao);
+							
+							Log.MODE = Log.PRINT_CONSOLE;
+							saveLogDB(theLink, ImportStatus.PARSED_OK);
+							
+							saveDBExecutor.execute(new Runnable() {						
+								@Override
+								public void run() {
+									try {
+										if( ! _vnExpressDao.isExistedArticle(newArticle)){
+											_vnExpressDao.saveArticle(newArticle);
+											saveLogDB(theLink, ImportStatus.SAVED_OK);
+										} else {
+											_vnExpressDao.updateArticle(newArticle);						
+											Log.println(" => theLink: " + theLink + " isExistArticle = true");
+											saveLogDB(theLink, ImportStatus.UPDATE_OK);
+										}
+										if(newArticle.isGeneralParsed()){
+											saveLogDB(theLink, ImportStatus.UNCOMPLETE_PARSED);	
+										}
+										print.println("200 ### workcount = " + VnExpressImporter.workFinished()+" SAVE OK => theLink: " + theLink);
+										print.flush();
+									} catch (SQLException e) {
+										errorPrint.println(theLink + " @@@ SQLException: " + e.getClass().getName()+ "-" + e.getMessage() );
+										e.printStackTrace();
+										saveLogDB(theLink, ImportStatus.SAVE_FAIL);	
+										//System.exit(1);
+									}							
+								}
+							});
+						}
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 					errorPrint.println(theLink + " @@@ " + e.getClass().getName()+ "-" + e.getMessage());
@@ -220,7 +218,12 @@ public class VnExpressImporter {
 	}	
 
 	public void masterWorker() throws Exception {
-				
+//		final int numberOfCores = Runtime.getRuntime().availableProcessors();
+//		System.out.println(numberOfCores);
+//		final double blockingCoefficient = 0.9;
+//		final int poolSize = (int)(numberOfCores / (1 - blockingCoefficient));
+//		NTHREDS = poolSize;
+		
 		masterJobStarted();	
 		final ExecutorService executor = Executors.newFixedThreadPool(NTHREDS);
 		int totalArticle = _vnExpressDao.getTotalCountInVnExpress();
@@ -231,17 +234,17 @@ public class VnExpressImporter {
 
 						
 		int startIndex = 0;
-		//startIndex = totalArticle - SAMPLE_TEST_NUM;
-		//startIndex = 432000; //TODO
+		startIndex = totalArticle - SAMPLE_TEST_NUM;
+		//startIndex = 332000; //TODO
 		
 		int totalJob = totalArticle - startIndex;
 		Log.println("## total article ## = " + totalArticle);
 		Log.println("jobcount/total: "+getJobCount() + " - " + totalJob);
 		
 		//TODO
-//		if(totalJob > SAMPLE_TEST_NUM){			
-//			totalJob = SAMPLE_TEST_NUM;
-//		}
+		if(totalJob > SAMPLE_TEST_NUM){			
+			totalJob = SAMPLE_TEST_NUM;
+		}
 		
 		setJobCount(0);
 		setTotalJobCount(totalJob);

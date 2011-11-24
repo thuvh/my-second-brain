@@ -4,16 +4,14 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
-import org.brain2.test.vneappcrawler.VnExpressParser;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
+import org.json.JSONException;
 
 public class HttpClientUtil {
 	
@@ -28,11 +26,35 @@ public class HttpClientUtil {
 	    return client;
 	}
 	
+	
+	public static String executePost(String url){
+		try {	
+			HttpPost httppost = new HttpPost(url);
+			
+			httppost.setHeader("User-Agent", USER_AGENT);
+			httppost.setHeader("Accept-Charset", "utf-8");			
+			httppost.setHeader("Cache-Control", "max-age=3, must-revalidate, private");	
+			httppost.setHeader("Authorization", "OAuth oauth_token=4442102a3cae70f546659c0f2851f5f6");
+
+			HttpResponse response = getThreadSafeClient().execute(httppost);
+			HttpEntity entity = response.getEntity();				
+			if (entity != null) {
+				getThreadSafeClient().getConnectionManager().closeExpiredConnections();
+				return EntityUtils.toString(entity, HTTP.UTF_8);
+			}
+		
+		}  catch (HttpResponseException e) {
+		    System.err.println(e.getMessage());		  
+			
+		} catch (Exception e) {
+			e.printStackTrace(); 
+		}
+		return "";
+	}
+	
 	public static String executeGet(String url){
 		try {
-			if( ! url.startsWith(VnExpressParser.BASE_URL)){
-				url = VnExpressParser.BASE_URL + url;
-			}
+		
 			
 			HttpGet httpget = new HttpGet(url);
 			
@@ -62,11 +84,30 @@ public class HttpClientUtil {
 		return "";
 	}
 	
-	public static void main(String[] args) {
-		String url = "http://vnexpress.net/tin/ban-doc-viet/2011/11/bong-da/";
-		String html = executeGet(url);
-		Document doc = Jsoup.parse(html, HTTP.UTF_8);
-		Elements nodes = doc.select(".lgsg");		
-		System.out.println(nodes.attr("title"));
+	public static void main(String[] args) throws JSONException {
+//		String url = "http://vnexpress.net/tin/ban-doc-viet/2011/11/bong-da/";
+//		String html = executeGet(url);
+//		Document doc = Jsoup.parse(html, HTTP.UTF_8);
+//		Elements nodes = doc.select(".lgsg");		
+//		System.out.println(nodes.attr("title"));
+		
+//		String url = "http://mapi.vnexpress.net/articles?method=get&ids=1000419497";
+//		
+//		
+//		String json = executeGet(url);
+//		System.out.println(json);
+//		
+//		JSONObject jsonObject = new JSONObject(json);
+//		JSONObject article = jsonObject.getJSONObject("body").getJSONArray("articles").getJSONObject(0); 
+//		String content = article.getString("content");		
+//		System.out.println("\ncontent:\n "+content);
+		
+//		String json = executePost("http://trieunt.mapi.vnexpress.net/comments/?method=send&article_id=1000000396&title=hello&content=world");
+//		System.out.println("\ncontent:\n "+json);
+//		
+		String json2 = executePost("http://mapi.vnexpress.net/comments/?method=send&article_id=1000419498&title=hello&content=world");
+		System.out.println("\ncontent:\n "+json2);
 	}
+	
+	
 }
