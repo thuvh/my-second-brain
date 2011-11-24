@@ -1,5 +1,10 @@
 package org.brain2.test.vneappcrawler;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.http.protocol.HTTP;
 import org.brain2.ws.core.utils.Log;
 import org.jsoup.Jsoup;
@@ -9,10 +14,10 @@ import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
 
 public class VnExpressParser extends MainParser{
-	public static  final String BASE_URL = "http://vnexpress.net";  
 	
 	public Article parseHtmlToArticle(String theLink, String html,
 			Article article, VnExpressDao _vnExpressDao) throws Exception {
+		System.out.println("THE LINK :" + theLink);
 		final Document doc = Jsoup.parse(html, HTTP.UTF_8);
 		final String lead = article.getAbstractS();
 
@@ -60,7 +65,7 @@ public class VnExpressParser extends MainParser{
 				 */
 				Article exArticle = new Article();
 				exArticle.setId(article.getId());
-				processExtraPageLink(cpms,exArticle,".content","div[cpms_content=true]");
+				List<String> extraHrefs = processExtraPageLink(cpms,exArticle,".content","div[cpms_content=true]",new ArrayList<String>());
 				
 				/**
 				 * Images
@@ -95,7 +100,8 @@ public class VnExpressParser extends MainParser{
 				 * Get thumbnail 
 				 * TODO : case : page_2.asp luu thumnail
 				 */
-				getThumbnail(theLink,article,"div[cpms_content=true]",130,100);
+				
+				getThumbnail(getThumbnailPageURL(theLink, extraHrefs),theLink,article,"div[cpms_content=true]",130,100);
 				
 				/**
 				 * Remove all , just get <p>
@@ -106,6 +112,7 @@ public class VnExpressParser extends MainParser{
 				Whitelist whiteList = new Whitelist();
 				whiteList.addTags("p");
 				String newContent = Jsoup.clean(cpms.html(), whiteList);
+				newContent = newContent.replaceAll("\\*Clip:", "");
 				article.setContent(newContent);
 				
 				/**

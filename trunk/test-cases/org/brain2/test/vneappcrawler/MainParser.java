@@ -2,6 +2,9 @@ package org.brain2.test.vneappcrawler;
 
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -32,7 +35,7 @@ public abstract class MainParser implements Parser{
 			if(_related_links!=null &&_related_links.size()>0){
 				for(Element ele: _related_links){
 					String href =  ele.attr("href");
-					ReferenceObject obj = new ReferenceObject(article.getId(), StringUtil.md5(href),href.replaceAll("http://vnexpress.net", ""), ReferenceType.RELATED_LINK, new Date());
+					ReferenceObject obj = new ReferenceObject(article.getId(), VnExpressUtils.md5(href),href, ReferenceType.RELATED_LINK, new Date());
 					article.addRefObj(obj);
 				}
 			}
@@ -69,12 +72,15 @@ public abstract class MainParser implements Parser{
 						obj.setUpdateTime(new Date());
 						
 						obj.setUrl(src);
-						obj.setMd5(StringUtil.md5(src));
+						obj.setMd5(VnExpressUtils.md5(src));
 						if(img.parents()!=null &&img.parents().size()>=2){
-							Element trNext = img.parents().get(1).nextElementSibling(); 
-							if(trNext != null && (trNext.select(".Image").size()>0||trNext.select("img").size()==0)){
-								obj.setCaption(trNext.text());
-								trNext.remove();
+							if(img.parents().get(1)!=null){
+								Element trNext = img.parents().get(1).nextElementSibling();
+								System.out.println("Paent : "+trNext);
+								if(trNext != null && trNext.select("img").size()==0){
+									obj.setCaption(trNext.text());
+									trNext.remove();
+								}
 							}
 							img.remove();
 							article.addRefObj(obj);
@@ -87,9 +93,9 @@ public abstract class MainParser implements Parser{
 			Log.println("EXTRACT IMG EXCEPTION :"+e.getMessage());
 		}
 	}
-	public void getThumbnail(String theLink,Article article,String parentSelectPaterrn, int widthImg,int heightImg){
+	public void getThumbnail(String thumbnailPageURL,String theLink,Article article,String parentSelectPaterrn, int widthImg,int heightImg){
 		try {
-			String thumbnailPage = HttpClientUtil.executeGet(theLink + "/page_1.asp");
+			String thumbnailPage = HttpClientUtil.executeGet(thumbnailPageURL);
 			if(!thumbnailPage.isEmpty()){
 				Elements cpmsThumbnailPage = Jsoup.parse(thumbnailPage).select(parentSelectPaterrn);
 				if(cpmsThumbnailPage !=null && cpmsThumbnailPage.size()>0){
@@ -98,13 +104,13 @@ public abstract class MainParser implements Parser{
 						if(String.valueOf(widthImg).equals(thum.attr("width"))){
 							String urlThumbnail = thum.attr("src");
 							article.setThumbnailURL(urlThumbnail);
-							article.setThumbnailMD5(StringUtil.md5(urlThumbnail));
+							article.setThumbnailMD5(VnExpressUtils.md5(urlThumbnail));
 							break;
 						}
 						if(String.valueOf(heightImg).equals(thum.attr("height"))){
 							String urlThumbnail = thum.attr("src");
 							article.setThumbnailURL(urlThumbnail);
-							article.setThumbnailMD5(StringUtil.md5(urlThumbnail));
+							article.setThumbnailMD5(VnExpressUtils.md5(urlThumbnail));
 							break;
 						}
 					}
@@ -139,19 +145,21 @@ public abstract class MainParser implements Parser{
 				int i = 0;
 				List<Comment> comments = new ArrayList<Comment>();
 				while (dbComments.next()) {
-					System.out.println("i "+i);
-					Comment comment = new Comment(
-							dbComments.getString("ID"), article.getId(),
-							dbComments.getString("Title"), _comments.get(i)
-									.select(".Normal").html(), "0",
-							dbComments.getString("Name"),
-							dbComments.getString("Email"),
-							dbComments.getInt("Status"),
-							dbComments.getDate("PublishDate"),
-							dbComments.getDate("Date"),
-							dbComments.getDate("Modified"));
-					comments.add(comment);
-					i++;
+					if(i<_comments.size()){
+						System.out.println("i "+i);
+						Comment comment = new Comment(
+								dbComments.getString("ID"), article.getId(),
+								dbComments.getString("Title"), _comments.get(i)
+										.select(".Normal").html(), "0",
+								dbComments.getString("Name"),
+								dbComments.getString("Email"),
+								dbComments.getInt("Status"),
+								dbComments.getDate("PublishDate"),
+								dbComments.getDate("Date"),
+								dbComments.getDate("Modified"));
+						comments.add(comment);
+						i++;
+					}
 				}
 				article.setComments(comments);
 			}
@@ -178,43 +186,73 @@ public abstract class MainParser implements Parser{
 			Log.println("::::PROCESS TDSK EXCEPTION:::::");
 		}
 	}
-	public void processExtraPageLink(Element element,Article article,String parentContent,String parent){
+	public List<String> processExtraPageLink(Element element,Article article,String parentContent,String parent,List<String> hrefList){
 		try {
-			Elements exPageLinks= element.select("a[href~=page_[1-9].asp]");
-			System.out.println("exPageLinks: "+exPageLinks.size());
+			Elements exPageLinks= element.select("a[href~=[p,P]age_([1-9])*.asp]");
+			System.out.println("HREF SIZE :"+exPageLinks.size());
 			if(exPageLinks.size()>0){
-				for(Element exPageLink:exPageLinks){
-				
-					String pageHtml = HttpClientUtil.executeGet(exPageLink.attr("href"));
-					if (!pageHtml.isEmpty()&& !pageHtml.equals("500")&&!pageHtml.equals("404")) {
-						Document docPage2 = Jsoup.parse(pageHtml, HTTP.UTF_8);
-						Elements contents = docPage2.select(parentContent);
-						if(contents.size()>0){
-							Elements cpmsExPage = contents.select(parent);
-							
-							if(cpmsExPage.size()>0){
-								Element cpmExPage = cpmsExPage.get(0);
-								cpmExPage = removeElement(cpmExPage);
-								Article extraArticle = new Article();
-								extraArticle.setId(article.getId());
-								
-								processExtraPageLink(cpmExPage,extraArticle,parentContent,parent);
-								
-								extractIMG(cpmExPage,article);
-								article.addAll(extraArticle.getRefObj());
-								extraArticle=null;
+				for(int i=0,n=exPageLinks.size();i<n;i++){
+					Element exPageLink = exPageLinks.get(i);
+					String hrefLink = exPageLink.attr("href");
+					System.out.println("Href :"+hrefLink);
+					if(!hrefLink.startsWith("http://"))
+						hrefLink = VnExpressUtils.getFullLink(hrefLink);
+					if(!hrefLink.isEmpty()){
+						if(!hrefList.contains(hrefLink.toLowerCase())){
+							String pageHtml = HttpClientUtil.executeGet(hrefLink);
+							if (!pageHtml.isEmpty()&& !pageHtml.equals("500")&&!pageHtml.equals("404")) {
+								Document docPage2 = Jsoup.parse(pageHtml, HTTP.UTF_8);
+								Elements contents = docPage2.select(parentContent);
+								if(contents.size()>0){
+									Elements cpmsExPage = contents.select(parent);
+									
+									if(cpmsExPage.size()>0){
+										Element cpmExPage = cpmsExPage.get(0);
+										cpmExPage = removeElement(cpmExPage);
+										Article extraArticle = new Article();
+										extraArticle.setId(article.getId());
+										if(!hrefList.contains(hrefLink.toLowerCase()))
+											hrefList.add(hrefLink.toLowerCase());
+										processExtraPageLink(cpmExPage,extraArticle,parentContent,parent,hrefList);
+										
+										extractIMG(cpmExPage,article);
+										article.addAll(extraArticle.getRefObj());
+										extraArticle=null;
+										
+									}
+								}
 								
 							}
+							
+							/**
+							 * remove text *Clip:
+							 */
+							Element parentLink = exPageLink.parent();
+							System.out.println("hreflink :"+hrefLink);
+							
+							exPageLink.remove();
+							try{
+								if(parentLink != null){
+//									String newHtml = parentLink.html().replaceAll("Clip", "");
+//									newHtml= newHtml.replaceAll("\\*", "");
+//									newHtml= newHtml.replaceAll(":", "");
+//									parentLink.html(newHtml+" ");
+									parentLink.html(parentLink.html().replaceAll("\\*<em>Clip:</em>", "")+" ");
+								}
+							} catch (IndexOutOfBoundsException e) {
+								e.printStackTrace();
+								//TODO
+								//skip
+							}
 						}
-						
 					}
-					exPageLink.parent().remove();
 				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			Log.println("::::processExtraPageLink EXCEPTION ::::: ");
 		}
+		return hrefList;
 	}
 	public Element removeElement(Element cpmExPage) {
 		return cpmExPage;
@@ -235,7 +273,7 @@ public abstract class MainParser implements Parser{
 					if(relatedLinks.size()>0){
 						for(Element reElement: relatedLinks){
 							String href =  reElement.attr("href");
-							ReferenceObject obj = new ReferenceObject(article.getId(), StringUtil.md5(href),href.replaceAll("http://vnexpress.net", ""), ReferenceType.RELATED_LINK, new Date());
+							ReferenceObject obj = new ReferenceObject(article.getId(), VnExpressUtils.md5(href),href, ReferenceType.RELATED_LINK, new Date());
 							article.addRefObj(obj);
 						}
 						relatedLinks.remove();
@@ -251,6 +289,30 @@ public abstract class MainParser implements Parser{
 			e.printStackTrace();
 			Log.println("::::::PROCESS LEAD EXCEPTION::::::");
 		}
+	}
+	public static String getThumbnailPageURL(String theLink, List<String> extraPageURL){
+		String thumbnailPage = theLink + "/page_1.asp";
+		try {
+			if(extraPageURL.contains(theLink.toLowerCase()+ "/page_1.asp")){
+				Comparator<String> c = new ExtraPageComparator();
+				Collections.sort(extraPageURL, c);
+				String lastLink = extraPageURL.get(extraPageURL.size()-1);
+				int nextIndex = Integer.parseInt(lastLink.substring(lastLink.lastIndexOf("_")+1,lastLink.lastIndexOf(".")))+1;
+				thumbnailPage = theLink + "/page_"+nextIndex+".asp";
+			}
+		} catch (Exception e) {
+			return thumbnailPage;
+		}
+		return thumbnailPage;
+	}
+	public static void main(String[] args) {
+		List<String> list =new ArrayList<String>();
+		list.add("http://vnexpress.net/gl/van-hoa/2011/11/my-nhan-miss-world-toa-sang-trong-trang-phuc-da-hoi/page_3.asp");
+		list.add("http://vnexpress.net/gl/van-hoa/2011/11/my-nhan-miss-world-toa-sang-trong-trang-phuc-da-hoi/page_11.asp");
+		list.add("http://vnexpress.net/gl/van-hoa/2011/11/my-nhan-miss-world-toa-sang-trong-trang-phuc-da-hoi/page_1.asp");
+//		System.out.println(list.contains("http://vnexpress.net/gl/van-hoa/2011/11/my-nhan-miss-world-toa-sang-trong-trang-phuc-da-hoi/page_3.asp"));
+		String result = MainParser.getThumbnailPageURL("http://vnexpress.net/gl/van-hoa/2011/11/my-nhan-miss-world-toa-sang-trong-trang-phuc-da-hoi", list);
+		System.out.println(result);
 	}
 
 }

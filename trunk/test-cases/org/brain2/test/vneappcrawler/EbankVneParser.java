@@ -1,5 +1,8 @@
 package org.brain2.test.vneappcrawler;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.http.protocol.HTTP;
 import org.brain2.ws.core.utils.Log;
 import org.jsoup.Jsoup;
@@ -32,7 +35,7 @@ public class EbankVneParser extends MainParser{
 				 * split related link from lead
 				 */
 				
-				processLead(cpms,article,"h2.Lead");
+				processLead(cpms,article,".Lead");
 
 				/**
 				 * remove title and lead from content
@@ -58,7 +61,7 @@ public class EbankVneParser extends MainParser{
 				 */
 				Article exArticle = new Article();
 				exArticle.setId(article.getId());
-				processExtraPageLink(cpms,exArticle,".content","div[cpms_content=true]");
+				List<String> extraHrefs = processExtraPageLink(cpms,exArticle,".content","div[cpms_content=true]",new ArrayList<String>());
 				
 				/**
 				 * Images
@@ -93,7 +96,7 @@ public class EbankVneParser extends MainParser{
 				 * Get thumbnail 
 				 * TODO : case : page_2.asp luu thumnail
 				 */
-				getThumbnail(theLink,article,"div[cpms_content=true]",130,100);
+				getThumbnail(getThumbnailPageURL(theLink, extraHrefs),theLink,article,"div[cpms_content=true]",130,100);
 				
 				/**
 				 * Remove all , just get <p>
@@ -104,6 +107,7 @@ public class EbankVneParser extends MainParser{
 				Whitelist whiteList = new Whitelist();
 				whiteList.addTags("p");
 				String newContent = Jsoup.clean(cpms.html(), whiteList);
+				newContent = newContent.replaceAll("\\*Clip:", "");
 				article.setContent(newContent);
 				
 				/**

@@ -10,6 +10,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Queue;
 
+import org.brain2.ws.core.utils.Log;
+
 public class VnExpressDao {
 	//DELETE FROM `comment`; DELETE FROM `article`;
 
@@ -274,6 +276,7 @@ public class VnExpressDao {
 		ps.setString(6, article.getSharedURL());
 		ps.setString(7, article.getThumbnailMD5());
 		ps.setString(8, article.getThumbnailURL());
+		System.out.println("save thumbnail" + article.getThumbnailURL());
 		ps.setLong(9, article.getCreationDate()!=null ? article.getCreationDate().getTime():0);
 		ps.setLong(10, article.getUpdateDate()!=null ? article.getUpdateDate().getTime():0);
 		boolean rs = ps.execute();			
@@ -290,19 +293,25 @@ public class VnExpressDao {
 	}
 	
 	public boolean saveTopicArticle(String topicID, String articleId) throws SQLException {
-		if(topicID == null || articleId == null){
+		try {
+			if(topicID == null || articleId == null){
+				return false;
+			}
+			String sql = "INSERT INTO topic_article VALUES(?,?,?,?,?) ";
+			PreparedStatement ps = conn.prepareStatement(sql);			
+			ps.setString(1, topicID);
+			ps.setString(2, articleId);
+			ps.setInt(3, 0);
+			ps.setLong(4, new Date().getTime());
+			ps.setLong(5, new Date().getTime());
+			boolean rs = ps.execute();			
+			conn.commit();
+			return rs;
+		} catch (Exception e) {
+			e.printStackTrace();
+			Log.println("::::EXCEPTION SAVE TOPIC ARTICLE");
 			return false;
 		}
-		String sql = "INSERT INTO topic_article VALUES(?,?,?,?,?) ";
-		PreparedStatement ps = conn.prepareStatement(sql);			
-		ps.setString(1, topicID);
-		ps.setString(2, articleId);
-		ps.setInt(3, 0);
-		ps.setLong(4, new Date().getTime());
-		ps.setLong(5, new Date().getTime());
-		boolean rs = ps.execute();			
-		conn.commit();
-		return rs;
 	}
 
 	public void saveArticle(final Queue<Article> articles) throws SQLException{

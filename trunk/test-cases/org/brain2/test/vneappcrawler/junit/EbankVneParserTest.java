@@ -1,8 +1,10 @@
-package org.brain2.test.vneappcrawler;
+package org.brain2.test.vneappcrawler.junit;
 
 import static org.junit.Assert.assertEquals;
 
 import org.apache.http.protocol.HTTP;
+import org.brain2.test.vneappcrawler.EbankVneParser;
+import org.brain2.test.vneappcrawler.Parser;
 import org.brain2.ws.core.utils.HttpClientUtil;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -13,31 +15,27 @@ import org.junit.Test;
 public class EbankVneParserTest {
 	private String domain ="http://ebank.vnexpress.net";
 	Parser ebankVneParser = new EbankVneParser();
-	@Test
-	public void testProcessContact(){
-		/**
-		 * /gl/the-gioi/nguoi-viet-5-chau/2011/11/hungary-thanh-binh/
-		 * /gl/cuoi/2011/11/ai-la-nan-nhan/
-		 * 
-		 */
-		String theLink = "/gl/ebank/thi-truong/2011/11/sot-ty-gia-ngan-hang-dang-ha-nhiet";
-		String html = HttpClientUtil.executeGet(domain+theLink);
-		Document doc = Jsoup.parse(html, HTTP.UTF_8);
-
-		Elements contents = doc.select(".content");
-
-		if (contents.size() > 0) {
-			Element content = contents.get(0);
-
-			Elements cpms_content = content.select("div[cpms_content=true]");
-
-			if (cpms_content.size() > 0) {
-				Element cpms = cpms_content.get(0);
-				ebankVneParser.processContact(cpms, "/contactus/?id=");
-				System.out.println("Content :" + cpms.html());
-			}
-		}
-	}
+//	@Test
+//	public void testProcessContact(){
+//		
+//		String theLink = "/gl/ebank/thi-truong/2011/11/sot-ty-gia-ngan-hang-dang-ha-nhiet";
+//		String html = HttpClientUtil.executeGet(domain+theLink);
+//		Document doc = Jsoup.parse(html, HTTP.UTF_8);
+//
+//		Elements contents = doc.select(".content");
+//
+//		if (contents.size() > 0) {
+//			Element content = contents.get(0);
+//
+//			Elements cpms_content = content.select("div[cpms_content=true]");
+//
+//			if (cpms_content.size() > 0) {
+//				Element cpms = cpms_content.get(0);
+//				ebankVneParser.processContact(cpms, "/contactus/?id=");
+//				System.out.println("Content :" + cpms.html());
+//			}
+//		}
+//	}
 //	@Test
 //	public void testProcessTDSK(){
 //		String theLink = "/gl/ebank/thi-truong/2011/11/sot-ty-gia-ngan-hang-dang-ha-nhiet";

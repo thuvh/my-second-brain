@@ -1,8 +1,10 @@
-package org.brain2.test.vneappcrawler;
+package org.brain2.test.vneappcrawler.junit;
 
 import static org.junit.Assert.assertEquals;
 
 import org.apache.http.protocol.HTTP;
+import org.brain2.test.vneappcrawler.NhaDepVneParser;
+import org.brain2.test.vneappcrawler.Parser;
 import org.brain2.ws.core.utils.HttpClientUtil;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
