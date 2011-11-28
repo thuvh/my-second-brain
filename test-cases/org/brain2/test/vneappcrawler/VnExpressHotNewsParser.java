@@ -46,7 +46,7 @@ public class VnExpressHotNewsParser {
 			JSONObject jsonObject = XML.toJSONObject(xml);
 			JSONArray items =  jsonObject.getJSONObject("XML").getJSONArray("I");
 			
-			VnExpressDao dao = VnExpressDao.getInstance();			
+			VneDataManager dao = VnExpressDao.getInstance();			
 			DateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss a");//11/19/2011 7:30:00 AM
 			
 			for (int i = 0; i < items.length(); i++) {

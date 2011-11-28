@@ -2,6 +2,7 @@ package org.brain2.test.vneappcrawler;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 import java.util.regex.Pattern;
 
 public class VnExpressUtils {
@@ -56,6 +57,11 @@ public class VnExpressUtils {
 		}
 		return null;
 	}
+	public static int getIntTimeInSecond(Long timeMS){
+		if(timeMS == null)
+			return 0;
+		return Long.valueOf(timeMS/1000L).intValue();
+	}
 	public static void main(String[] args) {
 //		String hexMD5 = VnExpressUtils.md5("http://vnexpress.net/Files/Subject/3b/bb/c0/47/ket_xe_top1.jpg");
 //		System.out.println("HEx String MD5 : " + hexMD5);
@@ -83,6 +89,14 @@ public class VnExpressUtils {
 		parser = VnExpressUtils.getParser(url);
 		rightParser = parser instanceof SeagameVneParser;
 		System.out.println("Test Parser:"+rightParser);
+		
+	 long before = System.currentTimeMillis();
+	 int after = VnExpressUtils.getIntTimeInSecond(before);
+	 System.out.println("Before :"+before+"ms");
+     System.out.println("After: "+after+"s");
+     System.out.println("Before :"+new Date(before).toString());
+     long restore = after *1000L;
+     System.out.println("After :"+new Date(restore).toString());
 		
 	}
 

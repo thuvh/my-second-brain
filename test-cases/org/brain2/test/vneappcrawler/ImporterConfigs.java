@@ -26,11 +26,20 @@ public class ImporterConfigs {
 	}
 	
 	
-	public String toConnectionUrl(){
+	public String getMySQLConnectionUrl(){
 		StringBuilder s = new StringBuilder();
 		s.append("jdbc:").append(this.getDbdriver()).append("://");
 		s.append(this.getHost());
 		s.append("/");
+		s.append(this.getDatabase());
+		return s.toString();
+	}
+	
+	public String getSQLServerConnectionUrl(){		
+		StringBuilder s = new StringBuilder();
+		s.append("jdbc:").append(this.getDbdriver()).append("://");
+		s.append(this.getHost());
+		s.append(";databaseName=");
 		s.append(this.getDatabase());
 		return s.toString();
 	}

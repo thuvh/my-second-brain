@@ -8,6 +8,7 @@ import com.google.gson.Gson;
 
 public class Article {
 	private String id;
+	private long ID;
 	private String authorID;
 	private String headline;
 	private String abstractS;
@@ -18,7 +19,10 @@ public class Article {
 	private String sharedURL;
 	private String thumbnailMD5;
 	private String thumbnailURL;
-	private String topicID;
+	private List<Topic> topics=new ArrayList<Topic>();
+	private String catID;
+	private String postBy;
+	private List<Topic> refTopics=new ArrayList<Topic>();
 	private List<Comment> comments=new ArrayList<Comment>();
 	private List<ReferenceObject> refObj=new ArrayList<ReferenceObject>();
 	
@@ -28,6 +32,20 @@ public class Article {
 		super();
 	}
 	
+	public Article(String id,String postBy, String headline, String abstractS, String sharedURL,int isDeleted,
+			Date creationDate, Date updateDate) {
+		super();
+		this.id = id;
+		this.headline = headline;
+		this.postBy = postBy;
+		this.abstractS = abstractS;
+		this.isDeleted = isDeleted;
+		this.creationDate = creationDate;
+		this.updateDate = updateDate;
+		this.sharedURL = sharedURL;
+	}
+	
+
 	public Article(String id, String headline, String abstractS, String sharedURL,int isDeleted,
 			Date creationDate, Date updateDate) {
 		super();
@@ -39,15 +57,38 @@ public class Article {
 		this.updateDate = updateDate;
 		this.sharedURL = sharedURL;
 	}
-	
 
-	public String getTopicID() {
-		return topicID;
+	public String getCatID() {
+		return catID;
 	}
 
-	public void setTopicID(String topicID) {
-		this.topicID = topicID;
+	public void setCatID(String catID) {
+		this.catID = catID;
 	}
+	public List<Topic> getTopics() {
+		return topics;
+	}
+
+	public void setTopics(List<Topic> topics) {
+		this.topics = topics;
+	}
+
+	public List<Topic> getRefTopics() {
+		return refTopics;
+	}
+
+	public void setRefTopics(List<Topic> refTopics) {
+		this.refTopics = refTopics;
+	}
+
+	public String getPostBy() {
+		return postBy;
+	}
+
+	public void setPostBy(String postBy) {
+		this.postBy = postBy;
+	}
+
 
 	public String getSharedURL() {
 		return sharedURL;
@@ -157,4 +198,23 @@ public class Article {
 		return new Gson().toJson(this);
 	}
 
+	public void addRefTopic(Topic topic) {
+		this.refTopics.add(topic);
+	}
+	public void addTopic(Topic topic) {
+		this.topics.add(topic);
+	}
+
+	public void removeRefTopic(Topic t) {
+		this.refTopics.remove(t);
+	}
+
+	public long getID() {
+		return ID;
+	}
+
+	public void setID(long iD) {
+		ID = iD;
+	}
+	
 }
