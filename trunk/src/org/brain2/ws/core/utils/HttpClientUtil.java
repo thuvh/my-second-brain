@@ -34,7 +34,7 @@ public class HttpClientUtil {
 			httppost.setHeader("User-Agent", USER_AGENT);
 			httppost.setHeader("Accept-Charset", "utf-8");			
 			httppost.setHeader("Cache-Control", "max-age=3, must-revalidate, private");	
-			httppost.setHeader("Authorization", "OAuth oauth_token=4442102a3cae70f546659c0f2851f5f6");
+			httppost.setHeader("Authorization", "OAuth oauth_token=4c63c99f2d512285df39f3abbcb20595");
 
 			HttpResponse response = getThreadSafeClient().execute(httppost);
 			HttpEntity entity = response.getEntity();				
@@ -102,11 +102,14 @@ public class HttpClientUtil {
 //		String content = article.getString("content");		
 //		System.out.println("\ncontent:\n "+content);
 		
-//		String json = executePost("http://trieunt.mapi.vnexpress.net/comments/?method=send&article_id=1000000396&title=hello&content=world");
-//		System.out.println("\ncontent:\n "+json);
-//		
-		String json2 = executePost("http://mapi.vnexpress.net/comments/?method=send&article_id=1000419498&title=hello&content=world");
-		System.out.println("\ncontent:\n "+json2);
+		String json = executePost("http://mapi.vnexpress.net/comments/?method=send&article_id=1000419498&title=hello1&content=world1");
+		System.out.println("\ncontent:\n "+json);
+
+//		String json2 = executePost("http://trieunt.mapi.vnexpress.net/comments/?method=send&article_id=1000718986&title=hell888o6&content=world888");
+//		System.out.println("\ncontent:\n "+json2);
+		
+//		String json3 = executeGet("http://trieunt.mapi.vnexpress.net/comments/?method=get&article_id=1000718986");
+//		System.out.println("\ncontent:\n "+json3);
 	}
 	
 	

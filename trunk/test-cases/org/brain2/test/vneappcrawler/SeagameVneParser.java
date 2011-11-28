@@ -1,14 +1,12 @@
 package org.brain2.test.vneappcrawler;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.http.protocol.HTTP;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
 
 public class SeagameVneParser extends MainParser{
@@ -18,10 +16,16 @@ public class SeagameVneParser extends MainParser{
 		final Document doc = Jsoup.parse(html, HTTP.UTF_8);
 		
 		Elements contents = doc.select(".ctdt");
-
+		
+		if(_vnExpressDao != null){
+			processCate(article,_vnExpressDao);
+			article.setAuthorID(_vnExpressDao.getAuthorID(article.getPostBy()));
+			setTopics(article, _vnExpressDao);	
+		}		
+		
 		if (contents.size() > 0) {
 			Element content = contents.get(0);
-			
+			getArticleDate(article,content,".time");
 			/**
 			 * split related link from lead
 			 */
@@ -82,14 +86,7 @@ public class SeagameVneParser extends MainParser{
 			/**
 			 * Remove all , just get <p>
 			 */
-			for (Element p : content.select("p")) {
-				p.html(Jsoup.parse(p.html()).text());
-			}
-			Whitelist whiteList = new Whitelist();
-			whiteList.addTags("p");
-			String newContent = Jsoup.clean(content.html(), whiteList);
-			newContent = newContent.replaceAll("\\*Clip:", "");
-			article.setContent(newContent);
+			filterContent(content, article);
 			
 		}
 		return article;

@@ -23,7 +23,7 @@ public class TestLoadConfigs {
 			ImporterConfigs configs =  gson.fromJson(json, ImporterConfigs.class);			
 			Assert.assertEquals("vnemobile", configs.getUsername());
 			Assert.assertEquals("vnemobile@123", configs.getPassword());
-			System.out.println(configs.toConnectionUrl());
+			System.out.println(configs.getMySQLConnectionUrl());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

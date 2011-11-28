@@ -8,7 +8,6 @@ import org.brain2.ws.core.utils.Log;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
 
 public class EbankVneParser extends MainParser{
@@ -18,7 +17,11 @@ public class EbankVneParser extends MainParser{
 		final Document doc = Jsoup.parse(html, HTTP.UTF_8);
 
 		Elements contents = doc.select(".content");
-
+		if(_vnExpressDao != null){
+			processCate(article,_vnExpressDao);
+			article.setAuthorID(_vnExpressDao.getAuthorID(article.getPostBy()));
+			setTopics(article, _vnExpressDao);
+		}
 		if (contents.size() > 0) {
 			Element content = contents.get(0);
 
@@ -86,7 +89,7 @@ public class EbankVneParser extends MainParser{
 				/**
 				 * Detect "Theo dong su kien"
 				 */
-				processTDSK(cpms,article);
+				processTDSK(cpms,article,".TopicTitle");
 				
 				
 				cpms.select("a[class!=Normal]").remove();
@@ -101,14 +104,7 @@ public class EbankVneParser extends MainParser{
 				/**
 				 * Remove all , just get <p>
 				 */
-				for (Element p : cpms.select("p")) {
-					p.html(Jsoup.parse(p.html()).text());
-				}
-				Whitelist whiteList = new Whitelist();
-				whiteList.addTags("p");
-				String newContent = Jsoup.clean(cpms.html(), whiteList);
-				newContent = newContent.replaceAll("\\*Clip:", "");
-				article.setContent(newContent);
+				filterContent(cpms, article);
 				
 				/**
 				 * Comment

@@ -37,8 +37,7 @@ public class ServiceNodeStarter extends AbstractHandler {
 			System.out.println(" connection keep-alive=true ");
 			try {
 				int timeSleep = Integer.parseInt(request.getParameter("keep-time"));
-				if(timeSleep > 0){
-					
+				if(timeSleep > 0){					
 					writer.print("");
 					Thread.sleep(timeSleep);
 					writer.print("setTotalJobCount("+VnExpressImporter.getTotalJobCount()+");");
@@ -118,17 +117,18 @@ public class ServiceNodeStarter extends AbstractHandler {
 			while (p.hasMoreElements()) {
 				String name = p.nextElement();
 				params.put(name, request.getParameter(name));
-				
 			}
 
-			// System.out.println(toks[1]);
-			// System.out.println(toks[2]);
+			System.out.println("Service handler namespace: "+toks[1]);
+			System.out.println("Service handler actionname: "+toks[2]);
 			System.out.println(target);
 			System.out.println(queryStr);
 
 			// TODO use config here
 			String key = "org.brain2.ws.services.linkmarking.LinkDataHandler";
-			Class clazz = Class.forName(key);
+			ServiceMapperLoader mapperLoader = new ServiceMapperLoader("/services-mapper.json");
+			String namespace = toks[1];
+			Class clazz = mapperLoader.getMapperClass(namespace );
 
 			if (!servicesMap.containsKey(key)) {
 				servicesMap.put(key, (ServiceHandler) clazz.newInstance());

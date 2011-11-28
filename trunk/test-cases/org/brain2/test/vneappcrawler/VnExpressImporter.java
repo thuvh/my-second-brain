@@ -26,7 +26,7 @@ public class VnExpressImporter {
 	
 	public static final int TIME_TO_SLEEP = 680;
 	private static int NTHREDS = 8;
-	public static int SAMPLE_TEST_NUM = 1000;
+	public static int SAMPLE_TEST_NUM = 200;
 	public static boolean CLEAN_LOG_DB = true;
 	
 	//dblog
@@ -38,7 +38,7 @@ public class VnExpressImporter {
 	
 	
 	private volatile static VnExpressImporter _theInstance = null;
-	private volatile static VnExpressDao _vnExpressDao = null;
+	private volatile static VneDataManager _vneDataManager = null;
 	private final ExecutorService saveDBExecutor = Executors.newSingleThreadExecutor();
 	
 	private volatile static boolean isWorking = false;
@@ -107,11 +107,11 @@ public class VnExpressImporter {
 	}
 
 	protected VnExpressImporter() throws Exception {
-		if(_vnExpressDao == null){
-			_vnExpressDao = VnExpressDao.getInstance();
+		if(_vneDataManager == null){
+			_vneDataManager = VnExpressDao.getInstance();
 		}
 		
-		if(CLEAN_LOG_DB){
+		if(CLEAN_LOG_DB){	
 			/** clear all current database */
 			clearLogDB();
 		}
@@ -133,7 +133,7 @@ public class VnExpressImporter {
 
 	public void cleanResources() {
 		try {
-			_vnExpressDao.closeConnection();
+			_vneDataManager.closeConnection();
 			linksDBManager.close();
 			print.close();
 			finalize();
@@ -175,7 +175,7 @@ public class VnExpressImporter {
 						
 						Parser parser = VnExpressUtils.getParser(theLink);
 						if(parser!=null){
-							final Article newArticle = parser.parseHtmlToArticle(fulLink, html, oldArticle, _vnExpressDao);
+							final Article newArticle = parser.parseHtmlToArticle(fulLink, html, oldArticle, (VnExpressDao) _vneDataManager);
 							
 							Log.MODE = Log.PRINT_CONSOLE;
 							saveLogDB(theLink, ImportStatus.PARSED_OK);
@@ -184,11 +184,11 @@ public class VnExpressImporter {
 								@Override
 								public void run() {
 									try {
-										if( ! _vnExpressDao.isExistedArticle(newArticle)){
-											_vnExpressDao.saveArticle(newArticle);
+										if( ! _vneDataManager.isExistedArticle(newArticle)){
+											_vneDataManager.saveArticle(newArticle);
 											saveLogDB(theLink, ImportStatus.SAVED_OK);
 										} else {
-											_vnExpressDao.updateArticle(newArticle);						
+											_vneDataManager.updateArticle(newArticle);						
 											Log.println(" => theLink: " + theLink + " isExistArticle = true");
 											saveLogDB(theLink, ImportStatus.UPDATE_OK);
 										}
@@ -226,7 +226,7 @@ public class VnExpressImporter {
 		
 		masterJobStarted();	
 		final ExecutorService executor = Executors.newFixedThreadPool(NTHREDS);
-		int totalArticle = _vnExpressDao.getTotalCountInVnExpress();
+		int totalArticle = _vneDataManager.getTotalCountInVnExpress();
 		print.println("## total article ## = " + totalArticle);
 
 		//int mod = total % NTHREDS;
@@ -235,7 +235,7 @@ public class VnExpressImporter {
 						
 		int startIndex = 0;
 		startIndex = totalArticle - SAMPLE_TEST_NUM;
-		//startIndex = 332000; //TODO
+//		startIndex = 422000; //TODO
 		
 		int totalJob = totalArticle - startIndex;
 		Log.println("## total article ## = " + totalArticle);
@@ -316,11 +316,11 @@ public class VnExpressImporter {
 	public synchronized int allowWorkersToPool(final int start, final int limit, final VnExpressImporter vnExpressDao, final ExecutorService executor) {
 		int jobAllocated = 0;
 		try {
-			ResultSet resultSet = _vnExpressDao.getSubjectPathInVnExpress(start, limit);
+			ResultSet resultSet = _vneDataManager.getSubjectPathInVnExpress(start, limit);
 			while (resultSet.next()) {
 				String theLink = resultSet.getString("Path");
 				Log.println("#Fetching: "+theLink );				
-				Article article =new Article(resultSet.getString("ID"), resultSet.getString("Title"), resultSet.getString("Lead"),resultSet.getString("Path"),0,resultSet.getDate("Date"),resultSet.getDate("Modified"));
+				Article article =new Article(resultSet.getString("ID"),resultSet.getString("PostBy"), resultSet.getString("Title"), resultSet.getString("Lead"),resultSet.getString("Path"),0,resultSet.getDate("Date"),resultSet.getDate("Modified"));
 				if(article != null){
 					Runnable worker = this.processArticle(theLink, article);
 					executor.execute(worker);
@@ -339,7 +339,7 @@ public class VnExpressImporter {
 			final Queue<String> errorLinks = this.getErrorLinks();
 			if(errorLinks.size()>0){
 				for (String theLink : errorLinks) {					
-					Article article = _vnExpressDao.getOldSubjectByPath(theLink);
+					Article article = _vneDataManager.getOldSubjectByPath(theLink);
 					Runnable worker = this.processArticle(theLink,article);
 					executor.execute(worker);
 					jobAllocated++;
@@ -469,7 +469,7 @@ public class VnExpressImporter {
 			} else if(status == ImportStatus.DEAD_LINK){
 				c3++;
 			} else if(status == ImportStatus.SERVER_ERROR){
-				Article article = _vnExpressDao.getOldSubjectByPath(link);
+				Article article = _vneDataManager.getOldSubjectByPath(link);
 				if(article != null){
 					executor.execute(this.processArticle(link, article));
 				}

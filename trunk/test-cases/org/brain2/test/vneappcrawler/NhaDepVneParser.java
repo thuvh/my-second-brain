@@ -8,7 +8,6 @@ import org.brain2.ws.core.utils.Log;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
 
 public class NhaDepVneParser extends MainParser{
@@ -17,10 +16,15 @@ public class NhaDepVneParser extends MainParser{
 		final Document doc = Jsoup.parse(html, HTTP.UTF_8);
 
 		Elements contents = doc.select(".content-left");
-
+		if(_vnExpressDao != null){
+			processCate(article,_vnExpressDao);
+			article.setAuthorID(_vnExpressDao.getAuthorID(article.getPostBy()));
+			setTopics(article, _vnExpressDao);
+		}
 		if (contents.size() > 0) {
+			
 			Element content = contents.get(0);
-
+			
 			Elements cpms_content = content.select(".PT-top-c3");
 
 			if (cpms_content.size() > 0) {
@@ -85,15 +89,7 @@ public class NhaDepVneParser extends MainParser{
 				/**
 				 * Remove all , just get <p>
 				 */
-				for (Element p : cpms.select("p")) {
-					p.html(Jsoup.parse(p.html()).text());
-				}
-				Whitelist whiteList = new Whitelist();
-				whiteList.addTags("p");
-				String newContent = Jsoup.clean(cpms.html(), whiteList);
-				newContent = newContent.replaceAll("\\*Clip:", "");
-				article.setContent(newContent);
-				
+				filterContent(cpms, article);
 				
 			} else {
 				Log.println("NO CMPS " + theLink);

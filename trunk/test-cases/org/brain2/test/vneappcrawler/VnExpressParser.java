@@ -1,8 +1,6 @@
 package org.brain2.test.vneappcrawler;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.http.protocol.HTTP;
@@ -10,17 +8,22 @@ import org.brain2.ws.core.utils.Log;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
 
 public class VnExpressParser extends MainParser{
 	
 	public Article parseHtmlToArticle(String theLink, String html,
 			Article article, VnExpressDao _vnExpressDao) throws Exception {
-		System.out.println("THE LINK :" + theLink);
 		final Document doc = Jsoup.parse(html, HTTP.UTF_8);
 		final String lead = article.getAbstractS();
-
+		
+		if(_vnExpressDao != null){
+			processCate(article,_vnExpressDao);
+			getArticleDate(article,doc.select(".folder-header").get(0),"");
+			article.setAuthorID(_vnExpressDao.getAuthorID(article.getPostBy()));
+			setTopics(article, _vnExpressDao);
+		}		
+		
 		Elements contents = doc.select(".content");
 
 		if (contents.size() > 0) {
@@ -90,7 +93,7 @@ public class VnExpressParser extends MainParser{
 				/**
 				 * Detect "Theo dong su kien"
 				 */
-				processTDSK(cpms,article);
+				processTDSK(cpms,article,".TopicTitle");
 				
 				
 				cpms.select("a[class!=Normal]").remove();
@@ -106,14 +109,7 @@ public class VnExpressParser extends MainParser{
 				/**
 				 * Remove all , just get <p>
 				 */
-				for (Element p : cpms.select("p")) {
-					p.html(Jsoup.parse(p.html()).text());
-				}
-				Whitelist whiteList = new Whitelist();
-				whiteList.addTags("p");
-				String newContent = Jsoup.clean(cpms.html(), whiteList);
-				newContent = newContent.replaceAll("\\*Clip:", "");
-				article.setContent(newContent);
+				filterContent(cpms,article);
 				
 				/**
 				 * Comment
@@ -128,4 +124,5 @@ public class VnExpressParser extends MainParser{
 		}
 		return article;
 	}
+	
 }

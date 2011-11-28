@@ -195,7 +195,7 @@ public class VneCrawler {
 		try {
 			int i=0;
 			while (resultSet.next()) {
-				Article article =new Article(resultSet.getString("ID"), resultSet.getString("Title"), resultSet.getString("Lead"),resultSet.getString("Path"),0,resultSet.getDate("Date"),resultSet.getDate("Modified"));
+				Article article =new Article(resultSet.getString("ID"),resultSet.getString("PostBy"), resultSet.getString("Title"), resultSet.getString("Lead"),resultSet.getString("Path"),0,resultSet.getDate("Date"),resultSet.getDate("Modified"));
 				Runnable worker = VneCrawler.httpGetArticle(vnExpressDao,article);
 				executor.execute(worker);
 				i++;
