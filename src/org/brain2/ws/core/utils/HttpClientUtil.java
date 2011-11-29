@@ -34,7 +34,7 @@ public class HttpClientUtil {
 			httppost.setHeader("User-Agent", USER_AGENT);
 			httppost.setHeader("Accept-Charset", "utf-8");			
 			httppost.setHeader("Cache-Control", "max-age=3, must-revalidate, private");	
-			httppost.setHeader("Authorization", "OAuth oauth_token=4c63c99f2d512285df39f3abbcb20595");
+			httppost.setHeader("Authorization", "OAuth oauth_token=0bd47489d18fc4e9496f4872fe83e505, oauth_consumer_key=a324957217164fd1d76b4b60d037abec, oauth_version=1.0, oauth_signature_method=HMAC-SHA1, oauth_timestamp=1322049404, oauth_nonce=-5195915877644743836, oauth_signature=wggOr1ia7juVbG%2FZ2ydImmiC%2Ft4%3D");
 
 			HttpResponse response = getThreadSafeClient().execute(httppost);
 			HttpEntity entity = response.getEntity();				
