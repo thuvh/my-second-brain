@@ -28,9 +28,9 @@ public class ServiceMapperLoader {
 					return clazz;
 				} else {				
 					clazz = Class.forName(mapperJSON.getString(namespace));
-					System.out.println("set class mapper namespace:"+ namespace + " => classpath: " + clazz.getName());
-				}
-				classMapper.put(namespace, clazz);
+					classMapper.put(namespace, clazz);
+					System.out.println("Class Mapper Key: "+ namespace + " => classpath: " + clazz.getName());
+				}				
 				return clazz;
 			}
 		} catch (JSONException e) {
