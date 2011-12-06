@@ -1,3 +1,4 @@
 {
 	 "linkmarking" : "org.brain2.ws.services.linkmarking.LinkDataHandler"	
+	 ,"infocrawler" : "org.brain2.ws.services.infocrawler.InfoCrawlerHandler"
 }

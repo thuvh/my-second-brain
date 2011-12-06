@@ -2,7 +2,10 @@ package org.brain2.ws.core.utils;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -107,6 +110,12 @@ public class FileUtils {
 		}
 		reader.close();
 		return fileData.toString();
+	}
+	
+	public static DataInputStream  readFileAsStream(String filePath) throws java.io.IOException {
+		String fullpath = FileUtils.getRuntimeFolderPath() + filePath;		
+		DataInputStream  stream = new DataInputStream(new FileInputStream(fullpath));		
+		return stream;
 	}
 	
 	public static String loadFilePathToString(String fullPath) throws java.io.IOException {		
