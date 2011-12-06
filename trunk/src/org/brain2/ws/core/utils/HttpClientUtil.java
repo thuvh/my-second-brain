@@ -34,7 +34,7 @@ public class HttpClientUtil {
 			httppost.setHeader("User-Agent", USER_AGENT);
 			httppost.setHeader("Accept-Charset", "utf-8");			
 			httppost.setHeader("Cache-Control", "max-age=3, must-revalidate, private");	
-			httppost.setHeader("Authorization", "OAuth oauth_token=0bd47489d18fc4e9496f4872fe83e505, oauth_consumer_key=a324957217164fd1d76b4b60d037abec, oauth_version=1.0, oauth_signature_method=HMAC-SHA1, oauth_timestamp=1322049404, oauth_nonce=-5195915877644743836, oauth_signature=wggOr1ia7juVbG%2FZ2ydImmiC%2Ft4%3D");
+			httppost.setHeader("Authorization", "OAuth oauth_token=2d62f7b3de642cdd402f62e42fba0b25, oauth_consumer_key=a324957217164fd1d76b4b60d037abec, oauth_version=1.0, oauth_signature_method=HMAC-SHA1, oauth_timestamp=1322049404, oauth_nonce=-5195915877644743836, oauth_signature=wggOr1ia7juVbG%2FZ2ydImmiC%2Ft4%3D");
 
 			HttpResponse response = getThreadSafeClient().execute(httppost);
 			HttpEntity entity = response.getEntity();				
@@ -60,12 +60,14 @@ public class HttpClientUtil {
 			
 			httpget.setHeader("User-Agent", USER_AGENT);
 			httpget.setHeader("Accept-Charset", "utf-8");			
-			httpget.setHeader("Cache-Control", "max-age=3, must-revalidate, private");			
+			httpget.setHeader("Cache-Control", "max-age=3, must-revalidate, private");	
+			httpget.setHeader("Authorization", "OAuth oauth_token=223a363ea1fd0a13b44e52663b97a255, oauth_consumer_key=a324957217164fd1d76b4b60d037abec, oauth_version=1.0, oauth_signature_method=HMAC-SHA1, oauth_timestamp=1322049404, oauth_nonce=-5195915877644743836, oauth_signature=wggOr1ia7juVbG%2FZ2ydImmiC%2Ft4%3D");
+			
 
 			HttpResponse response = getThreadSafeClient().execute(httpget);
 			int code = response.getStatusLine().getStatusCode();
 			if (code == 200) {
-				HttpEntity entity = response.getEntity();				
+				HttpEntity entity = response.getEntity();
 				if (entity != null) {
 					getThreadSafeClient().getConnectionManager().closeExpiredConnections();
 					return EntityUtils.toString(entity, HTTP.UTF_8);
@@ -102,14 +104,14 @@ public class HttpClientUtil {
 //		String content = article.getString("content");		
 //		System.out.println("\ncontent:\n "+content);
 		
-		String json = executePost("http://mapi.vnexpress.net/comments/?method=send&article_id=1000419498&title=hello1&content=world1");
-		System.out.println("\ncontent:\n "+json);
+//		String json = executePost("http://mapi.vnexpress.net/comments/?method=send&article_id=1000419498&title=hello1&content=world1");
+//		System.out.println("\ncontent:\n "+json);
 
 //		String json2 = executePost("http://trieunt.mapi.vnexpress.net/comments/?method=send&article_id=1000718986&title=hell888o6&content=world888");
 //		System.out.println("\ncontent:\n "+json2);
 		
-//		String json3 = executeGet("http://trieunt.mapi.vnexpress.net/comments/?method=get&article_id=1000718986");
-//		System.out.println("\ncontent:\n "+json3);
+		String json3 = executeGet("http://mapi.vnexpress.net/user/?method=get");
+		System.out.println("\ncontent:\n "+json3);
 	}
 	
 	

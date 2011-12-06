@@ -27,8 +27,11 @@ public class ServiceNodeStarter extends AbstractHandler {
 
 	public void handle(String target, Request baseRequest, final HttpServletRequest request, final HttpServletResponse response)
 			throws IOException, ServletException {
-		baseRequest.setHandled(true);
+		if(target.equals("/favicon.ico")){
+			return;
+		}
 		
+		baseRequest.setHandled(true);		
 		// response.getWriter().println(request.getRequestURI());
 		// response.getWriter().println(request.getQueryString());
 		if("true".equals(request.getParameter("keep-alive")) ){
@@ -106,6 +109,7 @@ public class ServiceNodeStarter extends AbstractHandler {
 			PrintStream writer = new PrintStream(response.getOutputStream(), true, "UTF-8");
 			String[] toks = target.split("/");
 			if (toks.length <= 3) {
+				System.out.println("target must in format [/class-key/method-name/response-type]: "+target);
 				return;
 			}
 			response.setContentType("text/html;charset=UTF-8");
@@ -123,12 +127,11 @@ public class ServiceNodeStarter extends AbstractHandler {
 			System.out.println("Service handler actionname: "+toks[2]);
 			System.out.println(target);
 			System.out.println(queryStr);
-
-			// TODO use config here
-			String key = "org.brain2.ws.services.linkmarking.LinkDataHandler";
+			
 			ServiceMapperLoader mapperLoader = new ServiceMapperLoader("/services-mapper.json");
 			String namespace = toks[1];
 			Class clazz = mapperLoader.getMapperClass(namespace );
+			String key = clazz.getName();
 
 			if (!servicesMap.containsKey(key)) {
 				servicesMap.put(key, (ServiceHandler) clazz.newInstance());
@@ -190,8 +193,6 @@ public class ServiceNodeStarter extends AbstractHandler {
 		System.out.println("Starting My Second Brain Agent at port " + port + " ...");
 		server.start();
 		server.join();		
-	}
-
-	
+	}	
 
 }
