@@ -1,4 +1,4 @@
-package org.brain2.ws.services.infocrawler;
+package org.brain2.ws.services.notify;
 
 import java.net.URLDecoder;
 import java.util.Map;
@@ -6,7 +6,7 @@ import java.util.Map;
 import org.brain2.ws.core.ServiceHandler;
 import org.brain2.ws.core.annotations.RestHandler;
 
-public class InfoCrawlerHandler extends ServiceHandler{
+public class NotifyHandler extends ServiceHandler{
 
 	@RestHandler
 	public boolean beginCrawling(Map params ) throws Exception {

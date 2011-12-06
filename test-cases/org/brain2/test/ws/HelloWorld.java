@@ -142,13 +142,24 @@ public class HelloWorld extends AbstractHandler {
 	}
 
 	public static void main(String[] args) throws Exception {
-		int port = 9999;
-		Server server = new Server(port);
-		server.setHandler(new HelloWorld());
-
-		System.out.println("Starting Yopco-WS server at port " + port + " ...");
-		server.start();
-		server.join();		
+//		int port = 9999;
+//		Server server = new Server(port);
+//		server.setHandler(new HelloWorld());
+//
+//		System.out.println("Starting Yopco-WS server at port " + port + " ...");
+//		server.start();
+//		server.join();	
+		
+		String a = null;
+		if(a.equals(null)){
+			System.out.println("1");
+		}
+		if("null".equals(a)){
+			System.out.println("2");
+		}
+		if(a == null){
+			System.out.println("3");
+		}
 	}
 	
 	

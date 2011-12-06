@@ -1,5 +1,6 @@
 package org.brain2.ws.core;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
@@ -8,11 +9,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.brain2.test.vneappcrawler.VnExpressImporter;
 import org.brain2.ws.core.utils.FileUtils;
+import org.eclipse.jetty.http.MimeTypes;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -23,11 +26,19 @@ import com.google.gson.Gson;
 public class ServiceNodeStarter extends AbstractHandler {
 	
 
-	private static Map<String, ServiceHandler> servicesMap = new HashMap<String, ServiceHandler>();
+	private static final Map<String, ServiceHandler> servicesMap = new HashMap<String, ServiceHandler>();
+	private static final Map<String, String> cachePool = new HashMap<String, String>(100);
+	private static final int BUFSIZE = 2048;
 
 	public void handle(String target, Request baseRequest, final HttpServletRequest request, final HttpServletResponse response)
 			throws IOException, ServletException {
+		System.out.println("### target: " + target);
+		response.setCharacterEncoding("UTF-8");
+		
 		if(target.equals("/favicon.ico")){
+			return;
+		} else if (target.startsWith("/resources/")){
+			processTargetResource(target, request, response);			
 			return;
 		}
 		
@@ -36,19 +47,14 @@ public class ServiceNodeStarter extends AbstractHandler {
 		// response.getWriter().println(request.getQueryString());
 		if("true".equals(request.getParameter("keep-alive")) ){
 			//callby: http://localhost:10001/?keep-alive=true&keep-time=10000
-			final PrintStream writer = new PrintStream(response.getOutputStream(), true, "UTF-8");
+			
 			System.out.println(" connection keep-alive=true ");
 			try {
 				int timeSleep = Integer.parseInt(request.getParameter("keep-time"));
-				if(timeSleep > 0){					
-					writer.print("");
+				final PrintStream writer = new PrintStream(response.getOutputStream(), true, "UTF-8");
+				if(timeSleep > 0){
 					Thread.sleep(timeSleep);
-					writer.print("setTotalJobCount("+VnExpressImporter.getTotalJobCount()+");");
-					writer.print("setJobCount("+VnExpressImporter.getJobCount()+");");
-					writer.print("setWorkFinished("+VnExpressImporter.getWorkFinished()+");");
-					writer.print("setTotalJobFailed("+VnExpressImporter.getTotalJobFailed()+");");
-					writer.print("setTotalDieLinks("+VnExpressImporter.getTotalDieLinks()+");");
-					writer.print("isWorking = "+VnExpressImporter.isWorking() + " ;");
+					writer.print(processStatusData());
 				}
 				writer.flush();
 			} catch (Exception e) {				
@@ -72,13 +78,10 @@ public class ServiceNodeStarter extends AbstractHandler {
 			
 			@Override
 			public void lifeCycleStopping(LifeCycle arg0) {
-				// TODO Auto-generated method stub				
 			}
 			
 			@Override
 			public void lifeCycleStopped(LifeCycle arg0) {
-				// TODO Auto-generated method stub
-				
 			}
 			
 			@Override
@@ -93,17 +96,51 @@ public class ServiceNodeStarter extends AbstractHandler {
 			
 			@Override
 			public void lifeCycleFailure(LifeCycle arg0, Throwable arg1) {
-				// TODO Auto-generated method stub
-				
 			}
 		});
+	}
+	
+	/**
+	 * static resource handler 
+	 * 
+	 * @param target
+	 * @param request
+	 * @param response
+	 * @throws IOException
+	 */
+	public void processTargetResource(String target, HttpServletRequest request,HttpServletResponse response) throws IOException {
+		if(target.endsWith(".js")||target.endsWith(".css")){					
+			String data = cachePool.get(target);
+			if(data == null){					
+				data = FileUtils.readFileAsString(target);
+				cachePool.put(target,data);
+			}			
+			response.getWriter().print(data);
+			response.getWriter().flush();
+		} else {
+			ServletOutputStream op = response.getOutputStream();
+			DataInputStream stream = FileUtils.readFileAsStream(target);
+			byte[] bbuf = new byte[BUFSIZE];
+			int length = 0, totalLength = 0;
+			while ((stream != null) && ((length = stream.read(bbuf)) != -1))
+	        {
+	            op.write(bbuf,0,length);
+	            if(length > 0){
+	            	totalLength += length;
+	            }
+	        }
+			stream.close();
+	        op.flush();
+	        op.close();		      
+	        response.setContentType("application/octet-stream" );
+	        response.setContentLength( totalLength );
+		}
 	}
 
 	/*
 	 * 
 	 */
-	public void processTargetHandler(String target, String queryStr, HttpServletRequest request,
-			HttpServletResponse response) {
+	public void processTargetHandler(String target, String queryStr, HttpServletRequest request,HttpServletResponse response) {
 		try {
 			//PrintWriter writer = response.getWriter();
 			PrintStream writer = new PrintStream(response.getOutputStream(), true, "UTF-8");
@@ -178,9 +215,26 @@ public class ServiceNodeStarter extends AbstractHandler {
 			System.out.println("Not found handler for the target: " + target + " !");
 		} catch (java.lang.IllegalArgumentException e) {
 			System.out.println("wrong number of arguments for the target: " + target + " !");
-		} catch (Exception e) {			
-			e.printStackTrace();
+		} catch (Exception e) {	
+			if(e instanceof java.lang.reflect.InvocationTargetException){
+				Throwable c = e.getCause();
+				//System.err.println(c.getClass().getName());
+				c.printStackTrace();
+			} else {
+				e.printStackTrace();
+			}
 		}
+	}
+	
+	protected String processStatusData() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("setTotalJobCount("+VnExpressImporter.getTotalJobCount()+");");
+		sb.append("setJobCount("+VnExpressImporter.getJobCount()+");");
+		sb.append("setWorkFinished("+VnExpressImporter.getWorkFinished()+");");
+		sb.append("setTotalJobFailed("+VnExpressImporter.getTotalJobFailed()+");");
+		sb.append("setTotalDieLinks("+VnExpressImporter.getTotalDieLinks()+");");
+		sb.append("isWorking = "+VnExpressImporter.isWorking() + " ;");
+		return sb.toString();
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -190,7 +244,7 @@ public class ServiceNodeStarter extends AbstractHandler {
 		theHandler.initLifeCycleListener();		
 		server.setHandler(theHandler);		
 
-		System.out.println("Starting My Second Brain Agent at port " + port + " ...");
+		System.out.println("Starting Agent at port " + port + " ...");
 		server.start();
 		server.join();		
 	}	
