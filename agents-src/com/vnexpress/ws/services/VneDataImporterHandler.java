@@ -16,7 +16,7 @@ public class VneDataImporterHandler extends ServiceHandler {
 	private static RecordManager linksDBManager;
 	private static PrimaryTreeMap<String,String> linksDB;
 	
-	public VneDataImporterHandler() {
+	static {
 		if(linksDB == null || linksDBManager == null){
 			try {
 				/** create (or open existing) database */
@@ -31,6 +31,10 @@ public class VneDataImporterHandler extends ServiceHandler {
 				e.printStackTrace();
 			}	
 		}
+	}
+	
+	public VneDataImporterHandler() {
+		
 	}
 
 	@RestHandler
