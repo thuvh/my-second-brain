@@ -12,6 +12,9 @@
 
 			<zipfileset excludes="META-INF/*.SF" src="lib/commons-codec.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/commons-logging.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/commons-lang3-3.1.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/commons-io.jar" />
+
 			<zipfileset excludes="META-INF/*.SF" src="lib/httpclient.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/httpclient-cache.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/httpcore.jar" />
@@ -29,18 +32,44 @@
 			<zipfileset excludes="META-INF/*.SF" src="lib/mysql-connector-java-5.1.18-bin.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/boilerpipe.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/jdbm-2.2.jar" />
-			
-			
+			<zipfileset excludes="META-INF/*.SF" src="lib/json-org.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/sqljdbc4.jar" />
+
 		</jar>
 	</target>
 	<target name="vne_impoter">
-		<jar destfile="vne_impoter.jar" filesetmanifest="mergewithoutmain">
+		<jar destfile="vne-parser.jar" filesetmanifest="mergewithoutmain">
 			<manifest>
-				<attribute name="Main-Class" value="org.brain2.test.dao.VnExpressDao" />
+				<attribute name="Main-Class" value="org.brain2.ws.core.ServiceNodeStarter" />
 				<attribute name="Class-Path" value="." />
 			</manifest>
 			<fileset dir="bin" excludes="**/.svn/*" />
-			<zipfileset dir="lib" prefix="lib/" excludes="META-INF/*.SF" />
+
+			<zipfileset excludes="META-INF/*.SF" src="lib/commons-codec.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/commons-logging.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/commons-lang3-3.1.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/commons-io.jar" />
+
+			<zipfileset excludes="META-INF/*.SF" src="lib/httpclient.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/httpclient-cache.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/httpcore.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/httpmime.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/junit.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/jetty-server.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/jetty-util.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/servlet-api.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/jetty-http.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/jetty-io.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/gson.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/lucene.core.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/jetty-continuation.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/jsoup.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/mysql-connector-java-5.1.18-bin.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/boilerpipe.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/jdbm-2.2.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/json-org.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/sqljdbc4.jar" />
+
 		</jar>
 	</target>
 </project>
