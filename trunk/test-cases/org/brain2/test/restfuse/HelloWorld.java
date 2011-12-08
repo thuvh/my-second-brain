@@ -1,5 +1,8 @@
 package org.brain2.test.restfuse;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Rule;
 import org.junit.runner.RunWith;
 
@@ -7,12 +10,9 @@ import com.eclipsesource.restfuse.Destination;
 import com.eclipsesource.restfuse.HttpJUnitRunner;
 import com.eclipsesource.restfuse.Method;
 import com.eclipsesource.restfuse.PollState;
-import com.eclipsesource.restfuse.Request;
 import com.eclipsesource.restfuse.Response;
 import com.eclipsesource.restfuse.annotation.Context;
-import com.eclipsesource.restfuse.annotation.Header;
 import com.eclipsesource.restfuse.annotation.HttpTest;
-import com.eclipsesource.restfuse.annotation.Poll;
 
 @RunWith(HttpJUnitRunner.class)
 public class HelloWorld {
@@ -68,6 +68,17 @@ public class HelloWorld {
 		System.out.println(response.getBody(String.class));
 	}
 
-	
+	@HttpTest(method = Method.GET, path = "/articles?method=get")
+	public void testArticlesAPI() throws JSONException {
+		com.eclipsesource.restfuse.Assert.assertOk(response);
+		int responseCode = response.getStatus();
+		System.out.println(responseCode);
+		String json = response.getBody(String.class);
+		JSONObject jsonObject = new JSONObject(json);
+		JSONArray jsonArray = jsonObject.getJSONObject("body").getJSONArray("articles");
+		for (int i = 0; i < jsonArray.length(); i++) {
+			System.out.println(jsonArray.get(i));
+		}
+	}
 
 }

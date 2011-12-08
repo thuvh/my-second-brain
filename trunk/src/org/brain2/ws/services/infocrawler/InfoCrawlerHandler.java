@@ -7,6 +7,11 @@ import org.brain2.ws.core.ServiceHandler;
 import org.brain2.ws.core.annotations.RestHandler;
 
 public class InfoCrawlerHandler extends ServiceHandler{
+	
+	@RestHandler
+	public String getServiceName(Map params) {		
+		return this.getClass().getName();
+	}
 
 	@RestHandler
 	public boolean beginCrawling(Map params ) throws Exception {

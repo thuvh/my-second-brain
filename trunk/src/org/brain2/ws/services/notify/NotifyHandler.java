@@ -14,4 +14,16 @@ public class NotifyHandler extends ServiceHandler{
 		System.out.println("href: " + href );
 		return true;
 	}
+	
+	@RestHandler
+	public boolean process(Map params ) throws Exception {
+		String href = URLDecoder.decode(params.get("href")+"","utf-8");
+		System.out.println("process href: " + href );
+		return true;
+	}
+
+	@RestHandler
+	public String getServiceName(Map params) {		
+		return this.getClass().getName();
+	}
 }

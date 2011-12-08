@@ -24,6 +24,11 @@ public class LinkDataHandler extends ServiceHandler{
 	}
 	
 	@RestHandler
+	public String getServiceName(Map params) {		
+		return this.getClass().getName();
+	}
+	
+	@RestHandler
 	public void editor(Map params ) throws Exception {
 		Object action = params.get("action");
 		//int limit = Integer.parseInt(params.get("limit")+"") ;
