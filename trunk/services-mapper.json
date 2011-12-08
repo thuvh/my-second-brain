@@ -3,4 +3,5 @@
 	 ,"infocrawler" : "org.brain2.ws.services.infocrawler.InfoCrawlerHandler"
 	 ,"notify" : "org.brain2.ws.services.notify.NotifyHandler"
 	 ,"hello" : "org.brain2.ws.services.hello.HelloWorldHandler"
+	 ,"vne-data" :  "com.vnexpress.ws.services.VneDataImporterHandler"
 }
