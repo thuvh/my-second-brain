@@ -1,4 +1,5 @@
 {
 	 "linkmarking" : "org.brain2.ws.services.linkmarking.LinkDataHandler"	
 	 ,"infocrawler" : "org.brain2.ws.services.infocrawler.InfoCrawlerHandler"
+	 ,"notify" : "org.brain2.ws.services.notify.NotifyHandler"
 }

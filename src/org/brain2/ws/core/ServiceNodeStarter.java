@@ -15,7 +15,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.brain2.test.vneappcrawler.VnExpressImporter;
 import org.brain2.ws.core.utils.FileUtils;
-import org.eclipse.jetty.http.MimeTypes;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -67,7 +66,11 @@ public class ServiceNodeStarter extends AbstractHandler {
 				}
 			}).start();
 		} else {
-			processTargetHandler(target, request.getQueryString(), request, response);	
+			try {
+				processTargetHandler(target, request.getQueryString(), request, response);
+			} catch (Exception e) {				
+				e.printStackTrace();
+			}	
 		}
 	}
 	
@@ -108,7 +111,7 @@ public class ServiceNodeStarter extends AbstractHandler {
 	 * @param response
 	 * @throws IOException
 	 */
-	public void processTargetResource(String target, HttpServletRequest request,HttpServletResponse response) throws IOException {
+	protected void processTargetResource(String target, HttpServletRequest request,HttpServletResponse response) throws IOException {
 		if(target.endsWith(".js")||target.endsWith(".css")){					
 			String data = cachePool.get(target);
 			if(data == null){					
@@ -140,15 +143,22 @@ public class ServiceNodeStarter extends AbstractHandler {
 	/*
 	 * 
 	 */
-	public void processTargetHandler(String target, String queryStr, HttpServletRequest request,HttpServletResponse response) {
+	protected void processTargetHandler(String target, String queryStr, HttpServletRequest request,HttpServletResponse response) throws Exception {
+		PrintStream writer = new PrintStream(response.getOutputStream(), true, "UTF-8");
 		try {
 			//PrintWriter writer = response.getWriter();
-			PrintStream writer = new PrintStream(response.getOutputStream(), true, "UTF-8");
+			
 			String[] toks = target.split("/");
-			if (toks.length <= 3) {
+			
+			if (toks.length <= 1) {
 				System.out.println("target must in format [/class-key/method-name/response-type]: "+target);
 				return;
+			}else if(toks.length == 2){
+				toks = new String[] {"",toks[1],"getServiceName","json"};
+			}else if(toks.length == 3){
+				toks = new String[] {"",toks[1],toks[2],"json"};
 			}
+			
 			response.setContentType("text/html;charset=UTF-8");
 			response.setStatus(HttpServletResponse.SC_OK);
 
@@ -183,7 +193,13 @@ public class ServiceNodeStarter extends AbstractHandler {
 			
 			Gson gson = new Gson();	
 			if(toks[3].toLowerCase().equals("json")){
-				writer.print(gson.toJson(result));
+				if(toks[2].equals("getServiceName")){
+					Map<String, String> obj = new HashMap<String, String>(2);
+					obj.put("service-name", result.toString());
+					writer.print(gson.toJson(obj));
+				} else {
+					writer.print(gson.toJson(result));
+				}
 			} else if(toks[3].toLowerCase().equals("html")){
 				System.out.println(gson.toJson(result));		
 				String path = request.getParameter("path");
@@ -212,9 +228,9 @@ public class ServiceNodeStarter extends AbstractHandler {
 			}
 			writer.flush();
 		} catch (java.lang.NoSuchMethodException e) {
-			System.out.println("Not found handler for the target: " + target + " !");
+			writer.print("Not found handler for the target: " + target + " !");
 		} catch (java.lang.IllegalArgumentException e) {
-			System.out.println("wrong number of arguments for the target: " + target + " !");
+			writer.print("wrong number of arguments for the target: " + target + " !");
 		} catch (Exception e) {	
 			if(e instanceof java.lang.reflect.InvocationTargetException){
 				Throwable c = e.getCause();
@@ -223,6 +239,7 @@ public class ServiceNodeStarter extends AbstractHandler {
 			} else {
 				e.printStackTrace();
 			}
+			writer.print(e.getMessage());
 		}
 	}
 	
