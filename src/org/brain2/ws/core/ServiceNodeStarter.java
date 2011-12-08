@@ -217,7 +217,9 @@ public class ServiceNodeStarter extends AbstractHandler {
 					writer.print(html);
 				} else {
 					writer.print("");
-				}				
+				}
+			} else if(toks[3].toLowerCase().equals("string")){
+				writer.print(result);
 			} else {
 				String filepath = "/resources/html/target_response.html";			
 				String html = "";
