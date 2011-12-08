@@ -35,6 +35,9 @@ public class ServiceNodeStarter extends AbstractHandler {
 		response.setCharacterEncoding("UTF-8");
 		
 		if(target.equals("/favicon.ico")){
+//			System.out.println(request.getHeader("Host"));
+//			System.out.println(request.getRequestURL().toString());			
+			response.sendRedirect("/resources/images/favicon.ico");
 			return;
 		} else if (target.startsWith("/resources/")){
 			processTargetResource(target, request, response);			
