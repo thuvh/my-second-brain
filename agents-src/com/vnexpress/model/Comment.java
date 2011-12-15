@@ -4,6 +4,8 @@ import java.sql.Date;
 
 public class Comment {
 	private String commentId;
+	private long ID;
+	private String path;
 	private String articleId;
 	private String title;
 	private String content;
@@ -123,6 +125,26 @@ public class Comment {
 
 	public void setUpdateDate(Date updateDate) {
 		this.updateDate = updateDate;
+	}
+
+
+	public  long getID() {
+		return ID;
+	}
+
+
+	public  void setID(long iD) {
+		ID = iD;
+	}
+
+
+	public  String getPath() {
+		return path;
+	}
+
+
+	public  void setPath(String path) {
+		this.path = path;
 	}
 
 }

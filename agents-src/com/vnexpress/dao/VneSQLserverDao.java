@@ -6,16 +6,23 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.http.protocol.HTTP;
 import org.brain2.ws.core.utils.HttpClientUtil;
 import org.brain2.ws.core.utils.Log;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
 import com.vnexpress.manager.ImporterConfigs;
 import com.vnexpress.manager.VnExpressUtils;
 import com.vnexpress.model.Article;
+import com.vnexpress.model.Comment;
 import com.vnexpress.model.ReferenceObject;
 import com.vnexpress.model.Topic;
 import com.vnexpress.parser.Parser;
@@ -45,8 +52,10 @@ public class VneSQLserverDao {
 		ImporterConfigs configs = ImporterConfigs.loadFromFile("/importer-mssql-configs.json");		
 		System.out.println("SQLServerConnectionUrl: "+configs.getSQLServerConnectionUrl());	
 		if("sqlserver".equals(configs.getDbdriver())){
-			Class.forName(configs.getDbdriverclasspath());
-			con = DriverManager.getConnection(configs.getSQLServerConnectionUrl(), configs.getUsername(), configs.getPassword());
+			if(con == null){
+				Class.forName(configs.getDbdriverclasspath());
+				con = DriverManager.getConnection(configs.getSQLServerConnectionUrl(), configs.getUsername(), configs.getPassword());
+			}
 			System.out.println("Connection Catalog: "+con.getCatalog());			
 		} else {		
 			throw new IllegalArgumentException("importer-mssqls-configs.json was not config correctly!");
@@ -65,6 +74,20 @@ public class VneSQLserverDao {
 		boolean rs =  ps.executeUpdate() > 0;
 		deleteObjectReference(article.getID());
 		saveRefObj(article);
+		return rs;
+	}
+	
+	public final static boolean updateCommentArticleContent(String content, long id) throws Exception {
+		if("".equals(content)) {
+			return false;
+		}		
+		String sql = "UPDATE Comment SET Content = ? WHERE ID = ?";
+		ConnectWithDriver();
+		PreparedStatement ps = con.prepareStatement(sql);
+		ps.setString(1, content);
+		ps.setLong(2, id);
+		boolean rs =  ps.executeUpdate() > 0;
+		System.out.println("updateCommentArticleContent: id = " + id  + " rs " + rs);
 		return rs;
 	}
 	
@@ -204,6 +227,23 @@ public class VneSQLserverDao {
 		return rs;
 	}
 	
+	public static List<Comment> getAllCommentsArticle(long articleId)
+			throws SQLException {
+		ResultSet rs = null;
+		Statement stmt = con.createStatement();
+		String sql = "SELECT ID, Path FROM Comment WHERE intID = " + articleId;
+		rs = stmt.executeQuery(sql);		
+		List<Comment> comments = new ArrayList<Comment>();
+		while (rs.next()) {
+			Comment c = new Comment();
+			c.setID(rs.getLong("ID"));
+			c.setPath(rs.getString("Path"));
+			comments.add(c);
+		}
+		rs.close();
+		return comments;
+	}
+	
 	public static int getTotalArticle()
 			throws SQLException {
 		ResultSet rs = null;
@@ -294,6 +334,46 @@ public class VneSQLserverDao {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public static String parseCommentArticle(final String path, final long commentId){
+		String commentContent = "";
+		String url = "http://vnexpress.net" + path;		
+		String html = HttpClientUtil.executeGet(url);		
+		if (html.isEmpty()||html.equals("500")) {	
+			System.err.println("http get fail, 500 server error");				
+		} else if(html.equals("404")){
+			System.err.println("Link die!!!");
+		} else {
+			final Document doc = Jsoup.parse(html, HTTP.UTF_8);			
+			Elements contents = doc.select(".content");			
+			if (contents.size() > 0) {
+				Element content = contents.get(0);
+
+				Elements cpms_content = content.select("div[cpms_content=true]");
+				if (cpms_content.size() > 0) {
+					Element cpms = cpms_content.get(0);
+					cpms.select("script").remove();
+					final Elements nodes = cpms.select(".Normal");
+					if (nodes.size() > 1) {
+						commentContent = nodes.get(0).text();
+						final String commentContent2 = commentContent;
+						new Thread(new Runnable() {								
+							@Override
+							public void run() {						
+								try {									
+									updateCommentArticleContent(commentContent2, commentId);
+								} catch (Exception e) {									
+									e.printStackTrace();
+								}																		
+							}
+						}).start();	
+					}
+				}
+			}
+		}
+		
+		return commentContent;
 	}
 	
 	public static String parseArticle(final String path, final long artilceId, final boolean forceUpdate){

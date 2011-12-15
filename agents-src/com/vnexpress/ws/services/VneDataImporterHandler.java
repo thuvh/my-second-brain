@@ -1,5 +1,6 @@
 package com.vnexpress.ws.services;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
@@ -9,6 +10,7 @@ import jdbm.RecordManagerFactory;
 
 import org.brain2.ws.core.ServiceHandler;
 import org.brain2.ws.core.annotations.RestHandler;
+import org.brain2.ws.core.utils.Log;
 
 import com.vnexpress.dao.VneSQLserverDao;
 
@@ -17,6 +19,7 @@ public class VneDataImporterHandler extends ServiceHandler {
 	private static PrimaryTreeMap<String,String> linksDB;
 	
 	static {
+		clearLogDB();
 		if(linksDB == null || linksDBManager == null){
 			try {
 				/** create (or open existing) database */
@@ -30,6 +33,19 @@ public class VneDataImporterHandler extends ServiceHandler {
 			} catch (IOException e) {			
 				e.printStackTrace();
 			}	
+		}
+	}
+	
+	protected static void clearLogDB() {
+		File directory = new File("cache");		
+		File[] files = directory.listFiles();
+		for (File file : files)
+		{
+		   if (!file.delete())
+		   {
+			   // Failed to delete file
+		       Log.println("Failed to delete "+file);
+		   }
 		}
 	}
 	
@@ -92,6 +108,43 @@ public class VneDataImporterHandler extends ServiceHandler {
 		
 		return content;
 	}
+	
+	public String parseCommentArticle(Map params){
+		if( ! params.containsKey("path") ){
+			return "";
+		}
+		final String path = params.get("path")+"";
+		
+		if(linksDB.containsKey(path)){
+			System.out.println("get from cache: "+path );
+			return linksDB.get(path);
+		}
+		
+		long commentId = 0;
+		if(params.containsKey("id") ){
+			commentId = Long.parseLong(params.get("id")+"");		
+			System.out.println("artilceId: "+commentId);
+		}
+		final String content = VneSQLserverDao.parseCommentArticle(path, commentId );
+		if( ! content.isEmpty() ){
+			new Thread(new Runnable() {								
+				@Override
+				public void run() {						
+					System.out.println("add cache: "+path + " length " + content.length());
+					linksDB.put(path, content);																
+				}
+			}).start();	
+		}
+		try {
+			linksDBManager.commit();			
+		} catch (IOException e) {			
+			e.printStackTrace();
+		}
+		
+		return content;
+	}
+	
+	
 
 	@RestHandler
 	public String getServiceName(Map params) {

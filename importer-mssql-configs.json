@@ -1,0 +1,8 @@
+{
+	username : "vneapp_fe"
+	,password : "vneapp_fe"
+	,database : "VNEAPP"
+	,host : "10.254.53.101"
+	,dbdriver : "sqlserver"
+	,dbdriverclasspath : "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+}
