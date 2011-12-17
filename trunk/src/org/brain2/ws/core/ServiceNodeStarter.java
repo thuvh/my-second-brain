@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,47 +28,47 @@ public class ServiceNodeStarter extends AbstractHandler {
 
 	private static final Map<String, ServiceHandler> servicesMap = new HashMap<String, ServiceHandler>();
 	private static final Map<String, String> cachePool = new HashMap<String, String>(100);
+	private static final Map<String, String> agentsQueue = new HashMap<String, String>(10000);
+	protected static final boolean USE_CACHE = false;
 	private static final int BUFSIZE = 2048;
 
 	public void handle(String target, Request baseRequest, final HttpServletRequest request, final HttpServletResponse response)
 			throws IOException, ServletException {
-		System.out.println("### target: " + target);
-		response.setCharacterEncoding("UTF-8");
 		
-		if(target.equals("/favicon.ico")){
-//			System.out.println(request.getHeader("Host"));
-//			System.out.println(request.getRequestURL().toString());			
+		//TODO logging request here		
+		System.out.println("HTTP Method: " + baseRequest.getMethod() + " ,target: " + target);
+		
+		response.setCharacterEncoding("UTF-8");
+		response.setStatus(HttpServletResponse.SC_OK);
+		
+		if(target.equals("/favicon.ico")){		
 			response.sendRedirect("/resources/images/favicon.ico");
 			return;
-		} else if (target.startsWith("/resources/")){
+		} else if (target.startsWith("/resources/")){			
 			processTargetResource(target, request, response);			
 			return;
-		}
+		}		
 		
-		baseRequest.setHandled(true);		
+		baseRequest.setHandled(true);
 		// response.getWriter().println(request.getRequestURI());
 		// response.getWriter().println(request.getQueryString());
 		if("true".equals(request.getParameter("keep-alive")) ){
-			//callby: http://localhost:10001/?keep-alive=true&keep-time=10000
-			
-			System.out.println(" connection keep-alive=true ");
+			//callby: http://localhost:10001/?keep-alive=true&keep-time=10000 			
 			try {
+				response.setContentType("text/javascript");				
 				int timeSleep = Integer.parseInt(request.getParameter("keep-time"));
 				final PrintStream writer = new PrintStream(response.getOutputStream(), true, "UTF-8");
+				writer.flush();
 				if(timeSleep > 0){
+					System.out.println("###connection keep-alive=true in millis: " + timeSleep);
 					Thread.sleep(timeSleep);
 					writer.print(processStatusData());
 				}
 				writer.flush();
+				
 			} catch (Exception e) {				
 				e.printStackTrace();
-			}	
-			new Thread(new Runnable() {				
-				@Override
-				public void run() {
-					//TODO	
-				}
-			}).start();
+			}
 		} else {
 			try {
 				processTargetHandler(target, request.getQueryString(), request, response);
@@ -88,11 +89,12 @@ public class ServiceNodeStarter extends AbstractHandler {
 			
 			@Override
 			public void lifeCycleStopped(LifeCycle arg0) {
+				
 			}
 			
 			@Override
 			public void lifeCycleStarting(LifeCycle arg0) {				
-				System.out.println("node starting ...");
+				System.out.println("node starting, loading init config ...");
 			}
 			
 			@Override
@@ -119,8 +121,15 @@ public class ServiceNodeStarter extends AbstractHandler {
 			String data = cachePool.get(target);
 			if(data == null){					
 				data = FileUtils.readFileAsString(target);
-				cachePool.put(target,data);
-			}			
+				if(USE_CACHE) {
+					cachePool.put(target,data);
+				}
+			}	
+			if(target.endsWith(".js")){				
+				response.setContentType("text/javascript");
+			} else if(target.endsWith(".css")){	
+				response.setContentType("text/css");
+			}
 			response.getWriter().print(data);
 			response.getWriter().flush();
 		} else {
@@ -175,8 +184,6 @@ public class ServiceNodeStarter extends AbstractHandler {
 
 			System.out.println("Service handler namespace: "+toks[1]);
 			System.out.println("Service handler actionname: "+toks[2]);
-			System.out.println(target);
-			System.out.println(queryStr);
 			
 			ServiceMapperLoader mapperLoader = new ServiceMapperLoader("/services-mapper.json");
 			String namespace = toks[1];
@@ -228,7 +235,8 @@ public class ServiceNodeStarter extends AbstractHandler {
 				} catch (IOException e) {					
 					e.printStackTrace();
 				}				
-				html = html.replace("_json", gson.toJson(result));
+				html = html.replace("{Origin}", request.getHeader("Origin"));
+				html = html.replace("{json}", gson.toJson(result));
 				writer.print(html);
 			}
 			writer.flush();
@@ -249,15 +257,19 @@ public class ServiceNodeStarter extends AbstractHandler {
 	}
 	
 	protected String processStatusData() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("setTotalJobCount("+VnExpressImporter.getTotalJobCount()+");");
-		sb.append("setJobCount("+VnExpressImporter.getJobCount()+");");
-		sb.append("setWorkFinished("+VnExpressImporter.getWorkFinished()+");");
-		sb.append("setTotalJobFailed("+VnExpressImporter.getTotalJobFailed()+");");
-		sb.append("setTotalDieLinks("+VnExpressImporter.getTotalDieLinks()+");");
-		sb.append("isWorking = "+VnExpressImporter.isWorking() + " ;");
-		return sb.toString();
+		return "console.log('"+(new Date()).toString() + "'); ";
 	}
+	
+//	protected String processStatusData() {
+//		StringBuilder sb = new StringBuilder();
+//		sb.append("setTotalJobCount("+VnExpressImporter.getTotalJobCount()+");");
+//		sb.append("setJobCount("+VnExpressImporter.getJobCount()+");");
+//		sb.append("setWorkFinished("+VnExpressImporter.getWorkFinished()+");");
+//		sb.append("setTotalJobFailed("+VnExpressImporter.getTotalJobFailed()+");");
+//		sb.append("setTotalDieLinks("+VnExpressImporter.getTotalDieLinks()+");");
+//		sb.append("isWorking = "+VnExpressImporter.isWorking() + " ;");
+//		return sb.toString();
+//	}
 
 	public static void main(String[] args) throws Exception {
 		int port = 10001;// TODO use config here
@@ -266,7 +278,7 @@ public class ServiceNodeStarter extends AbstractHandler {
 		theHandler.initLifeCycleListener();		
 		server.setHandler(theHandler);		
 
-		System.out.println("Starting Agent at port " + port + " ...");
+		System.out.println("Starting Agent Pools at port " + port + " ...");
 		server.start();
 		server.join();		
 	}	

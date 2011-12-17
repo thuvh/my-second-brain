@@ -7,6 +7,15 @@ import org.brain2.ws.core.ServiceHandler;
 import org.brain2.ws.core.annotations.RestHandler;
 
 public class NotifyHandler extends ServiceHandler{
+	
+	@RestHandler
+	public boolean postAgent(Map params ) throws Exception {
+		String agentClass = URLDecoder.decode(params.get("agent-class")+"","utf-8");
+		String agentInstance = URLDecoder.decode(params.get("agent-instance")+"","utf-8");
+		System.out.println("agent-class: " + agentClass );
+		System.out.println("agent-instance: " + agentInstance );
+		return true;
+	}
 
 	@RestHandler
 	public boolean beginCrawling(Map params ) throws Exception {

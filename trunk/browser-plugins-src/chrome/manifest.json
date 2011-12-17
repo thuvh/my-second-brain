@@ -9,7 +9,10 @@
     "default_title": "My Second Brain!"
   }, 
   "permissions": [
-    "bookmarks", "tabs", "unlimitedStorage", "ttsEngine","tts", "http://*/*", "https://*/*"
+    "background" , "bookmarks", "tabs", "unlimitedStorage", 
+    "ttsEngine","tts", "http://*/*", "https://*/*" , 
+    "fileBrowserHandler", "geolocation" , "contextMenus" ,
+    "notifications"
   ],
   "content_scripts": [
     {
