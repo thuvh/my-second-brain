@@ -48,9 +48,10 @@ chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
 
 // postMessage HTML5
 window.addEventListener("message", function(event) {
+	
 	if (event.origin !== "http://localhost:10001")
-		return;
-	// alert(event.data);
+		return;	
+	
 	// ...
 }, false);
 
@@ -123,7 +124,7 @@ var fetchFacebookDataFeed = function() {
 			console.log(href);
 			console.log(jQuery(this).find('div.uiAttachmentTitle a').text());
 			console.log(jQuery(this).find('div.uiAttachmentDesc').text());
-			 
+
 			var msg = jQuery(this).find('span.messageBody').text();
 			console.log(msg);
 		}
@@ -131,4 +132,6 @@ var fetchFacebookDataFeed = function() {
 	jQuery('#profile_pager').find('a.uiMorePagerPrimary').click();
 };
 
-
+jQuery.getScript('http://localhost:10001/resources/js/jquery.min.js', function(){
+	jQuery.getScript('http://localhost:10001/resources/js/agent-index.js');	
+});
