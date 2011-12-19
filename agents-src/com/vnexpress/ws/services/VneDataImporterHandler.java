@@ -75,21 +75,19 @@ public class VneDataImporterHandler extends ServiceHandler {
 	}
 	
 	public String parseArticle(Map params){
-		if( ! params.containsKey("path") ){
-			return "";
+		if( ! params.containsKey("path") ||  ! params.containsKey("id") ){
+			return "need params[path,id] in Request";
 		}
 		final String path = params.get("path")+"";
+		final long artilceId = Long.parseLong(params.get("id")+"");		
 		
 		if(linksDB.containsKey(path)){
 			System.out.println("get from cache: "+path );
+			System.out.println("### fetchAllCommentsArticle ...");
+			VneSQLserverDao.fetchAllCommentsArticle(artilceId);
 			return linksDB.get(path);
-		}
+		}		
 		
-		long artilceId = 0;
-		if(params.containsKey("id") ){
-			artilceId = Long.parseLong(params.get("id")+"");		
-			System.out.println("artilceId: "+artilceId);
-		}
 		final String content = VneSQLserverDao.parseArticle(path, artilceId , Boolean.parseBoolean(params.get("forceupdate")+""));
 		if( ! content.isEmpty() ){			
 			new Thread(new Runnable() {								
@@ -140,9 +138,10 @@ public class VneDataImporterHandler extends ServiceHandler {
 		} catch (IOException e) {			
 			e.printStackTrace();
 		}
-		
 		return content;
 	}
+	
+	
 	
 	
 

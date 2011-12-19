@@ -21,7 +21,9 @@ public class VneSQLserverDao {
 	private static boolean forceUpdateContent = false;
 
 	protected static void ConnectWithDriver() throws Exception {		
-		ImporterConfigs configs = ImporterConfigs.loadFromFile("/importer-mssql-configs.json");		
+		ImporterConfigs configs = ImporterConfigs.loadFromFile("/importer-mssql-configs.json");	
+		System.out.println("DATABASE SQLServerConnectionUrl: "+configs.getSQLServerConnectionUrl());	
+		
 		if("sqlserver".equals(configs.getDbdriver())){
 			Class.forName(configs.getDbdriverclasspath());
 			con = DriverManager.getConnection(configs.getSQLServerConnectionUrl(), configs.getUsername(), configs.getPassword());
@@ -134,10 +136,19 @@ public class VneSQLserverDao {
 
 	public static void main(String[] args) throws Exception {
 		System.out.println("Kiểm tra kết nối ...");
-		ConnectWithDriver();
+		ImporterConfigs configs = ImporterConfigs.loadFromFile("/importer-mssql-configs.json");	
+		System.out.println("DATABASE SQLServerConnectionUrl: "+configs.getSQLServerConnectionUrl());	
+		
+		if("sqlserver".equals(configs.getDbdriver())){
+			Class.forName(configs.getDbdriverclasspath());
+			con = DriverManager.getConnection(configs.getSQLServerConnectionUrl(), configs.getUsername(), configs.getPassword());
+			System.out.println("Connection Catalog: "+con.getCatalog());			
+		} else {		
+			throw new IllegalArgumentException("importer-mssqls-configs.json was not config correctly!");
+		}
 		
 
-		long maxId = 0;
+		/*long maxId = 0;
 		int limit = 5;
 		int total = getTotalArticle();
 		int numTest = 5, jobIndex = 0;
@@ -148,7 +159,7 @@ public class VneSQLserverDao {
 		while(jobIndex < numTest){
 			maxId = fetchArticle(maxId, limit);
 			jobIndex += limit;
-		}
+		}*/
 		
 		Close();
 	}
