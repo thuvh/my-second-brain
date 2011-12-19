@@ -60,13 +60,18 @@ public class RunScript {
 			ScriptableObject.putProperty(scope, "err", wrappedErr);
 
 			// Collect the arguments into a single string.
-			String s = "var f = function(x){return x+1;}; out.println('f(7)='+f(7)); out.println('f(9)='+f(9)); null";
-
+			//String s = "var f = function(x){return x+1;}; out.println('f(7)='+f(7)); out.println('f(9)='+f(9)); ''";
+			String s = "function validateEmail(elementValue){ var emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$/;  return emailPattern.test(elementValue);} ";
+			
+			s += "out.println('validateEmail(tantrieuf31@gmail.com):'+ validateEmail('tantrieuf31@gmail.com') ); ";
+			s += "out.println('validateEmail(tantrieuf31):'+ validateEmail('tantrieuf31') ); ";
+			
+			s += "''";
 			// Now evaluate the string we've colected.
 			Object result = cx.evaluateString(scope, s, "", 1, null);
 
 			// Convert the result to a string and print it.
-			System.out.println(Context.toString(result));
+			System.out.println(Context.toString(result).equals(""));
 
 		} finally {
 			// Exit from the context.
