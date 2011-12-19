@@ -48,18 +48,22 @@ public class VneSQLserverDao {
 		return jobCount;
 	}
 
-	protected static void ConnectWithDriver() throws Exception {		
-		ImporterConfigs configs = ImporterConfigs.loadFromFile("/importer-mssql-configs.json");		
-		System.out.println("SQLServerConnectionUrl: "+configs.getSQLServerConnectionUrl());	
-		if("sqlserver".equals(configs.getDbdriver())){
-			if(con == null){
+	protected static Connection ConnectWithDriver() throws Exception {	
+		if(con == null ){
+			ImporterConfigs configs = ImporterConfigs.loadFromFile("/importer-mssql-configs.json");
+			//jdbc:sqlserver://10.254.53.101;databaseName=VNEAPP
+			//jdbc:sqlserver://10.254.53.101;databaseName=VNEAPP
+
+			System.out.println("DATABASE SQLServerConnectionUrl: "+configs.getSQLServerConnectionUrl());	
+			if("sqlserver".equals(configs.getDbdriver())){				
 				Class.forName(configs.getDbdriverclasspath());
 				con = DriverManager.getConnection(configs.getSQLServerConnectionUrl(), configs.getUsername(), configs.getPassword());
+				//System.out.println("Connection Catalog: "+con.getCatalog());			
+			} else {
+				throw new IllegalArgumentException("importer-mssqls-configs.json was not config correctly!");
 			}
-			System.out.println("Connection Catalog: "+con.getCatalog());			
-		} else {		
-			throw new IllegalArgumentException("importer-mssqls-configs.json was not config correctly!");
 		}
+		return con;
 	}
 
 	public final static boolean updateArticleContent(Article article) throws SQLException {
@@ -81,9 +85,8 @@ public class VneSQLserverDao {
 		if("".equals(content)) {
 			return false;
 		}		
-		String sql = "UPDATE Comment SET Content = ? WHERE ID = ?";
-		ConnectWithDriver();
-		PreparedStatement ps = con.prepareStatement(sql);
+		String sql = "UPDATE Comment SET Content = ? WHERE ID = ?";		
+		PreparedStatement ps = ConnectWithDriver().prepareStatement(sql);
 		ps.setString(1, content);
 		ps.setLong(2, id);
 		boolean rs =  ps.executeUpdate() > 0;
@@ -227,20 +230,29 @@ public class VneSQLserverDao {
 		return rs;
 	}
 	
-	public static List<Comment> getAllCommentsArticle(long articleId)
-			throws SQLException {
-		ResultSet rs = null;
-		Statement stmt = con.createStatement();
-		String sql = "SELECT ID, Path FROM Comment WHERE intID = " + articleId;
-		rs = stmt.executeQuery(sql);		
-		List<Comment> comments = new ArrayList<Comment>();
-		while (rs.next()) {
-			Comment c = new Comment();
-			c.setID(rs.getLong("ID"));
-			c.setPath(rs.getString("Path"));
-			comments.add(c);
+	public static List<Comment> fetchAllCommentsArticle(long articleId)	{
+		List<Comment> comments = new ArrayList<Comment>();;
+		try {
+			
+			String sql = "SELECT ID, Path, Content FROM Comment WHERE intID = " + articleId;
+			System.out.println(sql);			
+			PreparedStatement stmt = ConnectWithDriver().prepareStatement(sql);		
+			
+			ResultSet rs = stmt.executeQuery();
+			while (rs.next()) {
+				String content = rs.getString("Content");
+				String path = rs.getString("Path");
+				long commentId = rs.getLong("ID");
+				System.out.println("...starting update comment id "+commentId + " content " + content);
+				//if( content == null )
+				{
+					parseCommentArticle(path, commentId);					
+				}
+			}
+			rs.close();
+		} catch (Exception e) {			
+			e.printStackTrace();
 		}
-		rs.close();
 		return comments;
 	}
 	
@@ -258,27 +270,27 @@ public class VneSQLserverDao {
 		return total;
 	}
 	
-	public static Article fetchArticle(long maxId, int limit) throws Exception{
+	public static Article fetchArticle(long articleID, int limit) throws Exception{
 		ResultSet results = null; 
 		Article lastParsedArticle = null;
 		if(limit == 1){
-			results = getSubjectPath(maxId);
+			results = getSubjectPath(articleID);
 		} else if(limit > 1) {
-			getSubjectPaths(maxId, limit);
+			getSubjectPaths(articleID, limit);
 		} 
 		if(results == null){
 			return null;
 		}
 		while (results.next()) {
 			jobCount++;
-			maxId = results.getLong("ID");
+			articleID = results.getLong("ID");
 			String path = results.getString("Path");
 						
 			String content = null;
 			if( ! forceUpdateContent){
 				content = results.getString("Content");
 			}
-			System.out.println(maxId + " - " + path + "- fetchArticled OK");
+			System.out.println(articleID + " - " + path + "- fetchArticled OK");
 			
 			if(content == null || "".equals(content)){
 				String fulLink = VnExpressUtils.getFullLinkOfVNEDomain(path);			
@@ -292,7 +304,7 @@ public class VneSQLserverDao {
 						Parser parser = VnExpressUtils.getParser(path);
 						if(parser!=null){
 							Article oldArticle = new Article();
-							oldArticle.setID(maxId);
+							oldArticle.setID(articleID);
 							oldArticle.setCreationDate(results.getDate("Date"));
 							oldArticle.setUpdateDate(results.getDate("Modified"));
 							oldArticle.setCatID(results.getInt("Folder"));
@@ -304,7 +316,8 @@ public class VneSQLserverDao {
 								public void run() {
 									boolean updated;
 									try {
-										updated = updateArticleContent(newArticle);
+										updated = updateArticleContent(newArticle);	
+										fetchAllCommentsArticle(newArticle.getID());
 										//articles.put(newArticle.getID(), newArticle.getHeadline());
 										System.out.println(newArticle.getID() + " #### updated = " + updated);
 										//System.out.println("### content \n " + newArticle.getContent());
@@ -361,7 +374,8 @@ public class VneSQLserverDao {
 						new Thread(new Runnable() {								
 							@Override
 							public void run() {						
-								try {									
+								try {			
+									System.out.println("updateCommentArticleContent: " + commentContent2.length());
 									updateCommentArticleContent(commentContent2, commentId);
 								} catch (Exception e) {									
 									e.printStackTrace();
@@ -457,8 +471,11 @@ public class VneSQLserverDao {
 	public static void main(String[] args) throws Exception {
 		ConnectWithDriver();
 		forceUpdateContent = true;
-		long artilceId = 1001322413;
-		fetchArticle(artilceId , 1);
+//		long artilceId = 1001322413;
+//		fetchArticle(artilceId , 1);
+		fetchAllCommentsArticle(1000498556);
+		//System.out.println(updateCommentArticleContent("ok", 1001098487)); ;
+		//ConnectWithDriver();
 	}
 
 }
