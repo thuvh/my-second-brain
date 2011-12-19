@@ -10,7 +10,7 @@
   }, 
   "permissions": [
     "background" , "bookmarks", "tabs", "unlimitedStorage", 
-    "ttsEngine","tts", "http://*/*", "https://*/*" , 
+    "ttsEngine","tts", "http://*/*"
     "fileBrowserHandler", "geolocation" , "contextMenus" ,
     "notifications"
   ],

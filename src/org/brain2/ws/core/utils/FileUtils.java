@@ -112,6 +112,14 @@ public class FileUtils {
 		return fileData.toString();
 	}
 	
+	public static File[]  listFilesInForder(String folderPath) throws java.io.IOException {
+		String fullpath = FileUtils.getRuntimeFolderPath() + folderPath;		
+		File folder = new File(fullpath);
+		if(folder.isDirectory())
+			return folder.listFiles();
+		return new File[0];
+	}
+	
 	public static DataInputStream  readFileAsStream(String filePath) throws java.io.IOException {
 		String fullpath = FileUtils.getRuntimeFolderPath() + filePath;		
 		DataInputStream  stream = new DataInputStream(new FileInputStream(fullpath));		

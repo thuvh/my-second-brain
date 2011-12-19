@@ -1,6 +1,7 @@
 package org.brain2.ws.core;
 
 import java.io.DataInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
@@ -132,6 +133,21 @@ public class ServiceNodeStarter extends AbstractHandler {
 			}
 			response.getWriter().print(data);
 			response.getWriter().flush();
+		} else if(target.endsWith("/")){
+			File[] files = FileUtils.listFilesInForder(target);
+			StringBuilder sb = new StringBuilder();
+			sb.append("<ul>");
+			for (File file : files) {		
+				if( ! file.getName().contains(".svn")){
+					String uri = "http://localhost:10001" + target + file.getName();
+					String a = "<a href='" + uri + "'>" + uri + "</a>";
+					sb.append("<li>").append(a).append("</li>");
+				}
+			}
+			sb.append("</ul>");			
+	        response.setContentType("text/html" );
+			response.getWriter().print(sb.toString());
+			response.getWriter().flush();	        
 		} else {
 			ServletOutputStream op = response.getOutputStream();
 			DataInputStream stream = FileUtils.readFileAsStream(target);
