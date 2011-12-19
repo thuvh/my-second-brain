@@ -70,11 +70,12 @@ function requestLiveDataStatus(){
 
 var a = new AgentHelloA();
 a.model.message = "I'm a instance of AgentHelloA";
+a.prototype.newFunction = function(){
+	alert('hi');
+}
 
 var postData = {'agent-class': AgentHelloA.toString() , 'agent-instance' : JSON.stringify(a) };
-crossHttpPost("http://localhost:10001/notify/postAgent/postmessage", postData , function(rs){
-	console.log(rs);
-});
+//crossHttpPost("http://localhost:10001/notify/postAgent/postmessage", postData , function(rs){ console.log(rs); });
 
 //postMessage HTML5
 window.addEventListener("message", function(event) {	
