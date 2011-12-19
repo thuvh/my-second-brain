@@ -3,7 +3,7 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="test-cases"/>
 	<classpathentry kind="src" path="agents-src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.7.0"/>
 	<classpathentry kind="lib" path="lib/commons-codec.jar"/>
 	<classpathentry kind="lib" path="lib/commons-logging.jar"/>
 	<classpathentry kind="lib" path="lib/gson.jar"/>
@@ -83,12 +83,6 @@
 	<classpathentry kind="lib" path="lib/akka-core-1.2/slf4j-api-1.6.0.jar"/>
 	<classpathentry kind="lib" path="lib/akka-core-1.2/slf4j-log4j12-1.5.8.jar"/>
 	<classpathentry kind="lib" path="lib/json-org.jar"/>
-	<classpathentry kind="lib" path="D:/Program Files/eclipse/plugins/org.apache.axis_1.4.0.v201005080400/lib/axis.jar"/>
-	<classpathentry kind="lib" path="D:/Program Files/eclipse/plugins/org.apache.commons.discovery_0.2.0.v201004190315/lib/commons-discovery-0.2.jar"/>
-	<classpathentry kind="lib" path="D:/Program Files/eclipse/plugins/javax.xml.rpc_1.1.0.v201005080400/lib/jaxrpc.jar"/>
-	<classpathentry kind="lib" path="D:/Program Files/eclipse/plugins/javax.xml.soap_1.2.0.v201005080501/lib/saaj.jar"/>
-	<classpathentry kind="lib" path="D:/Program Files/eclipse/plugins/javax.wsdl_1.6.2.v201012040545.jar"/>
-	<classpathentry kind="lib" path="D:/Program Files/eclipse/plugins/org.apache.commons.logging_1.0.4.v201101211617.jar"/>
 	<classpathentry kind="lib" path="lib/sqljdbc4.jar"/>
 	<classpathentry kind="lib" path="lib/commons-lang3-3.1.jar"/>
 	<classpathentry kind="lib" path="lib/signpost-commonshttp4-1.2.jar"/>
@@ -97,5 +91,6 @@
 	<classpathentry kind="lib" path="lib/com.eclipsesource.restfuse_1.0.0.201110302017.jar"/>
 	<classpathentry kind="lib" path="lib/jersey-client-1.9.1.jar"/>
 	<classpathentry kind="lib" path="lib/jersey-core-1.9.1.jar"/>
+	<classpathentry kind="lib" path="lib/js.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
