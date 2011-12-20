@@ -2,7 +2,9 @@ package com.vnexpress.ws.services;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.util.Map;
+import java.util.Set;
 
 import jdbm.PrimaryTreeMap;
 import jdbm.RecordManager;
@@ -15,25 +17,46 @@ import org.brain2.ws.core.utils.Log;
 import com.vnexpress.dao.VneSQLserverDao;
 
 public class VneDataImporterHandler extends ServiceHandler {
-	private static RecordManager linksDBManager;
+	private static RecordManager recordManager;
 	private static PrimaryTreeMap<String,String> linksDB;
+	private static PrimaryTreeMap<String,String> notifyDB;
+	
+	static final String recordManagerName = "cache/vne_importer";
+	static final String linksDBName = "vne_importer_cache";
+	static final String notifyDBName = "notify_log";
 	
 	static {
 		clearLogDB();
-		if(linksDB == null || linksDBManager == null){
+		if(linksDB == null || recordManager == null){
 			try {
-				/** create (or open existing) database */
-				String fileName = "cache/vne_importer";
-				linksDBManager = RecordManagerFactory.createRecordManager(fileName);
+				/** create (or open existing) database */				
+				recordManager = RecordManagerFactory.createRecordManager(recordManagerName);
 				
 				/** Creates TreeMap which stores data in database.  
 				 *  Constructor method takes recordName (something like SQL table name)*/
-				String recordName = "vne_importer_cache";
-				linksDB = linksDBManager.treeMap(recordName);
+				
+				linksDB = recordManager.treeMap(linksDBName);				
 			} catch (IOException e) {			
 				e.printStackTrace();
 			}	
 		}
+	}
+	
+	protected static PrimaryTreeMap<String,String> getNotifyDB() {		
+		try {
+			/** create (or open existing) database */
+			if(recordManager == null){
+				recordManager = RecordManagerFactory.createRecordManager(recordManagerName);	
+			}			
+	
+			if(notifyDB == null){
+				notifyDB = recordManager.treeMap(notifyDBName);
+			}
+		} catch (IOException e) {			
+			e.printStackTrace();
+		}	
+		
+		return notifyDB;
 	}
 	
 	protected static void clearLogDB() {
@@ -99,7 +122,7 @@ public class VneDataImporterHandler extends ServiceHandler {
 			}).start();	
 		}
 		try {
-			linksDBManager.commit();			
+			recordManager.commit();			
 		} catch (IOException e) {			
 			e.printStackTrace();
 		}
@@ -129,20 +152,95 @@ public class VneDataImporterHandler extends ServiceHandler {
 				@Override
 				public void run() {						
 					System.out.println("add cache: "+path + " length " + content.length());
-					linksDB.put(path, content);																
+					linksDB.put(path, content);	
+					try {
+						recordManager.commit();			
+					} catch (IOException e) {			
+						e.printStackTrace();
+					}
 				}
 			}).start();	
-		}
-		try {
-			linksDBManager.commit();			
-		} catch (IOException e) {			
-			e.printStackTrace();
 		}
 		return content;
 	}
 	
+	@RestHandler
+	public String processNotification(final Map params ) throws Exception {
+		final String object = URLDecoder.decode(params.get("object")+"","utf-8").toLowerCase();
+		final long id =  Long.parseLong(""+params.get("id"));
+		final String verb = URLDecoder.decode(params.get("verb")+"","utf-8").toLowerCase();
+		final String path = URLDecoder.decode(params.get("path")+"","utf-8").toLowerCase();
+		
+		if(! "".equals(path) ){
+			System.out.println("processNotification parseArticle");
+			new Thread(new Runnable() {								
+				@Override
+				public void run() {						
+					VneSQLserverDao.parseArticle(path, id , Boolean.parseBoolean(params.get("forceupdate")+""));																
+				}
+			}).start();	
+			return "true";
+		}
+		
+		boolean logNotify = "true".equals(params.get("log"));
+		String k = object +"-"+ verb +"-"+ id;
+		if(logNotify){
+			System.out.println("processNotification logNotify " + k);
+			
+			boolean processOk = true;//TODO
+			
+			if("article".equals(object)&& ("insert".equals(verb)||"update".equals(verb)) && id > 0 ){				
+				System.out.println("processNotification fetchArticle");
+				new Thread(new Runnable() {								
+					@Override
+					public void run() {						
+						try {
+							VneSQLserverDao.fetchArticle(id, 1);
+						} catch (Exception e) {							
+							e.printStackTrace();
+						}															
+					}
+				}).start();	
+			}else if("comment".equals(object)&& ("insert".equals(verb)) && id > 0 ){				
+				System.out.println("processNotification parseCommentById");
+				new Thread(new Runnable() {								
+					@Override
+					public void run() {						
+						try {
+							VneSQLserverDao.parseCommentById(id);
+						} catch (Exception e) {							
+							e.printStackTrace();
+						}
+					}
+				}).start();	
+			}			
+			
+			try {
+				getNotifyDB().put(k, ""+processOk);
+				recordManager.commit();			
+			} catch (Exception e) {			
+				e.printStackTrace();
+			}
+		}		
+		return "true";
+	}
 	
-	
+	@RestHandler
+	public String getNotificationLog(Map params ) throws Exception {		
+		final String pass = URLDecoder.decode(params.get("pass")+"","utf-8");
+		if(pass.equals("fosp@123")){
+			//FIXME
+			StringBuilder log = new StringBuilder();			
+			Set<String> keys = getNotifyDB().keySet();
+			for (String k : keys) {
+				log.append("k=").append(k).append(" => ").append(getNotifyDB().get(k)).append(" <br>\n ");
+			}		
+			String s = log.toString();
+			System.out.println(s);
+			return s;
+		}
+		return "";
+	}
 	
 
 	@RestHandler
@@ -155,7 +253,7 @@ public class VneDataImporterHandler extends ServiceHandler {
 	protected void finalize() throws Throwable {		
 		super.finalize();
 		try {			
-			linksDBManager.close();			
+			recordManager.close();			
 		} catch (Throwable e) {			
 			e.printStackTrace();
 		}

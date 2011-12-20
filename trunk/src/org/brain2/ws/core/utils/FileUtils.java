@@ -3,7 +3,6 @@ package org.brain2.ws.core.utils;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -120,10 +119,15 @@ public class FileUtils {
 		return new File[0];
 	}
 	
-	public static DataInputStream  readFileAsStream(String filePath) throws java.io.IOException {
-		String fullpath = FileUtils.getRuntimeFolderPath() + filePath;		
-		DataInputStream  stream = new DataInputStream(new FileInputStream(fullpath));		
-		return stream;
+	public static DataInputStream readFileAsStream(String filePath)  {
+		try {
+			String fullpath = FileUtils.getRuntimeFolderPath() + filePath;		
+			DataInputStream  stream = new DataInputStream(new FileInputStream(fullpath));		
+			return stream;
+		} catch (IOException e) {
+			Log.println("file " + filePath + " is not found!");
+		}
+		return null;
 	}
 	
 	public static String loadFilePathToString(String fullPath) throws java.io.IOException {		

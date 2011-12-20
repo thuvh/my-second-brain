@@ -15,7 +15,6 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.brain2.test.vneappcrawler.VnExpressImporter;
 import org.brain2.ws.core.utils.FileUtils;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
@@ -151,20 +150,24 @@ public class ServiceNodeStarter extends AbstractHandler {
 		} else {
 			ServletOutputStream op = response.getOutputStream();
 			DataInputStream stream = FileUtils.readFileAsStream(target);
-			byte[] bbuf = new byte[BUFSIZE];
-			int length = 0, totalLength = 0;
-			while ((stream != null) && ((length = stream.read(bbuf)) != -1))
-	        {
-	            op.write(bbuf,0,length);
-	            if(length > 0){
-	            	totalLength += length;
-	            }
-	        }
-			stream.close();
-	        op.flush();
-	        op.close();		      
-	        response.setContentType("application/octet-stream" );
-	        response.setContentLength( totalLength );
+			if(stream != null){
+				byte[] bbuf = new byte[BUFSIZE];
+				int length = 0, totalLength = 0;
+				while ((stream != null) && ((length = stream.read(bbuf)) != -1))
+		        {
+		            op.write(bbuf,0,length);
+		            if(length > 0){
+		            	totalLength += length;
+		            }
+		        }
+				stream.close();
+		        op.flush();
+		        op.close();		      
+		        response.setContentType("application/octet-stream" );
+		        response.setContentLength( totalLength );
+			} else {
+				response.setStatus(404);
+			}
 		}
 	}
 
@@ -215,7 +218,14 @@ public class ServiceNodeStarter extends AbstractHandler {
 //			System.out.println(clazz);
 //			System.out.println(method);
 
-			Object result = method.invoke(servicesMap.get(key), params);
+			Object result = "";
+			try {
+				result = method.invoke(servicesMap.get(key), params);
+			} catch (Throwable e1) {
+				//e1.printStackTrace();
+				result = e1.getCause().getClass().getName() + ":" + e1.getCause().getMessage();
+			}
+			System.out.println(result);
 			
 			Gson gson = new Gson();	
 			if(toks[3].toLowerCase().equals("json")){
