@@ -1,13 +1,27 @@
 package org.brain2.ws.core.utils;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.HttpResponseException;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
@@ -26,6 +40,68 @@ public class HttpClientUtil {
 	    return client;
 	}
 	
+	public static String executePost(String url,Map<String, String> params, String accessTokens) {
+		try {
+			HttpClient httpClient = getThreadSafeClient();
+			HttpPost postRequest = new HttpPost(url);			
+			postRequest.addHeader("Accept-Charset", HTTP.UTF_8);
+			postRequest.addHeader("User-Agent", MOBILE_USER_AGENT);
+			postRequest.setHeader("Authorization", "OAuth oauth_token="+accessTokens);
+
+			Set<String> names = params.keySet();
+			List<NameValuePair> postParameters = new ArrayList<NameValuePair>(names.size());					
+			for (String name : names) {
+				System.out.println( name + "=" + params.get(name));
+				postParameters.add(new BasicNameValuePair(name, params.get(name)));
+			}			
+			postRequest.setEntity(new UrlEncodedFormEntity(postParameters, "UTF-8"));
+			
+			HttpResponse response = httpClient.execute(postRequest);
+			HttpEntity entity = response.getEntity();
+			if (entity != null) {
+				httpClient.getConnectionManager().closeExpiredConnections();
+				return EntityUtils.toString(entity, HTTP.UTF_8);
+			}
+		} catch (HttpResponseException e) {
+			System.err.println(e.getMessage());
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return "";
+	}
+	
+	public static String executeMultipartPost(String postUrl,Map<String, Object> params, String accessTokens)
+			throws Exception {
+		try {
+			HttpClient httpClient = getThreadSafeClient();
+			HttpPost postRequest = new HttpPost(postUrl);			
+			postRequest.addHeader("Accept-Charset", HTTP.UTF_8);
+			postRequest.addHeader("User-Agent", MOBILE_USER_AGENT);			
+			postRequest.setHeader("Cache-Control", "max-age=3, must-revalidate, private");	
+			postRequest.setHeader("Authorization", "OAuth oauth_token="+accessTokens+", oauth_consumer_key=a324957217164fd1d76b4b60d037abec, oauth_version=1.0, oauth_signature_method=HMAC-SHA1, oauth_timestamp=1322049404, oauth_nonce=-5195915877644743836, oauth_signature=wggOr1ia7juVbG%2FZ2ydImmiC%2Ft4%3D");
+
+			MultipartEntity reqEntity = new MultipartEntity(
+					HttpMultipartMode.BROWSER_COMPATIBLE);
+			Set<String> names = params.keySet();
+			for (String name : names) {
+				Object value = params.get(name);
+				if (value instanceof StringBody) {
+					reqEntity.addPart(name, (StringBody) value);
+				} else if (value instanceof File) {
+					reqEntity.addPart("media", new FileBody((File) value));
+				}
+			}
+			postRequest.setEntity(reqEntity);
+
+			HttpResponse response = httpClient.execute(postRequest);
+			return EntityUtils.toString(response.getEntity(), HTTP.UTF_8);
+		} catch (Exception e) {
+			// handle exception here
+			e.printStackTrace();
+		}
+		return "";
+	}
 	
 	public static String executePost(String url){
 		try {	
@@ -53,11 +129,8 @@ public class HttpClientUtil {
 	}
 	
 	public static String executeGet(String url){
-		try {
-		
-			
-			HttpGet httpget = new HttpGet(url);
-			
+		try {		
+			HttpGet httpget = new HttpGet(url);			
 			httpget.setHeader("User-Agent", USER_AGENT);
 			httpget.setHeader("Accept-Charset", "utf-8");			
 			httpget.setHeader("Cache-Control", "max-age=3, must-revalidate, private");	

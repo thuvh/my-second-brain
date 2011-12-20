@@ -71,10 +71,18 @@ public class VneSQLserverDao {
 			return false;
 		}
 		totalJobDone++;
-		String sql = "UPDATE Subject0 SET Content = ? WHERE ID = ?";
-		PreparedStatement ps = con.prepareStatement(sql);
-		ps.setString(1, article.getContent());
-		ps.setLong(2, article.getID());
+		
+		StringBuilder topicIds = new StringBuilder();
+		for (Topic topic : article.getRefTopics()) {
+			topicIds.append(topic.getId()).append(",");
+			System.out.println( "topic:" + topicIds);
+		}
+		
+		PreparedStatement ps = con.prepareCall("{ call app_UpdateArticle(?,?,?) }");
+		ps.setLong(1, article.getID());
+		ps.setString(2, article.getContent());
+		ps.setString(3, topicIds.toString());
+		
 		boolean rs =  ps.executeUpdate() > 0;
 		deleteObjectReference(article.getID());
 		saveRefObj(article);
@@ -230,6 +238,29 @@ public class VneSQLserverDao {
 		return rs;
 	}
 	
+	public static String parseCommentById(long commentId)	{
+		
+		try {
+			
+			String sql = "SELECT ID, Path, Content FROM Comment WHERE ID = " + commentId;
+			System.out.println(sql);			
+			PreparedStatement stmt = ConnectWithDriver().prepareStatement(sql);		
+			
+			ResultSet rs = stmt.executeQuery();
+			while (rs.next()) {
+				String content = rs.getString("Content");
+				String path = rs.getString("Path");				
+				System.out.println("...starting update comment id "+commentId + " content " + content.length());
+				parseCommentArticle(path, commentId);
+				return content;
+			}
+			rs.close();
+		} catch (Exception e) {			
+			e.printStackTrace();
+		}
+		return "";
+	}
+	
 	public static List<Comment> fetchAllCommentsArticle(long articleId)	{
 		List<Comment> comments = new ArrayList<Comment>();;
 		try {
@@ -243,7 +274,7 @@ public class VneSQLserverDao {
 				String content = rs.getString("Content");
 				String path = rs.getString("Path");
 				long commentId = rs.getLong("ID");
-				System.out.println("...starting update comment id "+commentId + " content " + content);
+				System.out.println("...starting update comment id "+commentId + " content " + content.length());
 				//if( content == null )
 				{
 					parseCommentArticle(path, commentId);					
