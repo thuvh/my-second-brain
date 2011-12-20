@@ -1,0 +1,310 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+		<script> $.noConflict(); </script>
+		<title>Simple Local Data Search by JavaScript</title>
+		
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/prototype/1.7.0.0/prototype.js"></script>
+		
+
+	</head>
+    <body>
+		<img src="http://dl.dropbox.com/u/4074962/icons/brain.png" />
+		 <h2>Simple Local Data Search</h2>
+    <div>
+        <input type="text" id="demo-input-local" name="" value="" /><br>
+		Exact matching:<input type="checkbox" id="search_exact" name="" value="" /><br>
+		<ul id="search_results" ></ul>
+        <input type="button" value="Submit" onclick="doSearch()" />
+		
+        <script type="text/javascript">
+		
+		//example 1: using B-tree data structure
+		var BSharpTree = Class.create( {
+			root: null,
+
+			initialize: function(comparator) {
+				this.root = $A();
+				this.comparator = comparator || function(x) {
+					return x
+				};
+			},
+
+			add: function(text, object, node) {
+				var node = node || this.root;
+
+				node.objects = node.objects || $A();
+				if (node != this.root) {
+					node.objects.push(object);
+				}
+
+				if (text.length > 0) {
+					var chr = text.charCodeAt(0) - 32;
+					var next = node[chr] = chr == 0 ? this.root : node[chr] || $A();
+					this.add(text.substring(1), object, next);
+				}
+			},
+
+			search: function(text, objects) {
+				var node = this.root;
+				var result = null;
+
+				while (text.length > 0) {
+					var chr = text.charCodeAt(0) - 32;
+					text = text.substring(1);
+
+					if (chr == 0) {
+						result = this.search(text, result);
+						break;
+					} else {
+						node = node[chr];
+						if (!node) {
+							return $A();
+						}
+						result = node.objects;
+					}
+				}
+
+				if (objects) {
+					if (node == this.root) {
+						return objects;
+					} else {
+						return this.intersect(result, objects);
+					}
+				} else {
+					if (node == this.root) {
+						return $A();
+					} else {
+						return result;
+					}
+				}
+			},
+
+			intersect: function(a, b) {
+				var i = 0;
+				var j = 0
+				var intersect = $A();
+
+				a = a.sortBy(this.comparator);
+				b = b.sortBy(this.comparator);
+
+				while (i < a.length && j < b.length) {
+					if (this.comparator(a[i]) == this.comparator(b[j])) {
+						intersect.push(a[i]);
+						i++;
+						j++;
+					} else if (this.comparator(a[i]) > this.comparator(b[j])) {
+						j++;
+					} else {
+						i++;
+					}
+				}
+
+				return intersect;
+			}
+		});
+		var bst = new BSharpTree();
+
+		bst.add("some string", "my object");
+		bst.add("some other string", "other object");
+		bst.add("last string", "last object");
+
+		//bst.search("string"); // returns ["my object", "other object", "last object"]
+		//bst.search("some string"); // returns ["my object", "other object"]
+		
+		
+		//example 2: use Keywords Indexing Algorithms
+		
+		//Util function
+		var DEBUG_MODE = false;
+		var log = function(o){
+			if(DEBUG_MODE){
+				if(window.console){
+					console.log(o);
+				} else {
+					alert(o);
+				}
+			}
+		};
+		function trim(str) {
+			var	str = str.replace(/^\s\s*/, ''),
+				ws = /\s/,
+				i = str.length;
+			while (ws.test(str.charAt(--i)));
+			return str.slice(0, i + 1);
+		}
+		
+		// Set operation
+		Object.union = function(destination, source) {
+			for (var property in source) {
+				if (source.hasOwnProperty(property)) {
+					destination[property] = source[property];
+				}
+			}
+			return destination;
+		};		
+		Object.intersect = function(a, b) {
+			var finalSet = {};
+			for (var k1 in a) {
+				for (var k2 in b) {					
+					if(a[k2]){
+						finalSet[k2] = b[k2];
+					}
+				}
+			}
+			return finalSet;
+		};
+		
+		//sample data
+		var dataSet = [
+			"Nguyen van A", "Nguyen Tan Trieu" , "tran hung đao", "Nguyễn Tấn Triều",
+			"welove htv3" , "Huỳnh Văn Thê", "Đinh Lê Đạt" , "Bach Quang Bao Toan", "Nguyen NB",
+			"Cô bé kiêu kì"
+		];
+		var indexSet = {};
+		var indexSetSize = 0;
+		
+		var initIndexSet = function(){			
+			for(var i=0; i< dataSet.length; i++)
+			{
+				var record = dataSet[i];
+				var tokens = record.split(" ");
+				for(var j=0; j< tokens.length; j++)
+				{
+					var indexToken = removeSign4VietnameseString(tokens[j]).toLowerCase();
+					if( ! indexSet[indexToken] )
+					{
+						indexSet[indexToken] = [];
+					}
+					indexSet[indexToken].push(i);
+					indexSetSize++;
+				}   
+			}
+			log(indexSet);
+			log("Index size: "+indexSetSize);
+		};
+		jQuery(document).ready(initIndexSet);
+		
+		var queryDb = function(terms, exactLookup ){			
+			terms = terms.split(" ");
+			var results = {}, emptySet = true;		
+			for(var i=0; i< terms.length; i++)
+			{
+				var rs;
+				if(exactLookup){
+					rs = exactLookupTerm(terms[i]);
+				} else {
+					rs = fuzzyLookupTerm(terms[i]);
+				}
+		
+				if( !emptySet ){
+					results = Object.intersect(results,rs);
+				} else {
+					results = rs;
+					emptySet = false;
+				}
+			}	
+			return results;
+		};
+		
+		//more slow but usafull for sugggestion
+		var fuzzyLookupTerm = function(k){
+			k = removeSign4VietnameseString(k);
+			var results = {};
+			for(var term in indexSet){
+				if(term.indexOf(k.toLowerCase()) > -1){
+					var indexRecord = indexSet[term];
+					var size = indexRecord.length;					
+					for(var i=0; i< size; i++){
+						var theIndex = indexRecord[i];
+						if( ! results[ theIndex ] ) 
+							results[ theIndex ] = dataSet[theIndex];						
+					}
+				}
+			}
+			return results;
+		};
+		
+		//fast
+		var exactLookupTerm = function(k){
+			k = removeSign4VietnameseString(k).toLowerCase();
+			var results = {};
+			var indexRecord = indexSet[k];
+			if(Array.isArray(indexRecord)){
+				var size = indexRecord.length;					
+				for(var i=0; i< size; i++){
+					var theIndex = indexRecord[i];
+					if( ! results[ theIndex ] ) 
+						results[ theIndex ] = dataSet[theIndex];						
+				}
+			}
+			return results;
+		};
+ 
+
+ 
+		//vietnamese dumb
+		var vietnameseSigns = [
+	    	["a","A","e","E","o","O","u","U","i","I","d","D","y","Y"],
+	    	["á","à","ạ","ả","ã","â","ấ","ầ","ậ","ẩ","ẫ","ă","ắ","ằ","ặ","ẳ","ẵ"],
+	    	["Á","À","Ạ","Ả","Ã","Â","Ấ","Ầ","Ậ","Ẩ","Ẫ","Ă","Ắ","Ằ","Ặ","Ẳ","Ẵ"],
+	    	["é","è","ẹ","ẻ","ẽ","ê","ế","ề","ệ","ể","ễ"],
+	    	["É","È","Ẹ","Ẻ","Ẽ","Ê","Ế","Ề","Ệ","Ể","Ễ"],
+	    	["ó","ò","ọ","ỏ","õ","ô","ố","ồ","ộ","ổ","ỗ","ơ","ớ","ờ","ợ","ở","ỡ"],
+	    	["Ó","Ò","Ọ","Ỏ","Õ","Ô","Ố","Ồ","Ộ","Ổ","Ỗ","Ơ","Ớ","Ờ","Ợ","Ở","Ỡ"],
+	    	["ú","ù","ụ","ủ","ũ","ư","ứ","ừ","ự","ử","ữ"],
+	    	["Ú","Ù","Ụ","Ủ","Ũ","Ư","Ứ","Ừ","Ự","Ử","Ữ"],
+	    	["í","ì","ị","ỉ","ĩ"],
+	    	["Í","Ì","Ị","Ỉ","Ĩ"],
+	    	["đ"],
+	    	["Đ"],
+	    	["ý","ỳ","ỵ","ỷ","ỹ"],
+	    	["Ý","Ỳ","Ỵ","Ỷ","Ỹ"]
+	    ];
+		
+		var removeSign4VietnameseString = function(str) {
+	        //Tiến hành thay thế , lọc bỏ dấu cho chuỗi
+	        for (var i = 1; i < vietnameseSigns.length; i++) {
+	            for (var j = 0; j < vietnameseSigns[i].length; j++){						
+					str = str.replace( vietnameseSigns[i][j], vietnameseSigns[0][i - 1]);						
+	            }
+	        }
+	        return str;
+	    };
+		
+		
+		/*
+		//dummy testing
+		jQuery(document).ready(function(){
+			var s= removeSign4VietnameseString("Tiến hành thay thế , lọc bỏ dấu cho chuỗi");
+			log(s);
+			s = "Lên án nạn “đi đêm”, nâng giá cầu thủ vô tội vạ nhưng ông Nguyễn Đức Kiên vừa khiến cả V-League";
+			s = removeSign4VietnameseString(s);
+			log(s);
+			
+			var rs = queryDb("Nguyễn Tấn Triều").hasOwnProperty(3);
+			log(rs);
+		});		
+		*/
+		
+		//operation test
+		function doSearch(){
+			var term = jQuery("#demo-input-local").val();
+			var exact = jQuery("#search_exact").attr('checked') != undefined;
+			var list = queryDb(term, exact);
+			jQuery("#search_results > li").remove();
+			for(var _docId in list){
+				var liNode = jQuery("<li/>");
+				liNode.html(list[_docId]);
+				jQuery("#search_results").append(liNode);
+			}
+			
+		}
+		
+        
+        </script>
+    </div>
+	<p>Developed by <a href="http://tantrieuf31.blogspot.com/" target="_blank">tantrieuf31</a> </p>
+    </body>
+</html>

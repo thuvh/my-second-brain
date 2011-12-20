@@ -225,7 +225,7 @@ public class ServiceNodeStarter extends AbstractHandler {
 				//e1.printStackTrace();
 				result = e1.getCause().getClass().getName() + ":" + e1.getCause().getMessage();
 			}
-			System.out.println(result);
+			//System.out.println(result);
 			
 			Gson gson = new Gson();	
 			if(toks[3].toLowerCase().equals("json")){

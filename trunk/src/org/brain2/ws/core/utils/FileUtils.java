@@ -98,8 +98,7 @@ public class FileUtils {
 	}
 	
 	public static String readFileAsString(String filePath) throws java.io.IOException {
-		String fullpath = FileUtils.getRuntimeFolderPath() + filePath;
-		
+		String fullpath = FileUtils.getRuntimeFolderPath() + filePath;		
 		StringBuffer fileData = new StringBuffer(1000);
 		BufferedReader reader = new BufferedReader(new FileReader(fullpath));
 		char[] buf = new char[2048];
