@@ -34,6 +34,7 @@
 			<zipfileset excludes="META-INF/*.SF" src="lib/jdbm-2.2.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/json-org.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/sqljdbc4.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/scheduling.jar" />
 
 		</jar>
 	</target>
@@ -69,6 +70,7 @@
 			<zipfileset excludes="META-INF/*.SF" src="lib/jdbm-2.2.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/json-org.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/sqljdbc4.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/scheduling.jar" />			
 
 		</jar>
 	</target>

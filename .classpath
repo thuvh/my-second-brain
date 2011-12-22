@@ -92,5 +92,7 @@
 	<classpathentry kind="lib" path="lib/jersey-client-1.9.1.jar"/>
 	<classpathentry kind="lib" path="lib/jersey-core-1.9.1.jar"/>
 	<classpathentry kind="lib" path="lib/js.jar"/>
+	<classpathentry kind="lib" path="lib/scheduling.jar"/>
+	<classpathentry kind="lib" path="lib/calendrica.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

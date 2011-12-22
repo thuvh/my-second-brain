@@ -132,6 +132,8 @@ var fetchFacebookDataFeed = function() {
 	jQuery('#profile_pager').find('a.uiMorePagerPrimary').click();
 };
 
+/*
 jQuery.getScript('http://localhost:10001/resources/js/jquery.min.js', function(){
 	jQuery.getScript('http://localhost:10001/resources/js/agent-index.js');	
 });
+*/
