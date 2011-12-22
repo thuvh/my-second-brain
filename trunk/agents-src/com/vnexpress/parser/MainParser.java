@@ -84,12 +84,16 @@ public abstract class MainParser implements Parser{
 						
 						obj.setUrl(src);
 						obj.setMd5(VnExpressUtils.md5(src));
-						if(img.parents()!=null &&img.parents().size()>=2){
-							if(img.parents().get(1)!=null){
-								Element trNext = img.parents().get(1).nextElementSibling();
-								if( trNext != null && trNext.select("img").size()==0 && trNext.nodeName().equalsIgnoreCase("tr")){
-									obj.setCaption(trNext.text());
-									trNext.remove();
+						Elements parents = img.parents();
+						if(parents!=null &&parents.size()>=2){
+							for(Element e: parents){
+								if(e.tagName().equals("tr")){
+									Element trNext = e.nextElementSibling();
+									if( trNext != null && trNext.select("img").size()==0 && trNext.nodeName().equalsIgnoreCase("tr")){
+										obj.setCaption(trNext.text());
+										trNext.remove();
+									}
+									break;
 								}
 							}
 							img.remove();
