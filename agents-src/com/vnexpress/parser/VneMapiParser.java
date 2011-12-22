@@ -11,6 +11,7 @@ import org.json.JSONObject;
 
 import com.vnexpress.manager.VnExpressUtils;
 import com.vnexpress.model.Article;
+import com.vnexpress.model.ReferenceObject;
 import com.vnexpress.model.Topic;
 
 public class VneMapiParser {
@@ -52,7 +53,12 @@ public class VneMapiParser {
 								topicIds.append(topic.getId()).append(",");
 								System.out.println( "topic:" + topicIds);
 							}
-							updateArticle(id, newArticle.getContent(), topicIds.toString());
+							List<ReferenceObject> referenceObjects = newArticle.getRefObj();
+							for (ReferenceObject referenceObject : referenceObjects) {
+								System.out.println( "referenceObject.getUrl:" + referenceObject.getUrl());
+								System.out.println( "referenceObject.getCaption:" + referenceObject.getCaption());
+							}
+							//updateArticle(id, newArticle.getContent(), topicIds.toString());
 						} catch (Exception e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -81,7 +87,7 @@ public class VneMapiParser {
 	}
 	
 	public static void main(String[] args) {
-		parseArticleFromAPI(1000000037);
+		parseArticleFromAPI(1002243731);
 		
 		System.exit(1);
 		

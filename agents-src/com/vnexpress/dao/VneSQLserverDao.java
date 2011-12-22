@@ -331,7 +331,7 @@ public class VneSQLserverDao {
 			}
 			System.out.println(articleID + " - " + path + "- fetchArticled OK");
 			
-			if(content == null || "".equals(content)){
+			if(content == null || "".equals(content) ){
 				String fulLink = VnExpressUtils.getFullLinkOfVNEDomain(path);			
 				if(!fulLink.isEmpty()){
 					String html = HttpClientUtil.executeGet(fulLink);
