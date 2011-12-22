@@ -66,7 +66,7 @@ public class VneSQLserverDao {
 		return con;
 	}
 
-	public final static boolean updateArticleContent(Article article) throws SQLException {
+	public final static boolean updateArticleContent(Article article) throws Exception {
 		if("".equals(article.getContent())) {
 			return false;
 		}
@@ -78,7 +78,7 @@ public class VneSQLserverDao {
 			System.out.println( "topic:" + topicIds);
 		}
 		
-		PreparedStatement ps = con.prepareCall("{ call app_UpdateArticle(?,?,?) }");
+		PreparedStatement ps = ConnectWithDriver().prepareCall("{ call app_UpdateArticle(?,?,?) }");
 		ps.setLong(1, article.getID());
 		ps.setString(2, article.getContent());
 		ps.setString(3, topicIds.toString());
@@ -86,6 +86,17 @@ public class VneSQLserverDao {
 		boolean rs =  ps.executeUpdate() > 0;
 		deleteObjectReference(article.getID());
 		saveRefObj(article);
+		return rs;
+	}
+	
+	public final static boolean updateNumCommentByArticleID(long articleId) throws Exception {
+		if(articleId < 1000000001) {
+			return false;
+		}		
+		PreparedStatement ps = ConnectWithDriver().prepareCall("{ call app_UpdateNumCommentByArticleID(?) }");
+		ps.setLong(1, articleId);		
+		boolean rs =  ps.executeUpdate() > 0;
+		//System.out.println("updateNumCommentByArticleID: "+rs);		
 		return rs;
 	}
 	
@@ -102,21 +113,21 @@ public class VneSQLserverDao {
 		return rs;
 	}
 	
-	public final static boolean deleteObjectReference(long articleId) throws SQLException {
+	public final static boolean deleteObjectReference(long articleId) throws Exception {
 		String sql = "DELETE FROM ObjectReference";
 		if(articleId > 0){
 			sql = "DELETE FROM ObjectReference WHERE ArticleID = "  + articleId;
 		}		
-		PreparedStatement ps = con.prepareStatement(sql);		
+		PreparedStatement ps = ConnectWithDriver().prepareStatement(sql);		
 		boolean rs =  ps.executeUpdate() > 0;		
 		return rs;
 	}
 	
-	public static void saveRefObj(Article article) throws SQLException{
+	public static void saveRefObj(Article article) throws Exception{
 //		System.out.println("BEGIN SAVE DB ReferenceObject");
-		con.setAutoCommit(false);
+		ConnectWithDriver().setAutoCommit(false);
 		String sql = "INSERT INTO ObjectReference(ArticleID,Md5,Url,Credit,Caption,Type,Status,CreationTime,UpdateTime) VALUES(?,?,?,?,?,?,?,?,?);";
-		PreparedStatement ps = con.prepareStatement(sql);
+		PreparedStatement ps = ConnectWithDriver().prepareStatement(sql);
 		List<ReferenceObject> objs = article.getRefObj();
 		for(int i=0,n=objs.size();i<n;i++){
 			ReferenceObject obj = objs.get(i);
@@ -141,14 +152,14 @@ public class VneSQLserverDao {
 			ps.addBatch();
 		}
 		ps.executeBatch();
-		con.commit();
+		ConnectWithDriver().commit();
 		//conn.setAutoCommit(true);
 //		System.out.println("END SAVE DB ReferenceObject");
 	}
 	
-	public boolean existTopic(String topicID) throws SQLException {
+	public boolean existTopic(String topicID) throws Exception {
 		String sql = "SELECT count(*) as total FROM topic_detail WHERE topic_id=?";
-		PreparedStatement ps = con.prepareStatement(sql);			
+		PreparedStatement ps = ConnectWithDriver().prepareStatement(sql);			
 		ps.setString(1, topicID);
 		ResultSet rs = ps.executeQuery();
 		if(rs.next())
@@ -163,9 +174,9 @@ public class VneSQLserverDao {
 			if(refTopics.size() <=0 || articleId == null){
 				return false;
 			}
-			con.setAutoCommit(false);
+			ConnectWithDriver().setAutoCommit(false);
 			String sql = "INSERT INTO article_topic VALUES(?,?,?,?,?) ";
-			PreparedStatement ps = con.prepareStatement(sql);
+			PreparedStatement ps = ConnectWithDriver().prepareStatement(sql);
 			for(int i=0,n=refTopics.size();i<n;i++){
 				Topic topic = refTopics.get(i);
 				if(existTopic(topic.getId())){
@@ -178,7 +189,7 @@ public class VneSQLserverDao {
 				}
 			}
 			ps.executeBatch();
-			con.commit();
+			ConnectWithDriver().commit();
 		} catch (MySQLIntegrityConstraintViolationException e) {
 			e.printStackTrace();
 			Log.println("::::EXCEPTION MySQLIntegrityConstraintViolationException SAVE TOPIC ARTICLE");
@@ -191,9 +202,9 @@ public class VneSQLserverDao {
 		return true;
 	}
 	
-	private static String getOldSubjectIdByPath(String path) throws SQLException {
+	private static String getOldSubjectIdByPath(String path) throws Exception {
 		String sql = "SELECT ID FROM subject0 WHERE subject0.Path = ? ";
-		PreparedStatement ps = con.prepareStatement(sql);
+		PreparedStatement ps = ConnectWithDriver().prepareStatement(sql);
 		ps.setString(1, path);		
 		
 		ResultSet resultSet = ps.executeQuery();
@@ -207,20 +218,20 @@ public class VneSQLserverDao {
 	}
 
 	public static ResultSet getSubjectPaths(long maxID, int limit)
-			throws SQLException {
+			throws Exception {
 		// SELECT TOP 10 ID,Path FROM Subject0 WHERE ID <= (SELECT MAX(ID) FROM
 		// Subject0) ORDER BY ID DESC
 		// SELECT TOP 10 ID,Path FROM Subject0 WHERE ID < 1001438991 ORDER BY ID
 		// DESC
 
 		ResultSet rs = null;
-		Statement stmt = con.createStatement();
+		Statement stmt = ConnectWithDriver().createStatement();
 		String sql = "SELECT TOP " + limit
-				+ " ID,Path,Content,Date,Modified,Folder FROM Subject0 WHERE ID < [maxID] ORDER BY ID DESC";
+				+ " ID,Path,Content,Date,Modified,Folder FROM Subject0,NumComment WHERE ID < [maxID] ORDER BY ID DESC";
 		if (maxID == 0) {
 			sql = "SELECT TOP "
 					+ limit
-					+ " ID,Path,Content,Date,Modified,Folder FROM Subject0 WHERE ID <= (SELECT MAX(ID) FROM Subject0) ORDER BY ID DESC";
+					+ " ID,Path,Content,Date,Modified,Folder FROM Subject0,NumComment WHERE ID <= (SELECT MAX(ID) FROM Subject0) ORDER BY ID DESC";
 		} else {
 			sql = sql.replace("[maxID]", maxID + "");
 		}
@@ -229,10 +240,10 @@ public class VneSQLserverDao {
 	}
 	
 	public static ResultSet getSubjectPath(long ID)
-			throws SQLException {
+			throws Exception {
 		ResultSet rs = null;
-		Statement stmt = con.createStatement();
-		String sql = "SELECT ID,Path,Content,Date,Modified,Folder FROM Subject0 WHERE ID = [ID]";
+		Statement stmt = ConnectWithDriver().createStatement();
+		String sql = "SELECT ID,Path,Content,Date,Modified,Folder,NumComment  FROM Subject0 WHERE ID = [ID]";
 		sql = sql.replace("[ID]", ID + "");		
 		rs = stmt.executeQuery(sql);
 		return rs;
@@ -261,24 +272,17 @@ public class VneSQLserverDao {
 		return "";
 	}
 	
-	public static List<Comment> fetchAllCommentsArticle(long articleId)	{
+	public static List<Comment> updateEmptyCommentsArticle(long articleId)	{
 		List<Comment> comments = new ArrayList<Comment>();;
 		try {
-			
-			String sql = "SELECT ID, Path, Content FROM Comment WHERE intID = " + articleId;
-			System.out.println(sql);			
+			String sql = "SELECT ID, Path FROM Comment WHERE Content IS NULL AND intID = " + articleId;			
 			PreparedStatement stmt = ConnectWithDriver().prepareStatement(sql);		
 			
 			ResultSet rs = stmt.executeQuery();
-			while (rs.next()) {
-				String content = rs.getString("Content");
+			while (rs.next()) {							
 				String path = rs.getString("Path");
-				long commentId = rs.getLong("ID");
-				System.out.println("...starting update comment id "+commentId + " content " + content.length());
-				//if( content == null )
-				{
-					parseCommentArticle(path, commentId);					
-				}
+				long commentId = rs.getLong("ID");				
+				parseCommentArticle(path, commentId);
 			}
 			rs.close();
 		} catch (Exception e) {			
@@ -288,9 +292,9 @@ public class VneSQLserverDao {
 	}
 	
 	public static int getTotalArticle()
-			throws SQLException {
+			throws Exception {
 		ResultSet rs = null;
-		Statement stmt = con.createStatement();
+		Statement stmt = ConnectWithDriver().createStatement();
 		String sql = "SELECT COUNT(ID) as total FROM Subject0";
 		int total = 0;		
 		rs = stmt.executeQuery(sql);
@@ -316,7 +320,11 @@ public class VneSQLserverDao {
 			jobCount++;
 			articleID = results.getLong("ID");
 			String path = results.getString("Path");
-						
+			
+			if(results.getString("NumComment") == null){				
+				updateNumCommentByArticleID(articleID);
+			}
+			
 			String content = null;
 			if( ! forceUpdateContent){
 				content = results.getString("Content");
@@ -347,13 +355,12 @@ public class VneSQLserverDao {
 								public void run() {
 									boolean updated;
 									try {
-										updated = updateArticleContent(newArticle);	
-										fetchAllCommentsArticle(newArticle.getID());
+										updated = updateArticleContent(newArticle);
 										//articles.put(newArticle.getID(), newArticle.getHeadline());
 										System.out.println(newArticle.getID() + " #### updated = " + updated);
 										//System.out.println("### content \n " + newArticle.getContent());
-									} catch (SQLException e) {
-										// TODO Auto-generated catch block
+										updateEmptyCommentsArticle(newArticle.getID());//FIXME									
+									} catch (Exception e) {										
 										e.printStackTrace();
 									}																		
 								}
@@ -362,8 +369,8 @@ public class VneSQLserverDao {
 					}					
 				}
 			} else {
-				System.out.println("### content \n " + content);
-			}
+				//System.out.println("### content \n " + content);
+			}			
 		}		
 		results.close();
 		return lastParsedArticle;
@@ -371,7 +378,7 @@ public class VneSQLserverDao {
 	
 	public static void Close()  {
 		try {
-			if( ! con.isClosed()){
+			if( ! ConnectWithDriver().isClosed()){
 				con.close();
 			}
 		} catch (Exception e) {
@@ -448,8 +455,7 @@ public class VneSQLserverDao {
 						@Override
 						public void run() {						
 							try {
-								System.out.println("fetchArticle: " + path);
-								ConnectWithDriver();
+								System.out.println("fetchArticle: " + path);								
 								forceUpdateContent = forceUpdate;
 								fetchArticle(artilceId, 1);
 								//Close();
@@ -484,7 +490,7 @@ public class VneSQLserverDao {
 			while(jobIndex <= limitRecord){
 				Article a = fetchArticle(maxId, limit);
 				if(a == null){
-					Close();
+					//Close();
 					System.out.println("Not found");
 					return;
 				}
@@ -504,7 +510,7 @@ public class VneSQLserverDao {
 		forceUpdateContent = true;
 //		long artilceId = 1001322413;
 //		fetchArticle(artilceId , 1);
-		fetchAllCommentsArticle(1000498556);
+		updateEmptyCommentsArticle(1000498556);
 		//System.out.println(updateCommentArticleContent("ok", 1001098487)); ;
 		//ConnectWithDriver();
 	}

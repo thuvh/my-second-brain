@@ -26,7 +26,7 @@ import com.google.gson.Gson;
 public class ServiceNodeStarter extends AbstractHandler {
 	
 
-	private static final Map<String, ServiceHandler> servicesMap = new HashMap<String, ServiceHandler>();
+	private static final Map<String, ServiceHandler> servicesMap = new HashMap<String, ServiceHandler>(30);
 	private static final Map<String, String> cachePool = new HashMap<String, String>(100);
 	private static final Map<String, String> agentsQueue = new HashMap<String, String>(10000);
 	protected static final boolean USE_CACHE = false;
@@ -209,7 +209,7 @@ public class ServiceNodeStarter extends AbstractHandler {
 			Class clazz = mapperLoader.getMapperClass(namespace );
 			String key = clazz.getName();
 
-			if (!servicesMap.containsKey(key)) {
+			if ( ! servicesMap.containsKey(key) ) {
 				servicesMap.put(key, (ServiceHandler) clazz.newInstance());
 			}
 

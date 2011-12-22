@@ -107,7 +107,7 @@ public class VneDataImporterHandler extends ServiceHandler {
 		if(linksDB.containsKey(path)){
 			System.out.println("get from cache: "+path );
 			System.out.println("### fetchAllCommentsArticle ...");
-			VneSQLserverDao.fetchAllCommentsArticle(artilceId);
+			//VneSQLserverDao.fetchAllCommentsArticle(artilceId);
 			return linksDB.get(path);
 		}		
 		
@@ -170,20 +170,27 @@ public class VneDataImporterHandler extends ServiceHandler {
 		final long id =  Long.parseLong(""+params.get("id"));
 		final String verb = URLDecoder.decode(params.get("verb")+"","utf-8").toLowerCase();
 		final String path = URLDecoder.decode(params.get("path")+"","utf-8").toLowerCase();
+		final String k = object +"-"+ verb +"-"+ id;
 		
 		if(! "".equals(path) ){
 			System.out.println("processNotification parseArticle");
 			new Thread(new Runnable() {								
 				@Override
 				public void run() {						
-					VneSQLserverDao.parseArticle(path, id , Boolean.parseBoolean(params.get("forceupdate")+""));																
+					boolean processOk = ! VneSQLserverDao.parseArticle(path, id , Boolean.parseBoolean(params.get("forceupdate")+"")).isEmpty();		
+					try {
+						getNotifyDB().put(k, ""+processOk);
+						recordManager.commit();			
+					} catch (Exception e) {			
+						e.printStackTrace();
+					}
 				}
 			}).start();	
+			
 			return "true";
-		}
-		
+		}		
 		boolean logNotify = "true".equals(params.get("log"));
-		String k = object +"-"+ verb +"-"+ id;
+		
 		if(logNotify){
 			System.out.println("processNotification logNotify " + k);
 			
@@ -191,7 +198,7 @@ public class VneDataImporterHandler extends ServiceHandler {
 			
 			if("article".equals(object)&& ("insert".equals(verb)||"update".equals(verb)) && id > 0 ){				
 				System.out.println("processNotification fetchArticle");
-				new Thread(new Runnable() {								
+				new Thread(new Runnable() {
 					@Override
 					public void run() {						
 						try {
@@ -233,10 +240,10 @@ public class VneDataImporterHandler extends ServiceHandler {
 			StringBuilder log = new StringBuilder();			
 			Set<String> keys = getNotifyDB().keySet();
 			for (String k : keys) {
-				log.append("k=").append(k).append(" => ").append(getNotifyDB().get(k)).append(" <br>\n ");
+				log.append(k).append(" : ").append(getNotifyDB().get(k)).append("___");
 			}		
 			String s = log.toString();
-			System.out.println(s);
+			//System.out.println(s);
 			return s;
 		}
 		return "";
@@ -244,8 +251,7 @@ public class VneDataImporterHandler extends ServiceHandler {
 	
 
 	@RestHandler
-	public String getServiceName(Map params) {
-		// TODO Auto-generated method stub
+	public String getServiceName(Map params) {		
 		return this.getClass().getName();
 	}
 	
