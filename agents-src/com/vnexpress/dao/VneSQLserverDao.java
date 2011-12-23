@@ -321,9 +321,7 @@ public class VneSQLserverDao {
 			articleID = results.getLong("ID");
 			String path = results.getString("Path");
 			
-			if(results.getString("NumComment") == null){				
-				updateNumCommentByArticleID(articleID);
-			}
+			updateNumCommentByArticleID(articleID);			
 			
 			String content = null;
 			if( ! forceUpdateContent){
