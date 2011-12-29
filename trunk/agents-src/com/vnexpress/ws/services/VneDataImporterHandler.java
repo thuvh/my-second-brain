@@ -47,7 +47,7 @@ public class VneDataImporterHandler extends ServiceHandler {
 			/** create (or open existing) database */
 			if(recordManager == null){
 				recordManager = RecordManagerFactory.createRecordManager(recordManagerName);	
-			}			
+			}
 	
 			if(notifyDB == null){
 				notifyDB = recordManager.treeMap(notifyDBName);
