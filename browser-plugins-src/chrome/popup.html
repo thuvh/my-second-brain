@@ -75,13 +75,14 @@ ul {
 		<option value="search">Search</option>
 		<option value="gplus_btn">G+ button</option>
 		<option value="bb_plugins">Banbe Plugins</option>
+		<option value="test_link">Stress Test</option>
 		<option value="crawling_facebook">Crawling Facebook</option>
 		<option value="javascript: openNewsStreamEditor()">News Stream Editor</option>
 	</select>
 	<ul id="panel_list" >
 		<li id="save" >			
 			<input type="text" id="theTags" value="" style="width: 270px; margin: 5px;" placeholder="Enter the tags here (separated by space)" />
-			<a href="javascript:postSaveDataByMethodPOST()" class="button orange bigrounded" title="Save to my brain" style="float: right; margin: 10px;" >Save</a>
+			<a href="javascript:postSaveDataByMethodPOST()" class="button orange bigrounded" title="Bookmark this page" style="float: right; margin: 10px;" >Save</a>
 	 	</li>
 	  	<li id="search" >
 	  		<input type="text" id="theKeywords" value="" style="width: 270px; margin: 5px;" placeholder="Enter the keywords here" />
@@ -96,6 +97,14 @@ ul {
 		  	<div id="bb_plugins_holder" style="margin: 10px;">
 				<bb:sp-like layout="button_count" href="#_href_" ></bb:sp-like><br>
 				<bb:sp-share-button href="#_href_" ></bb:sp-share-button>
+			</div>
+	  	</li>
+	  	<li id="test_link" >
+		  	<div id="bb_plugins_holder" style="margin: 10px;">
+				<input type="text" id="theTestLink" value="" style="width: 270px; margin: 5px;" placeholder="Link to test" />
+				<input type="text" id="theNumTest" value="10" style="width: 270px; margin: 5px;" placeholder="theNumTest" />
+				<div style="font-weight: bold;" id="theNumTestCounter" >0</div>
+				<a href="javascript:doTestLink()" class="button orange bigrounded" style="float: right; margin: 10px;" >Test</a>
 			</div>
 	  	</li>
 	  	<li id="crawling_facebook" >
@@ -157,6 +166,30 @@ ul {
 		});		
 	}
 	
+	function doTestLink(){
+		var theTestLink = jQuery("#theTestLink").val();
+		var theNumTest =  parseInt(jQuery("#theNumTest").val(),10);		
+		var c = 0;
+		
+		var ping = function(){
+			var callback = function(tab) {
+				setTimeout(function(){
+					chrome.tabs.remove(tab.id);				
+					jQuery("#theNumTestCounter").html(c);
+					c++;		
+				},1000)					
+			}; 
+			chrome.tabs.create({url : theTestLink, active : false }, callback );	
+		};			
+		var id = setInterval(function(){
+			ping();
+			if(c >= theNumTest){
+			    clearInterval(id);			    
+			}			
+		},100)	
+		
+	}
+	
 	function crawlingMyFacebook() {
 		chrome.tabs.getSelected(null, function(tab) {
 			curTabId = tab.id;			
@@ -186,6 +219,7 @@ ul {
 		chrome.tabs.sendRequest(tab.id, {
 			method : "getCurrentUrl"				
 		}, function(response) {
+			jQuery("#theTestLink").val(response.href);
 			
 			//G+ Button
 			var node = document.getElementById('plusone_btn');
