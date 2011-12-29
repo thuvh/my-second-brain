@@ -47,13 +47,13 @@ public class MyClassLoader extends ClassLoader {
 		return null;
 	}
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) throws Throwable {
 
 		ClassLoader parentClassLoader = MyClassLoader.class.getClassLoader();
 		MyClassLoader classLoader = new MyClassLoader(parentClassLoader);
-		Class myObjectClass = classLoader.loadClass("org.brain2.test.parser.dynamic.MyParser");
-		Object obj = myObjectClass.newInstance();
-		Method doParsingMethod = myObjectClass.getDeclaredMethod("doParsing", new Class[] { String.class });
+		Class parserClass = classLoader.loadClass("org.brain2.test.parser.dynamic.MyParser");
+		Object obj = parserClass.newInstance();
+		Method doParsingMethod = parserClass.getDeclaredMethod("doParsing", new Class[] { String.class });
 		Object result = doParsingMethod.invoke(obj, "http://vnexpress.net/gl/vi-tinh/giai-tri/2011/12/10-clip-quang-cao-gay-sot-tren-youtube-nam-2011/");
 		System.out.println(result);
 
