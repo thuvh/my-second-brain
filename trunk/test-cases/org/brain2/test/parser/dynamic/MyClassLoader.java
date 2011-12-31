@@ -15,7 +15,7 @@ public class MyClassLoader extends ClassLoader {
 	}
 
 	public Class loadClass(String name) throws ClassNotFoundException {
-		if (!"reflection.MyObject".equals(name))
+		if (!"org.brain2.test.parser.dynamic.MyParser".equals(name))
 			return super.loadClass(name);
 
 		try {

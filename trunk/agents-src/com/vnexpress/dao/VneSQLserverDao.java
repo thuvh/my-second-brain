@@ -439,8 +439,7 @@ public class VneSQLserverDao {
 				System.err.println("Link die!!!");
 			} else {
 				Article oldArticle = new Article();
-				oldArticle.setID(artilceId);			
-				
+				oldArticle.setID(artilceId);
 				try {
 					Article newArticle = parser.parseHtmlToArticle(fulLink, html, oldArticle , null);
 					content = newArticle.getContent();
