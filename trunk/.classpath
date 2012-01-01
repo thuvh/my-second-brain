@@ -3,13 +3,10 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="test-cases"/>
 	<classpathentry kind="src" path="agents-src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.7.0"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.7.0_01"/>
 	<classpathentry kind="lib" path="lib/commons-codec.jar"/>
 	<classpathentry kind="lib" path="lib/commons-logging.jar"/>
 	<classpathentry kind="lib" path="lib/gson.jar"/>
-	<classpathentry kind="lib" path="lib/httpclient-cache.jar"/>
-	<classpathentry kind="lib" path="lib/httpclient.jar"/>
-	<classpathentry kind="lib" path="lib/httpcore.jar"/>
 	<classpathentry kind="lib" path="lib/httpmime.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-ajp.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-annotations.jar"/>
@@ -95,5 +92,13 @@
 	<classpathentry kind="lib" path="lib/scheduling.jar"/>
 	<classpathentry kind="lib" path="lib/calendrica.jar"/>
 	<classpathentry kind="lib" path="lib/guava.jar"/>
+	<classpathentry kind="lib" path="lib/httpcore.jar"/>
+	<classpathentry kind="lib" path="lib/httpclient-cache.jar"/>
+	<classpathentry kind="lib" path="lib/dropbox-java-sdk-1.2.2/commons-logging-1.1.1.jar"/>
+	<classpathentry kind="lib" path="lib/dropbox-java-sdk-1.2.2/dropbox-java-sdk-1.2.2.jar"/>
+	<classpathentry kind="lib" path="lib/dropbox-java-sdk-1.2.2/httpclient-4.0.3.jar"/>
+	<classpathentry kind="lib" path="lib/dropbox-java-sdk-1.2.2/httpcore-4.0.1.jar"/>
+	<classpathentry kind="lib" path="lib/dropbox-java-sdk-1.2.2/httpmime-4.0.3.jar"/>
+	<classpathentry kind="lib" path="lib/dropbox-java-sdk-1.2.2/json_simple-1.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

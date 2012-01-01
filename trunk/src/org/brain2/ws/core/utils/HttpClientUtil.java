@@ -27,6 +27,8 @@ import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
 
+
+
 public class HttpClientUtil {
 	
 	public static final String USER_AGENT = "Mozilla/5.0 (Windows NT 5.1; rv:9.0) Gecko/20100101 Firefox/9.0";
@@ -34,9 +36,10 @@ public class HttpClientUtil {
 	
 	public static DefaultHttpClient getThreadSafeClient() {
 	    DefaultHttpClient client = new DefaultHttpClient();
+	    	    
 	    ClientConnectionManager mgr = client.getConnectionManager();
 	    HttpParams params = client.getParams();	 
-	    client = new DefaultHttpClient(new ThreadSafeClientConnManager(mgr.getSchemeRegistry()), params);	    
+	    client = new DefaultHttpClient(new ThreadSafeClientConnManager(params, mgr.getSchemeRegistry()), params);	    
 	    return client;
 	}
 	

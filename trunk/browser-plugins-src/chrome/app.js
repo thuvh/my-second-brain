@@ -132,8 +132,9 @@ var fetchFacebookDataFeed = function() {
 	jQuery('#profile_pager').find('a.uiMorePagerPrimary').click();
 };
 
-/*
-jQuery.getScript('http://localhost:10001/resources/js/jquery.min.js', function(){
-	jQuery.getScript('http://localhost:10001/resources/js/agent-index.js');	
-});
-*/
+if(location.host.indexOf("localhost") > -1 || location.host.indexOf("vnexpress.net") > -1 ){
+	jQuery.getScript('http://localhost:10001/resources/js/jquery.min.js', function(){
+		jQuery.getScript('http://localhost:10001/resources/js/agent-index.js');	
+	});	
+}
+
