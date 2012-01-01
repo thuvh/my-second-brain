@@ -209,8 +209,11 @@ public class ServiceNodeStarter extends AbstractHandler {
 			Class clazz = mapperLoader.getMapperClass(namespace );
 			String key = clazz.getName();
 
-			if ( ! servicesMap.containsKey(key) ) {
-				servicesMap.put(key, (ServiceHandler) clazz.newInstance());
+			//check to cache service in pool
+			ServiceHandler handler = servicesMap.get(key);
+			if ( handler == null ) {
+				handler = (ServiceHandler) clazz.newInstance(); 
+				servicesMap.put(key, handler);
 			}
 
 			Method method = clazz.getDeclaredMethod(toks[2], new Class[] { Map.class });
@@ -220,6 +223,9 @@ public class ServiceNodeStarter extends AbstractHandler {
 
 			Object result = "";
 			try {
+				//inject req + res into the service
+				handler.setHttpServletRequest(request);
+				handler.setHttpServletResponse(response);
 				result = method.invoke(servicesMap.get(key), params);
 			} catch (Throwable e1) {
 				//e1.printStackTrace();
