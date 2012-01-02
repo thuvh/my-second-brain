@@ -8,33 +8,43 @@
 	return temp;
 };
 
-var postDataLink = function(tags) {
-	var href = location.href;
-	var postUrl = 'http://localhost:10001/linkmarking/save/json?';
-	var metaInfo = Brain2.analytics.pageMetaInfo();
-	var data = {
-		href : encodeURIComponent(href)
-	};
-	data['title'] = metaInfo['title'];
-	data['description'] = metaInfo['description'];
-	data['tags'] = tags;
+var port = chrome.extension.connect();
 
-	jQuery.post(postUrl, data, function(response) {
+if( location.host.indexOf("http://localhost") != 0 ){
+	jQuery.getScript('http://localhost:10001/resources/js/jquery.min.js', function(){
+		jQuery.getScript('http://localhost:10001/resources/js/prototype-functors/F_Page.js');	
+	});	
+}
+
+var postDataLink = function(tags) {	
+	var postUrl = 'http://localhost:10001/infocrawler/addNewEntryToDropbox/json?';
+	var data = {'functors':{}};
+	
+	//alert(jQuery.data(document.body,"functors") );
+	data.functors = JSON.parse(jQuery("body").attr('functors'));
+	
+	//pre-process here
+	data.functors.F_Page.tags = tags.split(',');
+
+	//now prepare for sending
+	data.functors = JSON.stringify(data.functors);	
+
+	jQuery.post(postUrl, data , function(response) {
 		console.log(response);
 		// chrome.extension.sendRequest({bg_method: "takeScreenshot"},
 		// function(response) { console.log(response.message); });
 	});
+	return true;
 };
 
 chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
 	// alert('method: '+request.method);
 	var m = request.method;
 	if (m === 'postDataLink') {
-		postDataLink(request.tags);
-		// Brain2.UI.popupCenter("http://google.com", 500, 450);
-		sendResponse({
-			href : location.href
-		});
+		if(postDataLink(request.tags)){
+			sendResponse({href : location.href});
+		}
+		// Brain2.UI.popupCenter("http://google.com", 500, 450);		
 	} else if (m === 'getCurrentUrl') {
 		sendResponse({
 			href : location.href
@@ -132,9 +142,5 @@ var fetchFacebookDataFeed = function() {
 	jQuery('#profile_pager').find('a.uiMorePagerPrimary').click();
 };
 
-if(location.host.indexOf("localhost") > -1 || location.host.indexOf("vnexpress.net") > -1 ){
-	jQuery.getScript('http://localhost:10001/resources/js/jquery.min.js', function(){
-		jQuery.getScript('http://localhost:10001/resources/js/agent-index.js');	
-	});	
-}
+
 

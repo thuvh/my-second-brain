@@ -1,5 +1,6 @@
 package org.brain2.ws.services.infocrawler;
 
+import java.io.ByteArrayInputStream;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.List;
@@ -8,11 +9,15 @@ import java.util.Map;
 import org.brain2.ws.core.ServiceHandler;
 import org.brain2.ws.core.annotations.RestHandler;
 import org.brain2.ws.core.utils.ServletUtils;
+import org.brain2.ws.core.utils.StringUtil;
+import org.json.JSONObject;
 
 import com.dropbox.client2.DropboxAPI;
 import com.dropbox.client2.DropboxAPI.Account;
 import com.dropbox.client2.DropboxAPI.Entry;
+import com.dropbox.client2.ProgressListener;
 import com.dropbox.client2.exception.DropboxException;
+import com.dropbox.client2.exception.DropboxUnlinkedException;
 import com.dropbox.client2.session.AccessTokenPair;
 import com.dropbox.client2.session.AppKeyPair;
 import com.dropbox.client2.session.RequestTokenPair;
@@ -21,6 +26,7 @@ import com.dropbox.client2.session.WebAuthSession;
 import com.dropbox.client2.session.WebAuthSession.WebAuthInfo;
 
 public class InfoCrawlerHandler extends ServiceHandler {
+	public static final String JS_MIMETYPE = "application/javascript";
 
 	// In the class declaration section:
 	private DropboxAPI<WebAuthSession> mDBApi;
@@ -29,9 +35,14 @@ public class InfoCrawlerHandler extends ServiceHandler {
 	final static private AccessType ACCESS_TYPE = AccessType.DROPBOX;
 	AccessTokenPair accessToken;
 	String uid = null;
+	Map<String, Entry> functorsCache = new java.util.HashMap<>();
 	
 	public InfoCrawlerHandler(){
 		System.out.println("init InfoCrawlerHandler");
+		// And later in some initialization function:
+		AppKeyPair appKeys = new AppKeyPair(APP_KEY, APP_SECRET);
+		WebAuthSession session = new WebAuthSession(appKeys, ACCESS_TYPE);
+		mDBApi = new DropboxAPI<WebAuthSession>(session);
 	}
 	
 
@@ -43,12 +54,9 @@ public class InfoCrawlerHandler extends ServiceHandler {
 	public void requestDropboxSession(Map params) {
 
 		try {
-			// And later in some initialization function:
-			AppKeyPair appKeys = new AppKeyPair(APP_KEY, APP_SECRET);
-			WebAuthSession session = new WebAuthSession(appKeys, ACCESS_TYPE);
-			mDBApi = new DropboxAPI<WebAuthSession>(session);
+			WebAuthSession session = mDBApi.getSession();
 
-			WebAuthInfo authInfo = mDBApi.getSession().getAuthInfo();
+			WebAuthInfo authInfo = session.getAuthInfo();
 			System.out.println("authInfo.url: " + authInfo.url);
 			
 			accessToken = session.getAccessTokenPair();
@@ -67,31 +75,99 @@ public class InfoCrawlerHandler extends ServiceHandler {
 			e.printStackTrace();
 		}
 	}
+	
+	ProgressListener dropboxFileListener = new ProgressListener(){
+		@Override
+		public void onProgress(long bytesSent, long total) {
+			int percent = (int) ((bytesSent * 100)/total);			
+			System.out.println(bytesSent + "-" + total + " %= " + percent);			
+		}
+	};
+	
+	public Entry addNewEntryToDropbox(Map params) {
+		try {
+			String functorsStr = URLDecoder.decode(httpServletRequest.getParameter("functors"),"UTF-8");
+			JSONObject functorsObj = new JSONObject(functorsStr);
+			System.out.println(functorsObj);
+							
+			JSONObject fPage = functorsObj.getJSONObject("F_Page");
+			
+			String url = fPage.getString("url");
+			System.out.println("url: " + url );
+			
+			if(accessToken == null){
+				httpServletResponse.sendRedirect("http://localhost:10001/infocrawler/requestDropboxSession/html?path=parser-admin");
+				//TODO redirect to this action
+				return null;
+			}
+			
+			// Uploading a sample functor.
+			if(mDBApi.getSession().isLinked()){						
+				String fileContents = "functorsCallback( " + functorsObj.toString() + " );";
+				byte[] data = fileContents.getBytes();
+				String fileName = "functor-F_Page-"+ StringUtil.CRC32(url) +".js";
+				Entry  entry = functorsCache.get(fileName);
+				String path = "/Public/database/functor-F_Page-"+ StringUtil.CRC32(url) +".js";					
+				if(entry != null){
+					entry = mDBApi.putFile(path, new ByteArrayInputStream(data), data.length, entry.rev, dropboxFileListener);
+					System.out.println("The uploaded file's rev is: " + entry.rev);	
+				} else {									
+					entry = mDBApi.putFile(path, new ByteArrayInputStream(data), data.length, null, dropboxFileListener);
+					System.out.println("The uploaded file's rev is: " + entry.rev);					
+				}				
+				return entry;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}	
+		return null;
+	}
 
 	public void postAuthorizeDropbox(Map params) throws DropboxException {
-		try {			
-			if(uid == null){
-				WebAuthSession session = mDBApi.getSession();
-				RequestTokenPair requestTokenPair = new RequestTokenPair(accessToken.key, accessToken.secret);
-				uid = session.retrieveWebAccessToken(requestTokenPair);
+		try {	
+			WebAuthSession session = mDBApi.getSession();
+			if(accessToken == null){
+				httpServletResponse.sendRedirect("http://localhost:10001/infocrawler/requestDropboxSession/html?path=parser-admin");
+				return;
 			}
-			System.out.println(uid);
+			if(uid == null){				
+				RequestTokenPair requestTokenPair = new RequestTokenPair(accessToken.key, accessToken.secret);
+				uid = session.retrieveWebAccessToken(requestTokenPair);				
+			}
 			
-			if(mDBApi.getSession().isLinked()){
-				Account account = mDBApi.accountInfo();
-				System.out.println(account.displayName);
+			if(uid.equals(params.get("uid"))){
+				if(session.isLinked()){
+					
+					//get and print the account info
+					Account account = mDBApi.accountInfo();
+					System.out.println(account.displayName);
+										
+					//list files in /Public/database/
+					Entry existingEntry = mDBApi.metadata("/Public/database/", 100, null, true, null);
+					List<Entry> entries = existingEntry.contents;
+					for (Entry entry : entries) {
+						if(JS_MIMETYPE.equals(entry.mimeType)){		
+							String fileName = entry.fileName();
+							if(fileName.startsWith("functor-")){
+								functorsCache.put(fileName, entry);
+								String publicAccessUrl = "http://dl.dropbox.com/u/" + uid + "/database/" + entry.fileName();
+								System.out.println("functors publicAccessUrl: " + publicAccessUrl);
+							}
+						}
+					}					
+				} else {
+					System.out.println("Dropbox is not linked!");
+				}	
 			} else {
-				System.out.println("Dropbox is not linked!");
-			}			
-			
-			Entry existingEntry = mDBApi.metadata("/Public", 100, null, true, null);
-			List<Entry> entries = existingEntry.contents;
-			for (Entry entry : entries) {
-				System.out.println("entry: " + entry.fileName());	
+				throw new IllegalArgumentException("uid = " + uid + " is not equal to " + params.get("uid"));
 			}
 			
 		} catch (Exception e) {
-			e.printStackTrace();
+			if( e instanceof DropboxUnlinkedException){
+				System.err.println(e.getMessage());
+			} else {
+				e.printStackTrace();
+			}
 		}
 	}
 
