@@ -86,3 +86,7 @@ window.addEventListener("message", function(event) {
 	console.log("crossHttpPostCallback: "+ event.data);
 }, false);
 
+
+var functorsCallback = function(obj){
+    console.log(obj);
+};
