@@ -9,15 +9,27 @@
 };
 
 var port = chrome.extension.connect();
+var baseAgentUrl = 'http://localhost:10001';
+var agentStatus = false;
 
 if( location.host.indexOf("http://localhost") != 0 ){
-	jQuery.getScript('http://localhost:10001/resources/js/jquery.min.js', function(){
-		jQuery.getScript('http://localhost:10001/resources/js/prototype-functors/F_Page.js');	
+	var img = jQuery('<img/>').attr('src', baseAgentUrl + '/resources/images/empty.gif');
+	img.on("load", function(){
+		agentStatus = true;
+		localStorage.setItem('agent-status',agentStatus);
+		jQuery.getScript(baseAgentUrl + '/resources/js/jquery.min.js', function(){
+			jQuery.getScript(baseAgentUrl + '/resources/js/prototype-functors/F_Page.js');	
+		});	
+	}).on("error", function(){
+		agentStatus = false;
+		//TODO here
+		localStorage.setItem('agent-status',agentStatus);
 	});	
+	jQuery('body').append(img);
 }
 
 var postDataLink = function(tags) {	
-	var postUrl = 'http://localhost:10001/infocrawler/addNewEntryToDropbox/json?';
+	var postUrl = baseAgentUrl + '/infocrawler/addNewEntryToDropbox/json?';
 	var data = {'functors':{}};
 	
 	//alert(jQuery.data(document.body,"functors") );
@@ -49,6 +61,14 @@ chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
 		sendResponse({
 			href : location.href
 		});
+	} else if (m === 'getAgentStatus') {
+		sendResponse({
+			agentStatus : agentStatus
+		});	
+	} else if (m === 'getPageMetaInfo') {
+		sendResponse({
+			pageMetaInfo : Brain2.analytics.pageMetaInfo()
+		});	
 	} else if (m === 'crawlingMyFacebook') {
 		fetchFacebookDataFeed();
 	} else {
@@ -57,19 +77,17 @@ chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
 });
 
 // postMessage HTML5
-window.addEventListener("message", function(event) {
-	
-	if (event.origin !== "http://localhost:10001")
-		return;	
-	
+window.addEventListener("message", function(event) {	
+	if (event.origin !== baseAgentUrl )
+		return;		
 	// ...
 }, false);
 
-// test
+
 
 var postSaveDataByMethodPOST = function(tags) {
 	var href = location.href;
-	var postUrl = 'http://localhost:10001/linkmarking/save/html?';
+	var postUrl = baseAgentUrl + '/linkmarking/save/html?';
 	var metaInfo = Brain2.analytics.pageMetaInfo();
 
 	/*

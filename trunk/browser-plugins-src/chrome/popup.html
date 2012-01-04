@@ -66,12 +66,14 @@ ul {
 	padding: 0px;
 }
 </style>
+<link rel="stylesheet" type="text/css" href="autoSuggest.css" >
 <script type="text/javascript" src="jquery.min.js" ></script>
+<script type="text/javascript" src="jquery.autoSuggest.packed.js" ></script>
 
-<div style="width: 280px; margin: 10px;" >
+<div style="width: 600px; height: 270px; margin: 10px;" >
 	Options:<br>
 	<select id="option_box" onchange="optionHandler(this)">
-		<option value="save">Save</option>
+		<option value="save">Save link to Dropbox</option>
 		<option value="search">Search</option>
 		<option value="gplus_btn">G+ button</option>
 		<option value="bb_plugins">Banbe Plugins</option>
@@ -80,8 +82,9 @@ ul {
 		<option value="javascript: openNewsStreamEditor()">News Stream Editor</option>
 	</select>
 	<ul id="panel_list" >
-		<li id="save" >			
-			<input type="text" id="theTags" value="" style="width: 270px; margin: 5px;" placeholder="Enter the tags here (comma-separated values)" />
+		<li id="save" >	
+			<b id="agentStatus" style="display: none;"></b>		
+			<input type="text" id="theTags" value="" style="width: 580px; margin: 5px;" placeholder="Enter the tags for this link here (comma-separated values)" />
 			<a href="javascript:postSaveDataByMethodPOST()" class="button orange bigrounded" title="Bookmark this page" style="float: right; margin: 10px;" >Save</a>
 	 	</li>
 	  	<li id="search" >
@@ -116,6 +119,8 @@ ul {
 </div> 
 
 <script type="text/javascript" >	
+	var agentStatus = false;
+
 	var initSelectionBox = function(){
 		jQuery('#panel_list').find('li').hide();
 		jQuery('#panel_list').find('#save').show();
@@ -149,7 +154,11 @@ ul {
 	//chrome.tts.speak('Please, enter your tags for this page!', {'lang': 'en-US', 'rate': 1.0});
 	
 	var curTabId = 0;
-	function postSaveDataByMethodPOST() {		
+	function postSaveDataByMethodPOST() {	
+		if( ! agentStatus ){			
+			return;
+		}
+		
 		var tagText = document.getElementById('theTags').value;		
 		chrome.tabs.getSelected(null, function(tab) {
 			curTabId = tab.id;
@@ -215,7 +224,36 @@ ul {
 	}
 	
 	
-	chrome.tabs.getSelected(null, function(tab) {			
+	chrome.tabs.getSelected(null, function(tab) {	
+		
+		//check status
+		chrome.tabs.sendRequest(tab.id, {
+			method : "getAgentStatus"				
+		}, function(response) {
+			agentStatus = response.agentStatus;		
+			if( agentStatus ){
+				jQuery("#agentStatus").show().html('Agent Status is ready!');
+			} else {
+				jQuery("#agentStatus").show().html('Agent Status is NOT ready!');	
+			}
+			
+		});
+		
+		//init tags hints data
+		chrome.tabs.sendRequest(tab.id, {
+			method : "getPageMetaInfo"				
+		}, function(response) {
+			var metaInfo = response.pageMetaInfo;		
+			var tags = metaInfo['title'].split(" ");
+			var data = {items: []};
+			for(var i=0; i < tags.length; i++){
+				data.items.push({value: i, name: tags[i] });
+			}		
+			var selectionAddedH = function(elem){ alert( jQuery(elem).text() ); }
+	       //	jQuery("#theTags").autoSuggest(data.items, {selectedItemProp: "name", searchObjProps: "name" , selectionAdded : selectionAddedH });
+		});
+		
+		//init plugins
 		chrome.tabs.sendRequest(tab.id, {
 			method : "getCurrentUrl"				
 		}, function(response) {
@@ -237,8 +275,12 @@ ul {
 			document.getElementById('bb_plugins').appendChild(po);
 			po.onload = function(){
 				window.FOSP.XFOML.parse();	
-			};			
+			};	
 		});
 	});	
+	
+	
+	
+
 	
 </script>
