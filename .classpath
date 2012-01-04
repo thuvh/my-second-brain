@@ -100,5 +100,8 @@
 	<classpathentry kind="lib" path="lib/dropbox-java-sdk-1.2.2/httpcore-4.0.1.jar"/>
 	<classpathentry kind="lib" path="lib/dropbox-java-sdk-1.2.2/httpmime-4.0.3.jar"/>
 	<classpathentry kind="lib" path="lib/dropbox-java-sdk-1.2.2/json_simple-1.1.jar"/>
+	<classpathentry kind="lib" path="lib/fontbox-1.6.0.jar"/>
+	<classpathentry kind="lib" path="lib/jempbox-1.6.0.jar"/>
+	<classpathentry kind="lib" path="lib/pdfbox-1.6.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
