@@ -3,6 +3,7 @@ package org.brain2.ws.services.infocrawler;
 import java.io.ByteArrayInputStream;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -35,7 +36,8 @@ public class InfoCrawlerHandler extends ServiceHandler {
 	final static private AccessType ACCESS_TYPE = AccessType.DROPBOX;
 	AccessTokenPair accessToken;
 	String uid = null;
-	Map<String, Entry> functorsCache = new java.util.HashMap<>();
+	Map<String, Entry> functorsCache = new java.util.HashMap<>();	
+	List<String> functorsPaths = null;
 	
 	public InfoCrawlerHandler(){
 		System.out.println("init InfoCrawlerHandler");
@@ -49,6 +51,56 @@ public class InfoCrawlerHandler extends ServiceHandler {
 	@RestHandler
 	public String getServiceName(Map params) {
 		return this.getClass().getName();
+	}
+	
+	@RestHandler
+	public List<String> getFunctors(Map params) throws Exception {
+		if(accessToken == null){			
+			initDropboxSession("getFunctorsCache/json");
+		}
+		WebAuthSession session = mDBApi.getSession();
+		if(session.isLinked() && functorsPaths == null ){
+								
+			//list files in /Public/database/
+			Entry existingEntry = mDBApi.metadata("/Public/database/", 1000, null, true, null);			
+			List<Entry> entries = existingEntry.contents;
+			functorsPaths = new ArrayList<>(entries.size());
+			for (Entry entry : entries) {
+				if(JS_MIMETYPE.equals(entry.mimeType)){		
+					String fileName = entry.fileName();
+					if(fileName.startsWith("functor-")){
+						functorsCache.put(fileName, entry);
+						String publicAccessUrl = "http://dl.dropbox.com/u/" + uid + "/database/" + entry.fileName();
+						System.out.println("functors publicAccessUrl: " + publicAccessUrl);
+						functorsPaths.add(publicAccessUrl);
+					}
+				}
+			}					
+			return functorsPaths;
+		}
+		return functorsPaths ;
+	}
+	
+	public void initDropboxSession(String oauth_callback) {
+		try {
+			WebAuthSession session = mDBApi.getSession();
+
+			WebAuthInfo authInfo = session.getAuthInfo();
+			System.out.println("authInfo.url: " + authInfo.url);
+			
+			accessToken = session.getAccessTokenPair();
+			System.out.println("accessToken.key "+accessToken.key);
+			System.out.println("accessToken.secret "+accessToken.secret);
+
+			String url = authInfo.url
+					+ "&oauth_callback="
+					+ URLEncoder.encode("http://localhost:10001/infocrawler/" + oauth_callback,"UTF-8");
+			System.out.println("url: " + url);
+			httpServletResponse.sendRedirect(url);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public void requestDropboxSession(Map params) {

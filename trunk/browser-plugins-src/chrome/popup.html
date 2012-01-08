@@ -75,6 +75,7 @@ ul {
 	<select id="option_box" onchange="optionHandler(this)">
 		<option value="save">Save link to Dropbox</option>
 		<option value="search">Search</option>
+		<option value="knowledge_tree">My Knowledge Tree</option>
 		<option value="gplus_btn">G+ button</option>
 		<option value="bb_plugins">Banbe Plugins</option>
 		<option value="test_link">Stress Test</option>
@@ -90,6 +91,9 @@ ul {
 	  	<li id="search" >
 	  		<input type="text" id="theKeywords" value="" style="width: 270px; margin: 5px;" placeholder="Enter the keywords here" />
 	  		<a href="javascript:openSearchForm()" class="button orange bigrounded" title="Search" style="float: right; margin: 10px;" >Search</a>
+		</li>
+		<li id="knowledge_tree" >	  		
+	  		<a href="javascript:openMyKnowledgeTree()" class="button orange bigrounded" title="My Knowledge Tree" style="float: right; margin: 10px;" >My Knowledge Tree</a>
 		</li>
 	  	<li id="gplus_btn" >
 		  	<div id="plusone_holder" style="margin: 10px;">
@@ -217,6 +221,11 @@ ul {
 		var keywords = jQuery("#theKeywords").val();		
 		var viewTabUrl = [ chrome.extension.getURL('search.html'), '?keywords=',	encodeURIComponent(keywords) ].join('');
 		chrome.tabs.create({url : viewTabUrl });	
+	}
+	
+	function openMyKnowledgeTree(){
+		var viewTabUrl = [ chrome.extension.getURL('knowledge-tree.html') ].join('');
+		chrome.tabs.create({url : viewTabUrl });
 	}
 	
 	function openNewsStreamEditor(){		
