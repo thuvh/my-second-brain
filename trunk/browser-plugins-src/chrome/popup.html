@@ -186,11 +186,12 @@ ul {
 		
 		var ping = function(){
 			var callback = function(tab) {
+				//alert(JSON.stringify(tab));
 				setTimeout(function(){
-					chrome.tabs.remove(tab.id);				
-					jQuery("#theNumTestCounter").html(c);
-					c++;		
-				},1000)					
+					chrome.tabs.remove(tab.id);
+				},8000)					
+				jQuery("#theNumTestCounter").html(c);
+				c++;
 			}; 
 			chrome.tabs.create({url : theTestLink, active : false }, callback );	
 		};			

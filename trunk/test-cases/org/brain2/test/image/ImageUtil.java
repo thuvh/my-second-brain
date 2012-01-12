@@ -3,7 +3,6 @@ package org.brain2.test.image;
 import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
-import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.Transparency;
 import java.awt.image.BufferedImage;
@@ -191,7 +190,8 @@ public class ImageUtil {
 		g2.drawImage(image, 0, 0, newWidth, newHeight, null);
 		return newImage;
 	}
-
+	
+	
 	/**
 	 * @param args
 	 * @throws InterruptedException 
@@ -199,12 +199,12 @@ public class ImageUtil {
 	public static void main(String[] args) throws InterruptedException {
 		try {
 			System.out.println("scaleImage...");
-			BufferedImage image = ImageIO.read(new File("D:/Photos/DSCF0519.JPG"));
+			BufferedImage image = ImageIO.read(new File("D:/Photos/DSCF0442.JPG"));
 			
 			image = blurImage(image);
 			
-			BufferedImage newImage = scaleImage(image, 2000, 2000);
-			ImageIO.write(newImage, "JPG", new File("D:/Photos/DSCF0519_thumb.JPG"));
+			BufferedImage newImage = scaleImage(image, 320, 480);
+			ImageIO.write(newImage, "JPG", new File("D:/Photos/DSCF0442_thumb.JPG"));
 			image.flush();
 			newImage.flush();
 			image = null;

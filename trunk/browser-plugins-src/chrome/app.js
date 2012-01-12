@@ -12,7 +12,7 @@ var port = chrome.extension.connect();
 var baseAgentUrl = 'http://localhost:10001';
 var agentStatus = false;
 
-if( location.host.indexOf("http://localhost") != 0 ){
+if( location.host.indexOf("http://localhost") != 0 ){	
 	var img = jQuery('<img/>').attr('src', baseAgentUrl + '/resources/images/empty.gif');
 	img.on("load", function(){
 		agentStatus = true;
@@ -24,6 +24,7 @@ if( location.host.indexOf("http://localhost") != 0 ){
 		agentStatus = false;
 		//TODO here
 		localStorage.setItem('agent-status',agentStatus);
+		jQuery(this).remove();
 	});	
 	jQuery('body').append(img);
 }

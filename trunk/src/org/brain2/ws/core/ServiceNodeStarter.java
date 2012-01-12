@@ -311,6 +311,7 @@ public class ServiceNodeStarter extends AbstractHandler {
 		server.setHandler(theHandler);		
 
 		System.out.println("Starting Agent Pools at port " + port + " ...");
+		System.out.println("JVM: " + System.getProperty("sun.arch.data.model") + " bit, version: " + System.getProperty("java.version"));
 		server.start();
 		server.join();		
 	}	
