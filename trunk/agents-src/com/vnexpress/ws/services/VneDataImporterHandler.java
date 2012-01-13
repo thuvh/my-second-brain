@@ -97,6 +97,25 @@ public class VneDataImporterHandler extends ServiceHandler {
 		}
 	}
 	
+	public String parseAllsArticle(Map params){		
+		int limitNum = 1000;
+		if(params.get("limit") != null){
+			try {
+				limitNum = Integer.parseInt(params.get("limit")+"");
+			} catch (NumberFormatException e) {}
+		}	
+		//org.apache.james.mime4j.message.Body
+		
+		try {
+			org.brain2.test.dao.VneSQLserverDao.main(new String[limitNum]);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return "";
+	}
+	
 	public String parseArticle(Map params){
 		if( ! params.containsKey("path") ||  ! params.containsKey("id") ){
 			return "need params[path,id] in Request";
