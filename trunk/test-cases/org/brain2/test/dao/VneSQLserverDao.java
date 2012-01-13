@@ -37,9 +37,8 @@ public class VneSQLserverDao {
 		String sql = "UPDATE Subject0 SET Content = ? WHERE ID = ?";
 		PreparedStatement ps = con.prepareStatement(sql);
 		ps.setString(1, article.getContent());
-		ps.setLong(2, article.getID());
-		boolean rs =  ps.executeUpdate() > 0;
-		return rs;
+		ps.setLong(2, article.getID());		
+		return ps.executeUpdate() > 0;
 	}
 
 	public static ResultSet getSubjectPaths(long maxID, int limit)
@@ -83,7 +82,7 @@ public class VneSQLserverDao {
 		while (rs.next()) {
 			maxId = rs.getLong("ID");
 			String path = rs.getString("Path");
-			System.out.println(maxId + " - " + path + "- Content= "+rs.getString("Content"));
+			System.out.println(maxId + " - " + path + "- Content FROM DB: "+(rs.getString("Content") == null));
 			
 			String content = null;
 			if( ! forceUpdateContent){
@@ -93,6 +92,7 @@ public class VneSQLserverDao {
 			if(content == null || "".equals(content)){
 				String fulLink = VnExpressUtils.getFullLink(path);			
 				if(!fulLink.isEmpty()){
+					System.out.println("### update content ");
 					String html = HttpClientUtil.executeGet(fulLink);
 					if (html.isEmpty()||html.equals("500")) {	
 						System.err.println("http get fail, 500 server error");				
@@ -112,7 +112,7 @@ public class VneSQLserverDao {
 										updated = updateArticleContent(newArticle);
 										articles.put(newArticle.getID(), newArticle.getHeadline());
 										System.out.println(newArticle.getID() + " #### updated = " + updated);
-										System.out.println("### content \n " + newArticle.getContent());
+										//System.out.println("### content \n " + newArticle.getContent());
 									} catch (SQLException e) {
 										// TODO Auto-generated catch block
 										e.printStackTrace();
@@ -123,7 +123,8 @@ public class VneSQLserverDao {
 					}					
 				}
 			} else {
-				System.out.println("### content \n " + content);
+				//System.out.println("### content \n " + content);
+				System.out.println("### Skip ");
 			}
 		}		
 		rs.close();
@@ -145,14 +146,13 @@ public class VneSQLserverDao {
 			System.out.println("Connection Catalog: "+con.getCatalog());			
 		} else {		
 			throw new IllegalArgumentException("importer-mssqls-configs.json was not config correctly!");
-		}
-		
+		}		
 
-		long maxId = 0;
-		int limit = 10;
+		long maxId = Integer.parseInt(args[0]);
+		int limit = 50;
 		int total = getTotalArticle();
 		int numTest = total, jobIndex = 0;
-		forceUpdateContent = true;
+		forceUpdateContent = false;
 		
 		System.out.println("total: "+total);
 		
