@@ -97,24 +97,25 @@ public class VneDataImporterHandler extends ServiceHandler {
 		}
 	}
 	
+	
 	public String parseAllsArticle(Map params){		
-		int limitNum = 1000;
+		int maxId = 1000510000;
 		if(params.get("limit") != null){
 			try {
-				limitNum = Integer.parseInt(params.get("limit")+"");
+				maxId = Integer.parseInt(params.get("maxId")+"");
 			} catch (NumberFormatException e) {}
 		}	
 		//org.apache.james.mime4j.message.Body
 		
 		try {
-			org.brain2.test.dao.VneSQLserverDao.main(new String[limitNum]);
+			org.brain2.test.dao.VneSQLserverDao.main(new String[]{maxId+""});
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		
+		}		
 		return "";
 	}
+	
 	
 	public String parseArticle(Map params){
 		if( ! params.containsKey("path") ||  ! params.containsKey("id") ){
@@ -265,6 +266,21 @@ public class VneDataImporterHandler extends ServiceHandler {
 			//System.out.println(s);
 			return s;
 		}
+		return "";
+	}
+	
+	@RestHandler
+	public String makeIReportThumbnail(Map params ) throws Exception {
+		Runtime.getRuntime().exec( new String[] {
+	      "java",
+	      "-jar",
+	      "-Xms128m",
+	      "-Xmx1024m",
+	      "make-thumbnail-image.jar",
+	      params.get("src")+"",
+	      params.get("w")+"",
+	      params.get("h")+""
+	    });	
 		return "";
 	}
 	
