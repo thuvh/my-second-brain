@@ -512,4 +512,9 @@ public class VneSQLserverDao {
 		//ConnectWithDriver();
 	}
 
+	public static void parseAllArticles(int limitNum) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

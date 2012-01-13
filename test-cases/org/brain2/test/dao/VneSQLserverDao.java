@@ -148,10 +148,10 @@ public class VneSQLserverDao {
 		}
 		
 
-		/*long maxId = 0;
-		int limit = 5;
+		long maxId = 0;
+		int limit = 10;
 		int total = getTotalArticle();
-		int numTest = 5, jobIndex = 0;
+		int numTest = total, jobIndex = 0;
 		forceUpdateContent = true;
 		
 		System.out.println("total: "+total);
@@ -159,9 +159,9 @@ public class VneSQLserverDao {
 		while(jobIndex < numTest){
 			maxId = fetchArticle(maxId, limit);
 			jobIndex += limit;
-		}*/
+		}
 		
-		Close();
+		//Close();
 	}
 
 }
