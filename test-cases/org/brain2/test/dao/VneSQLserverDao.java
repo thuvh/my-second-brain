@@ -21,6 +21,7 @@ import org.brain2.ws.core.utils.HttpClientUtil;
 
 public class VneSQLserverDao {
 	
+	private static RecordManager recordManager;
 	private static PrimaryTreeMap<String,String> cachedArticlesDB;
 	static final String recordManagerName = "cache/vne_crawling";
 	static final String vneCrawlingDBName = "vne_crawling_cache";
@@ -30,10 +31,10 @@ public class VneSQLserverDao {
 	private static boolean forceUpdateContent = false;
 	
 	static {		
-		if(cachedArticlesDB == null ){
+		if(cachedArticlesDB == null || recordManager==null ){
 			try {
 				/** create (or open existing) database */				
-				RecordManager recordManager = RecordManagerFactory.createRecordManager(recordManagerName);
+				recordManager = RecordManagerFactory.createRecordManager(recordManagerName);
 				
 				/** Creates TreeMap which stores data in database.  
 				 *  Constructor method takes recordName (something like SQL table name)*/
@@ -115,15 +116,20 @@ public class VneSQLserverDao {
 			}			
 			
 			if(content == null || "".equals(content)){
-				String fulLink = VnExpressUtils.getFullLink(path);			
+				String fulLink = VnExpressUtils.getFullLink(path);
 				if(!fulLink.isEmpty()){
 					System.out.println("### update content ");
+					final String cachedkey = maxId + "-" + fulLink;
+					cachedArticlesDB.put(cachedkey, "");
+					
 					String html = HttpClientUtil.executeGet(fulLink);
-					if (html.isEmpty()||html.equals("500")) {	
+					if (html.isEmpty()||html.equals("500")) {						
+						cachedArticlesDB.put(cachedkey, "500");
 						System.err.println("http get fail, 500 server error");				
 					} else if(html.equals("404")){
 						System.err.println("Link die!!!");
 					} else {
+						cachedArticlesDB.put(cachedkey, "200");
 						Parser parser = VnExpressUtils.getParser(path);
 						if(parser!=null){
 							Article oldArticle = new Article();
@@ -135,6 +141,12 @@ public class VneSQLserverDao {
 									boolean updated;
 									try {
 										updated = updateArticleContent(newArticle);
+										cachedArticlesDB.put(cachedkey, ""+updated);
+										try {
+											recordManager.commit();			
+										} catch (Exception e) {			
+											e.printStackTrace();
+										}
 										articles.put(newArticle.getID(), newArticle.getHeadline());
 										System.out.println(newArticle.getID() + " #### updated = " + updated);
 										//System.out.println("### content \n " + newArticle.getContent());
@@ -145,7 +157,12 @@ public class VneSQLserverDao {
 								}
 							}).start();
 						}
-					}					
+					}
+					try {						
+						recordManager.commit();			
+					} catch (Exception e) {			
+						e.printStackTrace();
+					}
 				}
 			} else {
 				//System.out.println("### content \n " + content);
