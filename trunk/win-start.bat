@@ -1,1 +1,1 @@
-java -jar starter.jar 512 1024
+java -jar starter.jar 512 800
