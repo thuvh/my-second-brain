@@ -303,8 +303,13 @@ public class ServiceNodeStarter extends AbstractHandler {
 //		return sb.toString();
 //	}
 
-	public static void main(String[] args) throws Exception {
-		int port = 10001;// TODO use config here
+	public static void main(String[] args) throws Exception {		
+		int port = 10001;
+		if(args.length == 1){
+			try {
+				port = Integer.parseInt(args[0]);
+			} catch (NumberFormatException e) {}
+		}
 		Server server = new Server(port);		
 		ServiceNodeStarter theHandler = new ServiceNodeStarter();
 		theHandler.initLifeCycleListener();		

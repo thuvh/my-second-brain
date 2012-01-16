@@ -100,7 +100,7 @@ public class VneDataImporterHandler extends ServiceHandler {
 	
 	public String parseAllsArticle(Map params){		
 		int maxId = 1000510000;
-		if(params.get("limit") != null){
+		if(params.get("maxId") != null){
 			try {
 				maxId = Integer.parseInt(params.get("maxId")+"");
 			} catch (NumberFormatException e) {}
