@@ -29,6 +29,9 @@ public class VnExpressUtils {
 	    return "";
 	}
 	public static String getFullLink(String url){
+		if(url == null){
+			return "";
+		}
 		String tempURL = url.toLowerCase();
 		if(Pattern.matches("^/gl/(.)*", tempURL)){
 			if(Pattern.matches("^/gl/ebank/(.)*", tempURL))

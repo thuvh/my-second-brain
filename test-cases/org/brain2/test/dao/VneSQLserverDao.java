@@ -1,5 +1,6 @@
 package org.brain2.test.dao;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -8,6 +9,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 
+import jdbm.PrimaryTreeMap;
+import jdbm.RecordManager;
+import jdbm.RecordManagerFactory;
+
 import org.brain2.test.vneappcrawler.Article;
 import org.brain2.test.vneappcrawler.ImporterConfigs;
 import org.brain2.test.vneappcrawler.Parser;
@@ -15,10 +20,30 @@ import org.brain2.test.vneappcrawler.VnExpressUtils;
 import org.brain2.ws.core.utils.HttpClientUtil;
 
 public class VneSQLserverDao {
-
+	
+	private static PrimaryTreeMap<String,String> cachedArticlesDB;
+	static final String recordManagerName = "cache/vne_crawling";
+	static final String vneCrawlingDBName = "vne_crawling_cache";
+	
 	private static Connection con = null;
 	private static HashMap<Long,String> articles = new HashMap<Long, String>();
 	private static boolean forceUpdateContent = false;
+	
+	static {		
+		if(cachedArticlesDB == null ){
+			try {
+				/** create (or open existing) database */				
+				RecordManager recordManager = RecordManagerFactory.createRecordManager(recordManagerName);
+				
+				/** Creates TreeMap which stores data in database.  
+				 *  Constructor method takes recordName (something like SQL table name)*/
+				
+				cachedArticlesDB = recordManager.treeMap(vneCrawlingDBName);				
+			} catch (IOException e) {			
+				e.printStackTrace();
+			}	
+		}
+	}
 
 	protected static void ConnectWithDriver() throws Exception {		
 		ImporterConfigs configs = ImporterConfigs.loadFromFile("/importer-mssql-configs.json");	
