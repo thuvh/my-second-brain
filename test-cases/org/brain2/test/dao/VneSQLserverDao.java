@@ -77,16 +77,32 @@ public class VneSQLserverDao {
 		ResultSet rs = null;
 		Statement stmt = con.createStatement();
 		String sql = "SELECT TOP " + limit
-				+ " ID,Path,Content FROM Subject0 WHERE ID < [maxID] ORDER BY ID DESC";
+				+ " ID,Path,Content FROM Subject0 WHERE ID < [maxID] AND Content IS NULL ORDER BY ID DESC";
 		if (maxID == 0) {
 			sql = "SELECT TOP "
 					+ limit
-					+ " ID,Path,Content FROM Subject0 WHERE ID <= (SELECT MAX(ID) FROM Subject0) ORDER BY ID DESC";
+					+ " ID,Path,Content FROM Subject0 WHERE ID <= (SELECT MAX(ID) FROM Subject0) AND Content IS NULL ORDER BY ID DESC";
 		} else {
 			sql = sql.replace("[maxID]", maxID + "");
 		}
 		rs = stmt.executeQuery(sql);
 		return rs;
+	}
+	
+	
+	
+	public static int getTotalNotEmptyArticle()
+			throws SQLException {
+		ResultSet rs = null;
+		Statement stmt = con.createStatement();
+		String sql = "SELECT COUNT(ID) as total FROM Subject0 WHERE Content IS NOT NULL";
+		int total = 0;		
+		rs = stmt.executeQuery(sql);
+		while (rs.next()) {
+			total = rs.getInt("total");
+		}
+		rs.close();
+		return total;
 	}
 	
 	public static int getTotalArticle()
@@ -170,6 +186,8 @@ public class VneSQLserverDao {
 			}
 		}		
 		rs.close();
+		int totalNotEmpty = getTotalNotEmptyArticle();
+		System.out.println(" ###---------------------------------------totalNotEmpty: "+totalNotEmpty);
 		return maxId;
 	}
 	
@@ -191,12 +209,13 @@ public class VneSQLserverDao {
 		}		
 
 		long maxId = Integer.parseInt(args[0]);
-		int limit = 50;
+		int limit = 20;
 		int total = getTotalArticle();
 		int numTest = total, jobIndex = 0;
 		forceUpdateContent = false;
 		
 		System.out.println("total: "+total);
+		System.out.println("maxId: "+maxId);
 		
 		while(jobIndex < numTest){
 			maxId = fetchArticle(maxId, limit);
