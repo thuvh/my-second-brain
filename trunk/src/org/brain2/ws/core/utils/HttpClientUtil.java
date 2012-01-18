@@ -153,10 +153,12 @@ public class HttpClientUtil {
 			} else {
 				return "500";
 			}
-		}  catch (HttpResponseException e) {
-		    System.err.println(e.getMessage());		  
-			
-		} catch (Exception e) {
+		}  catch (Exception e) {
+			if( e instanceof java.net.ConnectException){
+				return "444";
+			} else if( e instanceof java.net.ConnectException){
+				System.err.println(e.getMessage());
+			}
 			e.printStackTrace(); 
 		}
 		return "";

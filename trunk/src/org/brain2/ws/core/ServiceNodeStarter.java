@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.brain2.ws.core.utils.FileUtils;
+import org.brain2.ws.core.utils.HttpClientUtil;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -310,15 +311,19 @@ public class ServiceNodeStarter extends AbstractHandler {
 				port = Integer.parseInt(args[0]);
 			} catch (NumberFormatException e) {}
 		}
-		Server server = new Server(port);		
-		ServiceNodeStarter theHandler = new ServiceNodeStarter();
-		theHandler.initLifeCycleListener();		
-		server.setHandler(theHandler);		
-
-		System.out.println("Starting Agent Pools at port " + port + " ...");
-		System.out.println("JVM: " + System.getProperty("sun.arch.data.model") + " bit, version: " + System.getProperty("java.version"));
-		server.start();
-		server.join();		
+		String html = HttpClientUtil.executeGet("http://localhost:"+port);
+		if("444".equals(html)){
+			Server server = new Server(port);
+			ServiceNodeStarter theHandler = new ServiceNodeStarter();
+			theHandler.initLifeCycleListener();		
+			server.setHandler(theHandler);
+			System.out.println("Starting Agent Pools at port " + port + " ...");
+			System.out.println("JVM: " + System.getProperty("sun.arch.data.model") + " bit, version: " + System.getProperty("java.version"));
+			server.start();
+			server.join();		
+		} else {
+			System.err.println("\n#### An agent is listening on port "+port + " ####\n");
+		}
 	}	
 
 }
