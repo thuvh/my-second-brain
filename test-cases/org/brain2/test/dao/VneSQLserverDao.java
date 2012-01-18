@@ -144,6 +144,8 @@ public class VneSQLserverDao {
 					System.out.println("### update content ");
 					final String cachedkey = maxId + "-" + fulLink;
 					final long theId = maxId;
+					final Article oldArticle = new Article();
+					oldArticle.setID(theId);	
 					String status = cachedArticlesDB.get(cachedkey);
 					if ("404".equals(status) || "true".equals(status) ) {
 						//skip
@@ -156,31 +158,25 @@ public class VneSQLserverDao {
 								if (html.isEmpty() || html.equals("500")) {
 									cachedArticlesDB.put(cachedkey, "500");
 									System.err.println("http get fail, 500 server error");
-								} else if (html.equals("404")) {
-									System.err.println("Link die!!!");
 								} else {
-									cachedArticlesDB.put(cachedkey, "200");
-									Parser parser = VnExpressUtils
-											.getParser(path);
-									if (parser != null) {
-										Article oldArticle = new Article();
-										oldArticle.setID(theId);
-										Article newArticle;
+									if (html.equals("404")) {
+										System.err.println("Link die!!!");
+										cachedArticlesDB.put(cachedkey, "404");										
+									} else {
+										cachedArticlesDB.put(cachedkey, "200");
+									}
+									Parser parser = VnExpressUtils.getParser(path);
+									if (parser != null) {									
 										try {
-											newArticle = parser
-													.parseHtmlToArticle(
-															fulLink, html,
-															oldArticle, null);
+											Article newArticle = parser.parseHtmlToArticle(fulLink, html, oldArticle, null);
 											boolean updated = updateArticleContent(newArticle);
-											cachedArticlesDB.put(cachedkey, ""
-													+ updated);
+											cachedArticlesDB.put(cachedkey, "" + updated);
 											try {
 												recordManager.commit();
 											} catch (Exception e) {
 												e.printStackTrace();
 											}
-											articles.put(newArticle.getID(),
-													newArticle.getHeadline());
+											articles.put(newArticle.getID(),newArticle.getHeadline());
 											System.out.println(newArticle
 													.getID()
 													+ " #### updated = "
@@ -218,13 +214,10 @@ public class VneSQLserverDao {
 	}
 
 	public static void main(String[] args) throws Exception {
-
 		// int CreationTime = 1326776646;
 		// System.out.println(1326775000 < CreationTime);
 		// System.out.println(CreationTime <= 1326334199 );
 		// System.out.println(CreationTime >= 1325588692 );
-		//
-		//
 		// System.exit(1);
 		System.out.println("Kiểm tra kết nối ...");
 		ImporterConfigs configs = ImporterConfigs
@@ -243,8 +236,11 @@ public class VneSQLserverDao {
 					"importer-mssqls-configs.json was not config correctly!");
 		}
 
-		long maxId = Integer.parseInt(args[0]);
-		int limit = 1000;
+		long maxId = 0;
+		if(args.length == 1){
+			maxId = Integer.parseInt(args[0]);	
+		}		
+		int limit = 200;
 		int total = getTotalNotEmptyArticle();
 		int numTest = total, jobIndex = 0;
 		forceUpdateContent = false;
@@ -254,7 +250,7 @@ public class VneSQLserverDao {
 
 		while (jobIndex < numTest) {
 			maxId = fetchArticle(maxId, limit);
-			Thread.sleep(600);
+			Thread.sleep(300);
 			jobIndex += limit;
 		}
 
