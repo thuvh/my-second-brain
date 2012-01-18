@@ -59,8 +59,12 @@ public class MyParser {
 		return "";
 	}
 
+	//http://localhost:10001/vne-data/parseArticle/string?id=1000509759&forceupdate=true&path=/gl/ban-doc-viet/the-gioi/2011/04/ngam-hoa-anh-dao-o-tokyo/
 	public static void main(String[] args) {
 		MyParser parser = new MyParser();
-		parser.doParsing("http://vnexpress.net/gl/vi-tinh/giai-tri/2011/12/10-clip-quang-cao-gay-sot-tren-youtube-nam-2011/");
+		//parser.doParsing("http://vnexpress.net/gl/vi-tinh/giai-tri/2011/12/10-clip-quang-cao-gay-sot-tren-youtube-nam-2011/");
+		parser.doParsing("http://vnexpress.net/gl/ban-doc-viet/the-gioi/2011/04/ngam-hoa-anh-dao-o-tokyo/");
+		
+		
 	}
 }
