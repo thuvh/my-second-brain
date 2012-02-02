@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 
 import com.vnexpress.model.DomainName;
 import com.vnexpress.parser.EbankVneParser;
+import com.vnexpress.parser.GeneralNewsParser;
 import com.vnexpress.parser.NhaDepVneParser;
 import com.vnexpress.parser.Parser;
 import com.vnexpress.parser.SeagameVneParser;
@@ -81,7 +82,7 @@ public class VnExpressUtils {
 			if(Pattern.matches("^/tin/(.)*", tempURL))
 				return new SeagameVneParser();
 		}
-		return null;
+		return new GeneralNewsParser();
 	}
 	public static int getIntTimeInSecond(Long timeMS){
 		if(timeMS == null)

@@ -19,6 +19,11 @@ public class ReferenceObject {
 		super();
 	}
 	
+	public ReferenceObject(String url,String caption) {
+		this.url = url;
+		this.caption = caption;
+	}
+	
 	public ReferenceObject(String articleID, String md5, String url,
 			ReferenceType type, Date updateTime) {
 		super();
@@ -92,12 +97,18 @@ public class ReferenceObject {
 		this.objectID = objectID;
 	}
 	public String getCredit() {
+		if(credit == null){
+			credit = "";
+		}
 		return credit;
 	}
-	public void setCredit(String credit) {
+	public void setCredit(String credit) {		
 		this.credit = credit;
 	}
 	public String getCaption() {
+		if(caption == null){
+			caption = "";
+		}
 		return caption;
 	}
 	public void setCaption(String caption) {

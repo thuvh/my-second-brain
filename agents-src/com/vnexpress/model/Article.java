@@ -146,6 +146,9 @@ public class Article {
 		this.abstractS = abstractS;
 	}
 	public String getContent() {
+		if(content == null){
+			content = "";
+		}
 		return content;
 	}
 	public void setContent(String content) {
