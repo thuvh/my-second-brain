@@ -15,9 +15,11 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.log4j.BasicConfigurator;
 import org.brain2.ws.core.autotasks.AutoTasksScheduler;
 import org.brain2.ws.core.utils.FileUtils;
 import org.brain2.ws.core.utils.HttpClientUtil;
+import org.brain2.ws.core.utils.Log;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -308,7 +310,10 @@ public class ServiceNodeStarter extends AbstractHandler {
 //		return sb.toString();
 //	}
 
-	public static void main(String[] args) throws Exception {		
+	public static void main(String[] args) throws Exception {	
+		// Set up a simple configuration that logs on the console.
+	    BasicConfigurator.configure();
+	     
 		int port = 10001;
 		if(args.length == 1){
 			try {
@@ -321,7 +326,7 @@ public class ServiceNodeStarter extends AbstractHandler {
 			ServiceNodeStarter theHandler = new ServiceNodeStarter();
 			theHandler.initLifeCycleListener();		
 			server.setHandler(theHandler);
-			System.out.println("Starting Agent Pools at port " + port + " ...");
+			Log.get(ServiceNodeStarter.class).info("Starting Agent Pools at port " + port + " ...");
 			System.out.println("JVM: " + System.getProperty("sun.arch.data.model") + " bit, version: " + System.getProperty("java.version"));
 			server.start();
 			server.join();		
