@@ -97,7 +97,7 @@ public class VneDataImporterHandler extends ServiceHandler {
 		}
 	}
 	
-	
+	//1000107670
 	public String parseAllsArticle(Map params){		
 		int maxId = 0;
 		if(params.get("maxId") != null){
@@ -122,21 +122,22 @@ public class VneDataImporterHandler extends ServiceHandler {
 			return "need params[path,id] in Request";
 		}
 		final String path = params.get("path")+"";
-		final long artilceId = Long.parseLong(params.get("id")+"");		
+		final long artilceId = Long.parseLong(params.get("id")+"");
+		boolean forceupdate = Boolean.parseBoolean(params.get("forceupdate")+"");
 		
-		if(linksDB.containsKey(path)){
+		if(linksDB.containsKey(path) && forceupdate == false){
 			System.out.println("get from cache: "+path );
 			System.out.println("### fetchAllCommentsArticle ...");
 			//VneSQLserverDao.fetchAllCommentsArticle(artilceId);
 			return linksDB.get(path);
 		}		
 		
-		final String content = VneSQLserverDao.parseArticle(path, artilceId , Boolean.parseBoolean(params.get("forceupdate")+""));
+		final String content = VneSQLserverDao.parseArticle(path, artilceId , forceupdate);
 		if( ! content.isEmpty() ){			
 			new Thread(new Runnable() {								
 				@Override
 				public void run() {						
-					System.out.println("add cache: "+path + " length " + content.length());
+					System.out.println("add cache: "+path + " \n " + content);
 					linksDB.put(path, content);																
 				}
 			}).start();	

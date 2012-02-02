@@ -1,0 +1,12 @@
+[
+{
+	classpath : "com.vnexpress.autotasks.ApiHealthChecker"
+	,delay : 18000
+	,period : 18000
+}
+,{
+	classpath : "com.vnexpress.autotasks.CompressingImageIreport"
+	,delay : 10000
+	,period : 10000
+}
+]

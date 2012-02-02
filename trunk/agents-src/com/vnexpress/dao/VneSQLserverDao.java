@@ -13,6 +13,7 @@ import java.util.List;
 import org.apache.http.protocol.HTTP;
 import org.brain2.ws.core.utils.HttpClientUtil;
 import org.brain2.ws.core.utils.Log;
+import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -26,6 +27,9 @@ import com.vnexpress.model.Comment;
 import com.vnexpress.model.ReferenceObject;
 import com.vnexpress.model.Topic;
 import com.vnexpress.parser.Parser;
+
+import de.l3s.boilerpipe.BoilerpipeProcessingException;
+import de.l3s.boilerpipe.extractors.ArticleExtractor;
 
 public class VneSQLserverDao {
 
@@ -130,26 +134,40 @@ public class VneSQLserverDao {
 		PreparedStatement ps = ConnectWithDriver().prepareStatement(sql);
 		List<ReferenceObject> objs = article.getRefObj();
 		for(int i=0,n=objs.size();i<n;i++){
-			ReferenceObject obj = objs.get(i);
-			ps.setLong(1, article.getID());
-			ps.setString(2, obj.getMd5());
-						
+			ReferenceObject obj = objs.get(i);			
+			ReferenceObject.ReferenceType type = obj.getType();	
 			String url = obj.getUrl().toLowerCase();			
 			if(url.startsWith("/gl/")){						
 				if(url.endsWith("/")){
-					url = url.substring(0, url.lastIndexOf("/") - 1);
+					url = url.substring(0, url.lastIndexOf("/"));
 				}
-				ps.setString(3, getOldSubjectIdByPath(url) );
+			} 	
+			
+			if(type.equals(ReferenceObject.ReferenceType.IMG)){				
+				ps.setString(2, obj.getMd5());
+				ps.setString(4, obj.getCredit());
+				ps.setString(5, obj.getCaption());
+				
+			} else if(type.equals(ReferenceObject.ReferenceType.RELATED_LINK)){
+				String json = getRelatedArticleByPath(url);
+				System.out.println("RELATED_LINK: " + json);
+				ps.setString(2, "");			
+				ps.setString(4, "");
+				ps.setString(5, json);
 			} else {
-				ps.setString(3, url);	
-			}			
-			ps.setString(4, obj.getCredit());
-			ps.setString(5, obj.getCaption());
-			ps.setInt(6, obj.getType().index());
+				continue;
+			}
+						
+			System.out.println("ReferenceObject: "+url);
+			ps.setLong(1, article.getID());
+			ps.setString(3, url);
+			ps.setInt(6, type.index());
 			ps.setInt(7, ReferenceObject.STATUS_VISIBLE);
 			ps.setInt(8, 0 );
 			ps.setInt(9, 0 );
+			
 			ps.addBatch();
+			
 		}
 		ps.executeBatch();
 		ConnectWithDriver().commit();
@@ -202,8 +220,36 @@ public class VneSQLserverDao {
 		return true;
 	}
 	
+	private static String getRelatedArticleByPath(String path) throws Exception {
+		String sql = "SELECT ID,Title,ImageFile,ImageFile2,ImageFile3,ImageFile4,Date,Modified FROM Subject0 WHERE Subject0.Path = ? ";
+		PreparedStatement ps = ConnectWithDriver().prepareStatement(sql);
+		ps.setString(1, path);		
+		System.out.println("PreparedStatement: " + sql + path);
+		ResultSet resultSet = ps.executeQuery();
+				
+		JSONObject obj = new JSONObject();
+		while (resultSet.next()) {
+			obj.put("article_id", resultSet.getString("ID"));
+			obj.put("headline", resultSet.getString("Title"));
+			obj.put("update_time", resultSet.getDate("Date").getTime()/1000);
+			obj.put("public_time", resultSet.getDate("Modified").getTime()/1000);
+			obj.put("thumbnail_md5", "");
+			String thumbnail_url = resultSet.getString("ImageFile3");
+			if(thumbnail_url == null){
+				thumbnail_url = resultSet.getString("ImageFile2");
+				if(thumbnail_url == null){
+					thumbnail_url = resultSet.getString("ImageFile");
+				}
+			}
+			obj.put("thumbnail_url", thumbnail_url);
+		}
+		ps.close();
+		resultSet.close();		
+		return obj.toString();
+	}
+	
 	private static String getOldSubjectIdByPath(String path) throws Exception {
-		String sql = "SELECT ID FROM subject0 WHERE subject0.Path = ? ";
+		String sql = "SELECT ID FROM Subject0 WHERE Subject0.Path = ? ";
 		PreparedStatement ps = ConnectWithDriver().prepareStatement(sql);
 		ps.setString(1, path);		
 		
@@ -249,10 +295,8 @@ public class VneSQLserverDao {
 		return rs;
 	}
 	
-	public static String parseCommentById(long commentId)	{
-		
-		try {
-			
+	public static String parseCommentById(long commentId)	{		
+		try {			
 			String sql = "SELECT ID, Path, Content FROM Comment WHERE ID = " + commentId;
 			System.out.println(sql);			
 			PreparedStatement stmt = ConnectWithDriver().prepareStatement(sql);		
@@ -357,7 +401,7 @@ public class VneSQLserverDao {
 										//articles.put(newArticle.getID(), newArticle.getHeadline());
 										System.out.println(newArticle.getID() + " #### updated = " + updated);
 										//System.out.println("### content \n " + newArticle.getContent());
-										updateEmptyCommentsArticle(newArticle.getID());//FIXME									
+										//updateEmptyCommentsArticle(newArticle.getID());//FIXME									
 									} catch (Exception e) {										
 										e.printStackTrace();
 									}																		
@@ -430,9 +474,8 @@ public class VneSQLserverDao {
 		String content = "";
 		String fulLink = VnExpressUtils.getFullLinkOfVNEDomain(path);
 		Parser parser = VnExpressUtils.getParser(path);
-		
-		if(parser!=null){
-			String html = HttpClientUtil.executeGet(fulLink);
+		String html = HttpClientUtil.executeGet(fulLink);
+		if(parser!=null){			
 			if (html.isEmpty()||html.equals("500")) {	
 				System.err.println("http get fail, 500 server error");				
 			} else if(html.equals("404")){
@@ -440,9 +483,8 @@ public class VneSQLserverDao {
 			} else {
 				Article oldArticle = new Article();
 				oldArticle.setID(artilceId);
-				try {
-					Article newArticle = parser.parseHtmlToArticle(fulLink, html, oldArticle , null);
-					content = newArticle.getContent();
+				try {					
+					content = parser.parseHtmlToArticle(fulLink, html, oldArticle , null).getContent();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -465,8 +507,14 @@ public class VneSQLserverDao {
 				}
 			}
 		}
-		
-		
+		if("".equals(content)){
+			try {
+				content = ArticleExtractor.INSTANCE.getText(html);
+			} catch (BoilerpipeProcessingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}		
 		return content;
 	}
 	

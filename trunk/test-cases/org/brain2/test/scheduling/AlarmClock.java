@@ -62,7 +62,7 @@ public class AlarmClock {
 	    		long diff = System.currentTimeMillis() - s;
 	    		System.out.println("diff: " + diff);
 			}
-		}, delay, period*180);
+		}, delay, period*180);//3 minutes
 
     }
 }

@@ -13,6 +13,9 @@ import org.jsoup.select.Elements;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 
+import de.l3s.boilerpipe.BoilerpipeProcessingException;
+import de.l3s.boilerpipe.extractors.ArticleExtractor;
+
 public class MyParser {
 	Function<Element, String> processRow = new Function<Element, String>() {
 		public String apply(Element row) {
@@ -31,7 +34,17 @@ public class MyParser {
 
 	public String doParsing(String url) {
 
-		String html = HttpClientUtil.executeGet(url);
+		String html = HttpClientUtil.executeGet(url);		
+		
+		try {
+			String plainContent = ArticleExtractor.INSTANCE.getText(html);
+			System.out.println(plainContent);
+		} catch (BoilerpipeProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
 		Document doc = Jsoup.parse(html, HTTP.UTF_8);
 		Elements contents = doc.select(".content");
 		Elements tables = doc.select("table");
@@ -40,10 +53,8 @@ public class MyParser {
 		for (int i = 0; i < tables.size(); i++) {
 			Element table = tables.get(i);
 			Elements rows = table.select("tr");
-			
-			
-			arr.addAll(Collections2.transform(rows, processRow));
-					
+						
+			arr.addAll(Collections2.transform(rows, processRow));					
 			
 			for (int j = 0; j < rows.size(); j++) {
 				Element row = rows.get(j);

@@ -1,6 +1,7 @@
 package com.vnexpress.parser;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.http.protocol.HTTP;
@@ -12,6 +13,8 @@ import org.jsoup.select.Elements;
 
 import com.vnexpress.dao.VnExpressDao;
 import com.vnexpress.model.Article;
+import com.vnexpress.model.ReferenceObject;
+import com.vnexpress.model.ReferenceObject.ReferenceType;
 
 public class VnExpressParser extends MainParser{
 	
@@ -33,6 +36,24 @@ public class VnExpressParser extends MainParser{
 			Element content = contents.get(0);
 
 			Elements cpms_content = content.select("div[cpms_content=true]");
+			
+			Elements relatedLinks = cpms_content.select("h2[class=Lead] a");
+			for (Element relatedLink : relatedLinks) {
+				String href = relatedLink.attr("href");
+				String text = relatedLink.text();
+//				System.out.println("### relatedLink: "+href);
+//				System.out.println("### relatedLink: "+text);
+				ReferenceObject obj = new ReferenceObject(href, text);
+				
+				obj.setArticleID(article.getId());
+				obj.setType(ReferenceType.RELATED_LINK);
+				obj.setUpdateTime(new Date());
+				obj.setMd5("");
+				
+				article.getRefObj().add(obj);
+			}
+			
+			//System.out.println("####### \n "+cpms_content.text());
 
 			if (cpms_content.size() > 0) {
 				Element cpms = cpms_content.get(0);

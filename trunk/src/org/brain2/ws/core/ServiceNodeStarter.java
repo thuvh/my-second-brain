@@ -15,6 +15,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.brain2.ws.core.autotasks.AutoTasksScheduler;
 import org.brain2.ws.core.utils.FileUtils;
 import org.brain2.ws.core.utils.HttpClientUtil;
 import org.eclipse.jetty.server.Request;
@@ -101,6 +102,9 @@ public class ServiceNodeStarter extends AbstractHandler {
 			@Override
 			public void lifeCycleStarted(LifeCycle arg0) {				
 				System.out.println("node Started ...");
+				AutoTasksScheduler scheduler = new AutoTasksScheduler(); 
+				int c = scheduler.startingAutoTasks();
+				System.out.println("Started: " + c + " AutoTasks");
 			}
 			
 			@Override
