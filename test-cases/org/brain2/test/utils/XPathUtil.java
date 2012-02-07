@@ -6,7 +6,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.IOUtils;
-import org.brain2.test.crawler.InfoCollectRobot;
 import org.brain2.ws.core.utils.HttpClientUtil;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -15,12 +14,10 @@ import org.jsoup.select.Elements;
 import org.w3c.dom.Node;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.CommandResult;
 import com.mongodb.DB;
 import com.mongodb.DBAddress;
 import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
-import com.mongodb.MongoException;
 
 import de.l3s.boilerpipe.extractors.ArticleExtractor;
 

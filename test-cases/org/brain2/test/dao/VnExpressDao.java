@@ -505,7 +505,7 @@ public class VnExpressDao {
 		System.out.println("c2 = "+ c2);
 		System.out.println("c3 = "+ c3);
 		System.out.println("c4 = "+ c4);
-		
+		importVnExpressArticles();
 		executor.shutdown();
 		while(!executor.isTerminated()){}		
 		int total = c2+c3+c4;
