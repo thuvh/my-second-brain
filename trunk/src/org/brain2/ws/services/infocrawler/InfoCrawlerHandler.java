@@ -36,7 +36,7 @@ public class InfoCrawlerHandler extends ServiceHandler {
 	final static private AccessType ACCESS_TYPE = AccessType.DROPBOX;
 	AccessTokenPair accessToken;
 	String uid = null;
-	Map<String, Entry> functorsCache = new java.util.HashMap<>();	
+	Map<String, Entry> functorsCache = new java.util.HashMap<String, Entry>();	
 	List<String> functorsPaths = null;
 	
 	public InfoCrawlerHandler(){
@@ -64,7 +64,7 @@ public class InfoCrawlerHandler extends ServiceHandler {
 			//list files in /Public/database/
 			Entry existingEntry = mDBApi.metadata("/Public/database/", 1000, null, true, null);			
 			List<Entry> entries = existingEntry.contents;
-			functorsPaths = new ArrayList<>(entries.size());
+			functorsPaths = new ArrayList<String>(entries.size());
 			for (Entry entry : entries) {
 				if(JS_MIMETYPE.equals(entry.mimeType)){		
 					String fileName = entry.fileName();
