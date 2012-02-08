@@ -7,7 +7,7 @@ public class NodesStarter {
 	 *            the command line arguments
 	 */
 	public static void main(String[] args) throws Exception {
-		int min = 512, max = 1024;
+		int min = 256, max = 1024;
 		if(args.length == 2){
 			min = Integer.parseInt(args[0]);
 			max = Integer.parseInt(args[1]);
