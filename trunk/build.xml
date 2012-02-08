@@ -38,9 +38,8 @@
 		
 		<jar destfile="agent-master.jar" filesetmanifest="mergewithoutmain">
 			<manifest>
-				<attribute name="Main-Class" value="org.brain2.test.concurency.AkkaTest" />
-				<!-- <attribute name="Class-Path" value="lib/akka-core-1.2" /> -->
-				<attribute name="Class-Path" value="."/>
+				<attribute name="Main-Class" value="org.brain2.test.concurency.AkkaTest" />				
+				<attribute name="Class-Path" value=". " />
 			</manifest>
 			
 			<fileset dir="bin" excludes="**/.svn/*" ></fileset>
@@ -50,6 +49,7 @@
 			<zipfileset dir="." excludes="META-INF/*.SF" includes="**/lib/akka-core-1.2/*" />
 			-->
 			
+			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/scala-library.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/akka-actor-1.2.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/akka-actor-tests-1.2.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/akka-beanstalk-mailbox-1.2.jar" />
@@ -82,7 +82,7 @@
 			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/objenesis-1.2.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/protobuf-java-2.4.1.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/redisclient_2.9.0-2.3.1.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/scala-library.jar" />
+			
 			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/sjson_2.9.0-0.11.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/slf4j-api-1.5.8.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/slf4j-api-1.6.0.jar" />
@@ -155,51 +155,38 @@
 		</jar>
 	</target>
 	
-	<target name="agent-slave">
+	<target name="agent-slave-1">
 		<jar destfile="agent-slave-1.jar" filesetmanifest="mergewithoutmain">
 			<manifest>
 				<attribute name="Main-Class" value="org.brain2.test.concurency.AkkaTest2" />
-				<attribute name="Class-Path" value="." />
+				<attribute name="Class-Path" value=". ; lib/akka-core-1.2/scala-library.jar ; lib/akka-core-1.2/akka-actor-1.2.jar ; 
+					lib/akka-core-1.2/akka-http-1.2.jar ; lib/akka-core-1.2/akka-mailboxes-common-1.2.jar ; 
+					lib/akka-core-1.2/akka-remote-1.2.jar ; lib/akka-core-1.2/akka-typed-actor-1.2.jar ; 
+					lib/akka-core-1.2/protobuf-java-2.4.1.jar ; lib/akka-core-1.2/netty-3.2.5.Final.jar ; 	
+					lib/akka-core-1.2/commons-codec-1.4.jar ; lib/akka-core-1.2/commons-io-2.0.1.jar ; 
+					lib/akka-core-1.2/commons-pool-1.5.5.jar ; lib/akka-core-1.2/log4j-1.2.16.jar 					
+					" />
 			</manifest>
 			<fileset dir="bin" excludes="**/.svn/*" includes="**/concurency/*"></fileset>
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/akka-actor-1.2.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/akka-actor-tests-1.2.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/akka-beanstalk-mailbox-1.2.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/akka-file-mailbox-1.2.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/akka-http-1.2.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/akka-mailboxes-common-1.2.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/akka-redis-mailbox-1.2.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/akka-remote-1.2.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/akka-slf4j-1.2.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/akka-stm-1.2.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/akka-testkit-1.2.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/akka-typed-actor-1.2.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/aopalliance-1.0.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/aspectwerkz-2.2.3.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/beanstalk_client-1.4.5.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/commons-codec-1.4.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/commons-io-2.0.1.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/commons-pool-1.5.5.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/dispatch-json_2.9.0-0.8.1.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/guice-all-2.0.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/h2-lzf-1.0.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/jackson-core-asl-1.8.0.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/jackson-mapper-asl-1.8.0.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/jsr250-api-1.0.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/jsr311-api-1.1.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/junit-4.8.1.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/log4j-1.2.16.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/multiverse-alpha-0.6.2.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/netty-3.2.5.Final.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/objenesis-1.2.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/protobuf-java-2.4.1.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/redisclient_2.9.0-2.3.1.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/scala-library.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/sjson_2.9.0-0.11.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/slf4j-api-1.5.8.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/slf4j-api-1.6.0.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/akka-core-1.2/slf4j-log4j12-1.5.8.jar" />
-		</jar>
+			
+		</jar>	
+	</target>
+	
+	<target name="agent-slave-2">
+		<jar destfile="agent-slave-2.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Main-Class" value="org.brain2.test.concurency.AkkaTest3" />
+				<attribute name="Class-Path" value=". ; lib/akka-core-1.2/scala-library.jar ; lib/akka-core-1.2/akka-actor-1.2.jar ; 
+					lib/akka-core-1.2/akka-http-1.2.jar ; lib/akka-core-1.2/akka-mailboxes-common-1.2.jar ; 
+					lib/akka-core-1.2/akka-remote-1.2.jar ; lib/akka-core-1.2/akka-typed-actor-1.2.jar ; 
+					lib/akka-core-1.2/protobuf-java-2.4.1.jar ; lib/akka-core-1.2/netty-3.2.5.Final.jar ; 	
+					lib/akka-core-1.2/commons-codec-1.4.jar ; lib/akka-core-1.2/commons-io-2.0.1.jar ; 
+					lib/akka-core-1.2/commons-pool-1.5.5.jar ; lib/akka-core-1.2/log4j-1.2.16.jar 					
+					" />
+			</manifest>
+			<fileset dir="bin" excludes="**/.svn/*" includes="**/concurency/*"></fileset>
+			
+		</jar>	
 	</target>
 
 	<target name="create_run_jar">
@@ -241,8 +228,6 @@
 			<zipfileset excludes="META-INF/*.SF" src="lib/dropbox-java-sdk-1.2.2/httpmime-4.0.3.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/dropbox-java-sdk-1.2.2/json_simple-1.1.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/dropbox-java-sdk-1.2.2/commons-logging-1.1.1.jar" />
-
-
 
 		</jar>
 	</target>
