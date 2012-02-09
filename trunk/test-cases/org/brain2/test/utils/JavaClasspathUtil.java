@@ -35,8 +35,33 @@ public class JavaClasspathUtil {
 		return jarPaths;
 	}
 	
+	public static int mystery(int a, int b) {
+		   if (b == 0)     return 0;
+		   if (b % 2 == 0) return mystery(a+a, b/2);
+		   return mystery(a+a, b/2) + a;
+	}
 	
-	public static void main(String[] args) {
+	public static void mystery2(int a, int b) {
+		   if (a != b) {
+		       int m = (a + b) / 2;
+		       mystery2(a, m);
+		       System.out.println(m);
+		       mystery2(m, b);
+		   }
+	}
+	
+	public static void mystery3(int a, int b) {
+		   if (a != b) {
+		       int m = (a + b) / 2;
+		       mystery(a, m - 1);
+		       System.out.println(m);
+		       mystery3(m + 1, b);
+		   }
+		}
+
+	
+	
+	public static void main(String[] args) {		
 		File currentFolder = new File("");
 		
 		JavaClasspathUtil util = new JavaClasspathUtil();

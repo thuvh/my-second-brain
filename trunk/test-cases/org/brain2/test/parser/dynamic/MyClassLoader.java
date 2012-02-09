@@ -34,10 +34,7 @@ public class MyClassLoader extends ClassLoader {
 			input.close();
 
 			byte[] classData = buffer.toByteArray();
-
-			return defineClass("org.brain2.test.parser.dynamic.MyParser", classData, 0,
-					classData.length);
-
+			return defineClass("org.brain2.test.parser.dynamic.MyParser", classData, 0,	classData.length);
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
