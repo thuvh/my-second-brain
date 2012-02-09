@@ -5,11 +5,7 @@ import static akka.actor.Actors.poisonPill;
 import static akka.actor.Actors.remote;
 import static java.util.Arrays.asList;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
-
-import org.brain2.test.utils.JavaClasspathUtil;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
@@ -24,14 +20,14 @@ public class AkkaTest {
 	public static void main(String[] args) throws Exception {
 		AkkaTest pi = new AkkaTest();
 		pi.calculate(4, 10000, 10000);
-		
-		
+
+
 		// server code
 		class HelloWorldActor1 extends UntypedActor {
 			public void onReceive(Object msg) {
 				System.out.println("HelloWorldActor1 tryReply: "+msg);
 				getContext().tryReply(msg + " World");
-				
+
 				if(msg.equals("AkkaTest2_started")){
 					try {
 						ActorRef actor2 = remote().actorFor("hello-service2", "localhost", 2553);
@@ -39,11 +35,10 @@ public class AkkaTest {
 						System.out.println(actor2.getId());
 						
 						Object res2 = actor2.ask("ping hello-service2 ").get();
-						System.out.println(res2);	
+						System.out.println(res2);
 						
 						Object res3 = actor2.ask("exit").get();
-						System.out.println(res3);
-						
+						System.out.println(res3);						
 												
 						Object res4 = actor2.ask("are you die").get();
 						System.out.println(res4);
@@ -94,25 +89,7 @@ public class AkkaTest {
 		
 		
 		//start slave agents
-		int min = 256, max = 1024;
-		if(args.length == 2){
-			min = Integer.parseInt(args[0]);
-			max = Integer.parseInt(args[1]);
-		}		
-		JavaClasspathUtil util = new JavaClasspathUtil();
-		File currentFolder = new File("");
-		ArrayList<String> jarFileNames = util.lookupFiles(new JavaClasspathUtil.FileNameFilter() {			
-			@Override
-			public boolean check(String name) {			
-				//System.out.println(name);
-				return name.startsWith("agent-slave-") && name.endsWith(".jar");
-			}
-		},currentFolder.getAbsolutePath(), "", false);			
-		for (String jarFileName : jarFileNames) {			
-			String cmd = "java -jar -Xms"+min+"m -Xmx"+max+"m -XX:-UseParallelGC " + jarFileName;
-			System.out.println("... exec: " + cmd);
-			Runtime.getRuntime().exec(cmd);
-		}
+		ActorStarterUtil.startChildActors();
 		
 			
 				
