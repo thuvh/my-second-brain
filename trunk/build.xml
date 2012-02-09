@@ -108,7 +108,7 @@
 			<zipfileset excludes="META-INF/*.SF" src="lib/httpclient.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/httpcore.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/httpmime.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/jdbm-2.3.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/jdbm-2.4.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/jempbox-1.6.0.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/jericho-html-3.2.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/jersey-client-1.9.1.jar" />
@@ -217,7 +217,7 @@
 			<zipfileset excludes="META-INF/*.SF" src="lib/jsoup.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/mysql-connector-java-5.1.18-bin.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/boilerpipe.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/jdbm-2.3.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/jdbm-2.4.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/json-org.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/sqljdbc4.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/scheduling.jar" />
@@ -260,7 +260,7 @@
 			<zipfileset excludes="META-INF/*.SF" src="lib/jsoup.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/mysql-connector-java-5.1.18-bin.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/boilerpipe.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="lib/jdbm-2.3.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="lib/jdbm-2.4.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/json-org.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/sqljdbc4.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/scheduling.jar" />
