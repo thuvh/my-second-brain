@@ -21,8 +21,8 @@ public class MasterActor extends UntypedActor{
 				Object res2 = actor2.ask("ping hello-service2 ").get();
 				System.out.println(res2);
 				
-				Object res3 = actor2.ask("exit").get();
-				System.out.println(res3);						
+//				Object res3 = actor2.ask("exit").get();
+//				System.out.println(res3);						
 										
 				Object res4 = actor2.ask("are you die").get();
 				System.out.println(res4);
@@ -35,7 +35,31 @@ public class MasterActor extends UntypedActor{
 				}
 			}
 			
-		}
+		} else if(msg.equals("AkkaTest3_started")){
+			try {
+				ActorRef actor3 = remote().actorFor("hello-service3", "localhost", 2554);
+				System.out.println(actor3.getUuid());
+				System.out.println(actor3.getId());
+				
+				Object res2 = actor3.ask("ping hello-service3 ").get();
+				System.out.println(res2);	
+				
+//				Object res3 = actor3.ask("exit").get();
+//				System.out.println(res3);
+				
+										
+				Object res4 = actor3.ask("are you die").get();
+				System.out.println(res4);
+			} catch (Exception e) {
+				if(e instanceof akka.dispatch.FutureTimeoutException){
+					System.out.println("[localhost:2554][actor:hello-service2][status:die]");
+				} else {
+					e.printStackTrace();
+					System.err.println(e.getMessage());
+				}
+			}
+			
+		}	
 		
 	}
 	

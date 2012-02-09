@@ -17,7 +17,7 @@ public class ActorStarter {
 			actorDef.setHost("localhost");
 			actorDef.setPort(2552);
 			actorDef.addActorService("hello-service", "org.brain2.test.concurency.MasterActor" );
-			Map<String, ActorRef > map = actorDef.getActorServices();
+			Map<String,ActorRef> map = actorDef.getActorServices();
 			
 			remote().start("localhost", 2552).register("hello-service",map.get("hello-service"));
 			
