@@ -23,7 +23,8 @@ public class AkkaTest3 {
 		Properties properties = new Properties();
 		try {
 			String name = AkkaTest3.class.getName();
-		    properties.load(new FileInputStream(name+".properties"));
+		    //properties.load(new FileInputStream(name+".properties"));
+			properties.load(new FileInputStream("log4j.properties"));
 		    properties.put("log4j.appender.rollingFile.File", name+".log");
 		} catch (IOException e) {
 		}

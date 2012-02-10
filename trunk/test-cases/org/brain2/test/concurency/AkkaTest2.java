@@ -9,6 +9,7 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+import org.brain2.ws.core.utils.HttpClientUtil;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
@@ -24,35 +25,44 @@ public class AkkaTest2 {
 		Properties properties = new Properties();
 		try {
 			String name = AkkaTest2.class.getName();
-		    properties.load(new FileInputStream(name+".properties"));
+		    properties.load(new FileInputStream("log4j.properties"));
 		    properties.put("log4j.appender.rollingFile.File", name+".log");
 		} catch (IOException e) {
 		}
 		PropertyConfigurator.configure(properties);
 		
-		final RemoteServerModule serverModule = remote().start("localhost", 2553);
 		
+		
+		final RemoteServerModule serverModule = remote().start("localhost", 2553);		
 		class HelloWorldActor2 extends UntypedActor {
 			public void onReceive(final Object msg) {
 //				System.out.println("HelloWorldActor2 tryReply: "+msg);
 				
-				System.out.println("msg: " + msg);
-				if(msg.equals("exit")){
-					System.out.println("exit received ");
-					getContext().tryReply("I'm die");
-					remote().shutdown();
-					new Thread(new Runnable() {
-						@Override
-						public void run() {
-							System.exit(1);							
-						}
-					}).start();
-				} else {
-					getContext().tryReply(msg + " from HelloWorldActor2");
+				try {
+					if(msg.toString().startsWith("http")){
+						String html = HttpClientUtil.executeGet(msg.toString());
+						getContext().tryReply(html);
+					}
+					
+					System.out.println("msg: " + msg);
+					if(msg.equals("exit")){
+						System.out.println("exit received ");
+						getContext().tryReply("I'm die");
+						remote().shutdown();
+						new Thread(new Runnable() {
+							@Override
+							public void run() {
+								System.exit(1);							
+							}
+						}).start();
+					} else {
+						getContext().tryReply(msg + " from HelloWorldActor2");
+					}
+				} catch (Exception e) {
+					logger.info(e);
 				}
 			}
-		}
-				
+		}				
 		serverModule.register("hello-service2",actorOf(HelloWorldActor2.class));
 		
 		ActorRef actor2 = remote().actorFor("hello-service", "localhost", 2552);

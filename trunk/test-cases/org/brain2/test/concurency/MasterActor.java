@@ -18,7 +18,7 @@ public class MasterActor extends UntypedActor{
 				System.out.println(actor2.getUuid());
 				System.out.println(actor2.getId());
 				
-				Object res2 = actor2.ask("ping hello-service2 ").get();
+				Object res2 = actor2.ask("http://vnexpress.net/gl/vi-tinh/san-pham-moi/2012/02/asus-gioi-thieu-cap-doi-hot-nhan-dip-le-valentine-o-vn/").get();
 				System.out.println(res2);
 				
 //				Object res3 = actor2.ask("exit").get();
