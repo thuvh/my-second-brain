@@ -24,7 +24,7 @@ public class HelloWorld {
 	private PollState state;
 	
 	@Rule
-	public Destination destination = new Destination("http://localhost");
+	public Destination destination = new Destination("http://trieunt.mapi.vnexpress.net");
 	
 	
 	/*@Rule
