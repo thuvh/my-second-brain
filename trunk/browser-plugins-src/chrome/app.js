@@ -84,8 +84,6 @@ window.addEventListener("message", function(event) {
 	// ...
 }, false);
 
-
-
 var postSaveDataByMethodPOST = function(tags) {
 	var href = location.href;
 	var postUrl = baseAgentUrl + '/linkmarking/save/html?';
