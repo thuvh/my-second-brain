@@ -297,7 +297,7 @@
 					lib/akka-core-1.2/commons-pool-1.5.5.jar ; lib/akka-core-1.2/log4j-1.2.16.jar ;
 					lib/httpmime.jar ; lib/httpclient.jar ; lib/httpcore.jar ; lib/httpclient-cache.jar ; 
 					lib/commons-io.jar ; lib/commons-lang3-3.1.jar ; lib/commons-codec.jar ; lib/commons-logging.jar ;
-					lib/boilerpipe.jar 
+					lib/boilerpipe.jar ; lib/xerces-2.9.1.jar ; lib/nekohtml-1.9.13.jar
 					" />
 			</manifest>
 			<fileset dir="bin" excludes="**/.svn/*" includes="**org/brain2/**" ></fileset>
