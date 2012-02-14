@@ -242,7 +242,7 @@ public class InfoCollectRobot {
 	
 	
 
-	public void crawleNews(String seedUrl) throws InterruptedException,
+	public void startCrawling(String seedUrl) throws InterruptedException,
 			CorruptIndexException, IOException {
 		urlQueue = new LinkedList<String>();
 		this.seedUrl = seedUrl;
@@ -334,22 +334,22 @@ public class InfoCollectRobot {
 		robot.setMainNavigationNodeId("#BlogArchive1_ArchiveList");
 		robot.setUrlRuleShouldMatch(".*.html");
 		robot.setUrlRuleShouldNotMatch(".*_archive.html");
-		robot.crawleNews("http://tantrieuf31.blogspot.com/");
+		robot.startCrawling("http://tantrieuf31.blogspot.com/");
 	}
 
 	protected static void test_vnexpress_net() throws Exception {
-		int maxQueueSize = 100;
+		int maxQueueSize = 1000;
 		String domain = "vnexpress.net";
 		InfoCollectRobot robot = new InfoCollectRobot(domain, maxQueueSize);
 		
 		robot.setMainContentNodeId("#content .content-center");
-		robot.setUrlRuleShouldMatch("http://vnexpress.net/gl/vi-tinh/.*");
+		//robot.setUrlRuleShouldMatch("http://vnexpress.net/*");
 		robot.getClustersByURI().put("san-pham-moi", new HashSet<String>());
 		robot.getClustersByURI().put("kinh-nghiem", new HashSet<String>());
 		robot.getClustersByURI().put("giai-tri", new HashSet<String>());
 		robot.getClustersByURI().put("hoi-dap", new HashSet<String>());		
 		
-		robot.crawleNews("http://vnexpress.net/gl/vi-tinh/2011/11/anonymous-tiet-lo-danh-tinh-ke-doa-xoa-so-facebook/");
+		robot.startCrawling("http://vnexpress.net/");
 	}
 	
 	protected static void test_asmarterplanet_com() throws Exception {
@@ -358,14 +358,14 @@ public class InfoCollectRobot {
 		InfoCollectRobot robot = new InfoCollectRobot(domain, maxQueueSize);
 		robot.setMainContentNodeId("#content");
 		robot.setUrlRuleShouldMatch("http://asmarterplanet.com/blog/2011/10/.*");
-		robot.crawleNews("http://asmarterplanet.com/blog/2011/10/smarter-silhouettes-a-curriculum-of-analytics.html");
+		robot.startCrawling("http://asmarterplanet.com/blog/2011/10/smarter-silhouettes-a-curriculum-of-analytics.html");
 	}
 	
 	protected static void test_nhipsongso_tuoitre_vn() throws Exception {
 		int maxQueueSize = 10000;
 		String domain = "nhipsongso.tuoitre.vn";
 		InfoCollectRobot robot = new InfoCollectRobot(domain, maxQueueSize);				
-		robot.crawleNews("http://nhipsongso.tuoitre.vn/");
+		robot.startCrawling("http://nhipsongso.tuoitre.vn/");
 	}
 	
 	protected static void test_video() throws Exception {
@@ -373,7 +373,7 @@ public class InfoCollectRobot {
 		String domain = "vnexpress.net";
 		InfoCollectRobot robot = new InfoCollectRobot(domain, maxQueueSize);		
 		robot.setUrlRuleShouldMatch("http://vnexpress.net/video/.*");
-		robot.crawleNews("http://vnexpress.net/video/the-gioi-tuong-lai-trong-tri-tuong-tuong-cua-microsoft/8/59647/");
+		robot.startCrawling("http://vnexpress.net/video/the-gioi-tuong-lai-trong-tri-tuong-tuong-cua-microsoft/8/59647/");
 	}
 	
 	protected static void test_infoq_com() throws Exception {
@@ -381,7 +381,7 @@ public class InfoCollectRobot {
 		String domain = "infoq.com";
 		InfoCollectRobot robot = new InfoCollectRobot(domain, maxQueueSize);		
 		robot.setUrlRuleShouldNotMatch("http://infoq.com/cn/.* & http://infoq.com/.*jsessionid=.*");		
-		robot.crawleNews("http://www.infoq.com");
+		robot.startCrawling("http://www.infoq.com");
 	}
 	
 	protected static void test_24h_com() throws Exception {
@@ -389,7 +389,7 @@ public class InfoCollectRobot {
 		String domain = "24h.com.vn";
 		InfoCollectRobot robot = new InfoCollectRobot(domain, maxQueueSize);		
 		robot.setUrlRuleShouldMatch(".*/video-phim-dac-sac/.*");		
-		robot.crawleNews("http://www.24h.com.vn/");
+		robot.startCrawling("http://www.24h.com.vn/");
 		
 		boolean test = "http://game.24h.com.vn/tinh-diem/dao-vang-ii-c145g624b16.html".matches("http://hcm.24h.com.vn/video-phim-dac-sac/.*");
 		System.out.println("test match: "+test);
