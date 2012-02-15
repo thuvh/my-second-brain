@@ -29,7 +29,6 @@ import com.google.gson.Gson;
 
 public class ServiceNodeStarter extends AbstractHandler {
 	
-
 	private static final Map<String, ServiceHandler> servicesMap = new HashMap<String, ServiceHandler>(30);
 	private static final Map<String, String> cachePool = new HashMap<String, String>(100);
 	private static final Map<String, String> agentsQueue = new HashMap<String, String>(10000);
@@ -38,7 +37,7 @@ public class ServiceNodeStarter extends AbstractHandler {
 
 	public void handle(String target, Request baseRequest, final HttpServletRequest request, final HttpServletResponse response)
 			throws IOException, ServletException {
-		
+
 		//TODO logging request here		
 		System.out.println("HTTP Method: " + baseRequest.getMethod() + " ,target: " + target);
 		

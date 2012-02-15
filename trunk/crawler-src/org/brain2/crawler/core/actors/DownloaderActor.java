@@ -17,10 +17,12 @@ public class DownloaderActor extends UntypedActor {
 			if(msg.toString().startsWith("http")){
 				String html = HttpClientUtil.executeGet(msg.toString());
 				logger.info("Downloaded");
+				getContext().tryReply("Downloaded");
+				
 				ActorRef actor = remote().actorFor("ParsingActorService", "localhost", 20002);
 				Object res = actor.ask(html).get();	
 				logger.info(res);
-				getContext().tryReply("Downloaded");
+				getContext().tryReply("Parsed");
 			}
 			if(msg.equals("exit")){
 				logger.info("exit received ");
