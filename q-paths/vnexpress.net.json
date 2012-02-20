@@ -1,0 +1,6 @@
+{
+	"title":"title"
+	,"content" : "div[cpms_content=true] !.Lead !.Title"
+	,"author" : "div[cpms_content=true] > p[align=right]:last"
+	,"images" : "table tr img[src] && table tr"	
+}
