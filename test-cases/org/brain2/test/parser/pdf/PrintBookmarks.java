@@ -1,16 +1,23 @@
 package org.brain2.test.parser.pdf;
 
+import java.awt.Rectangle;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 
 import org.apache.pdfbox.exceptions.InvalidPasswordException;
 import org.apache.pdfbox.pdfparser.PDFParser;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineNode;
+import org.apache.pdfbox.util.PDFTextStripper;
+import org.apache.pdfbox.util.PDFTextStripperByArea;
+import org.brain2.ws.core.utils.FileUtils;
 
 /**
  * This is an example on how to access the bookmarks that are part of a pdf
@@ -27,14 +34,16 @@ public class PrintBookmarks {
 	 *             If there is an error parsing the document.
 	 */
 	public static void main(String[] args) throws Exception {
-		String filePath = "D:/DOCUMENTS/Bayesian_Artificial_Intelligence.pdf";
+		//String filePath = "D:/EBOOKS/Packt.Solr 1.4 Enterprise Search Server.pdf";
 		
-		
+		String strURI = "file:///D:/EBOOKS/OReilly,2011,Learning Android.pdf";		
+		strURI = strURI.replace(" ", "%20");
+		URI uri = new URI(strURI);		
 		
 		PDDocument document = null;
 		FileInputStream file = null;
 		try {
-			file = new FileInputStream(filePath);
+			file = new FileInputStream(new File(uri));
 			PDFParser parser = new PDFParser(file);
 			parser.parse();
 			document = parser.getPDDocument();
@@ -50,7 +59,13 @@ public class PrintBookmarks {
 			PDDocumentCatalog catalog = document.getDocumentCatalog();
 			PDDocumentOutline outline = catalog.getDocumentOutline();
 			
-			System.out.println("### Analysing bookmark ### of PDF file: " + filePath);			
+			PDFTextStripper stripper = new PDFTextStripper("utf-8");
+			String content = stripper.getText(document);
+			System.out.println(content);
+			FileUtils.writeStringToFile("D:/pdf-content.txt", content);
+			System.exit(1);
+			
+			System.out.println("### Analysing bookmark ### of PDF file: " + uri);			
 			System.out.println("number Pages: " + document.getNumberOfPages());
 			List allPages = catalog.getAllPages();
 			if (outline != null) {
@@ -79,10 +94,21 @@ public class PrintBookmarks {
 	public void printBookmark(PDOutlineNode bookmark, String indentation,
 			PDDocument document, List allPages) throws IOException {
 		PDOutlineItem current = bookmark.getFirstChild();
+		PDFTextStripperByArea tripper = new PDFTextStripperByArea();
+
+		
+		tripper.setSortByPosition(true);
+		Rectangle rectangle = new Rectangle(100, 100, 200, 500);
+		tripper.addRegion("class1", rectangle);
+		
 		while (current != null) {			
-			int pageNum = allPages.indexOf(current.findDestinationPage(document)) + 1;
-			System.out.println(indentation + current.getTitle() + " " + pageNum );
-			printBookmark(current, indentation + "    ", document, allPages);
+			PDPage page = current.findDestinationPage(document);
+			tripper.extractRegions(page);
+			System.out.println("\n#\n" + tripper.getTextForRegion("class1") + "\n#\n");				
+						
+			//int pageNum = allPages.indexOf(page) + 1;
+			//System.out.println(indentation + current.getTitle() + " " + pageNum );
+			printBookmark(current, indentation + "  ", document, allPages);
 			current = current.getNextSibling();
 		}
 
