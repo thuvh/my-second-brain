@@ -76,11 +76,12 @@ public class SimpleLuceneTest {
 		// else just query
 
 		// 2. query
-		String querystr = "*lucene*";
-		//Query q = new WildcardQuery(new Term("title", querystr));		
+//		String querystr = "Wrox";
+//		Query q = new PrefixQuery(new Term("title", querystr));	
 		
-		querystr = "\"D:/EBOOKS/Manning.Lucene.in.Action.2nd.Edition.Jun.2010.pdf\"";
-		Query q = new QueryParser(VERSION, "uri", analyzer).parse(querystr);	
+		
+		String querystr = "\"wrox\"";
+		Query q = new QueryParser(VERSION, "title", analyzer).parse(querystr);	
 		
 
 		// 3. search
