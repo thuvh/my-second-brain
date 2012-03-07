@@ -22,9 +22,14 @@ import java.io.Writer;
  */
 public class FileUtils {
 
-	public static String getRuntimeFolderPath() throws IOException {
-		File dir1 = new File(".");
-		return dir1.getCanonicalPath();
+	public static String getRuntimeFolderPath()  {
+		try {
+			File dir1 = new File(".");
+			return dir1.getCanonicalPath();
+		} catch (IOException e) {			
+			e.printStackTrace();
+		}
+		return "";
 	}
 
 	/**

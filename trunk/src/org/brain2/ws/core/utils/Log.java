@@ -38,8 +38,13 @@ public class Log {
 		// Read properties file.
 		Properties properties = new Properties();
 		try {
-			properties.load(new FileInputStream("log4j.properties"));
-			properties.put("log4j.appender.rollingFile.File", classname	+ ".log");
+			if(classname.isEmpty()){
+				properties.load(new FileInputStream("log4j.properties"));
+				properties.put("log4j.appender.rollingFile.File", "debug.log");
+			} else {
+				properties.load(new FileInputStream("log4j-"+classname+".properties"));
+				properties.put("log4j.appender.rollingFile.File", classname	+ ".log");
+			}
 		} catch (IOException e) {
 		}
 		PropertyConfigurator.configure(properties);
