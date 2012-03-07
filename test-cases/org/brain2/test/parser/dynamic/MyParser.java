@@ -1,12 +1,8 @@
 package org.brain2.test.parser.dynamic;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
 
 import org.apache.http.protocol.HTTP;
 import org.brain2.ws.core.utils.FileUtils;
@@ -19,10 +15,6 @@ import org.jsoup.select.Elements;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Maps.EntryTransformer;
-import com.google.gson.Gson;
-import com.vnexpress.manager.ImporterConfigs;
 
 import de.l3s.boilerpipe.BoilerpipeProcessingException;
 import de.l3s.boilerpipe.extractors.ArticleExtractor;
@@ -59,8 +51,7 @@ public class MyParser {
 		try {
 			String filePath = "/q-paths/vnexpress.net.json";
 			String json = FileUtils.readFileAsString(filePath);
-			System.out.println(json);
-			
+			System.out.println(json);			
 			
 			JSONObject jsonObject = new JSONObject(json);
 

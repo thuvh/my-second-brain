@@ -11,6 +11,12 @@ import java.awt.image.Kernel;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author trieunt
+ * 
+ * Scaling image util, support scaling image byg ratio
+ *
+ */
 public class ImageUtil {
 	
 
