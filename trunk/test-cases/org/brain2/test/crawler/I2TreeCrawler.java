@@ -14,7 +14,8 @@ import org.jsoup.select.Elements;
 
 public class I2TreeCrawler {
 	
-	static final String BASE_URL = "http://tantrieuf31.byethost7.com/i2tree/index.php/mydata/post";
+	//static final String BASE_URL = "http://tantrieuf31.byethost7.com/i2tree/index.php/mydata/post";
+	static final String BASE_URL = "http://localhost/i2tree/index.php/unit-tests/crawler_api/post";
 	
 	public static void main(String[] args) throws Exception {
 		crawlingData();
@@ -29,7 +30,7 @@ public class I2TreeCrawler {
 	}
 	
 	public static void crawlingData() throws InterruptedException {
-		String url = "http://www.thongtintuyensinh.vn/Truong-Dai-hoc-Kinh-te-Tai-chinh-TPHCM_C51_D675.htm";
+		String url = "http://www.thongtintuyensinh.vn/Truong-Dai-hoc-Cong-nghe-thong-tin-Gia-Dinh_C51_D673.htm";
 		String html = HttpClientUtil.executeGet( url );
 		Document doc = Jsoup.parse(html, HTTP.UTF_8);
 		Elements nodes = doc.select("div[id=tabContent]");
