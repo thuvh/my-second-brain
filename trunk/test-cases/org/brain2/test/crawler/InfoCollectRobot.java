@@ -320,7 +320,7 @@ public class InfoCollectRobot {
 	public static void main(String[] args) throws Exception {
 		long start = System.nanoTime();
 		
-		test_vnexpress_net();
+		test_tantrieuf31_blogspot_com();
 
 		long end = System.nanoTime();
 		long miliseconds = (end - start) / 10000000;
