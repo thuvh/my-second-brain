@@ -57,7 +57,7 @@ public class I2TreeCrawler {
 				"content",
 				"<img src='http://lh6.googleusercontent.com/-_YOw8FvJAXY/TanAhrdWcpI/AAAAAAAABes/44V-f9K8Lv0/s600/2011-04-10_17-21-05_840_Ho%2520Chi%2520Minh%2520City.jpg' />");
 		String rs = HttpClientUtil.executePost(BASE_URL, params, "");
-		System.out.println(rs);
+		//System.out.println(rs);
 	}
 	
 	public static void crawlingData(String rootUrl)  {		
@@ -104,7 +104,7 @@ public class I2TreeCrawler {
 			params.put("url", url);
 			params.put("title", title);
 			String rs = HttpClientUtil.executePost(BASE_URL, params, "");
-			//System.out.println("###rs: \n" + rs );
+			System.out.println("###rs: \n" + rs );
 		}
 	}
 

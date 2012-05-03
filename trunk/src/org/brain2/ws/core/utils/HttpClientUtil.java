@@ -86,7 +86,7 @@ public class HttpClientUtil {
 			Set<String> names = params.keySet();
 			List<NameValuePair> postParameters = new ArrayList<NameValuePair>(names.size());					
 			for (String name : names) {
-				System.out.println( name + "=" + params.get(name));
+				//System.out.println( name + "=" + params.get(name));
 				postParameters.add(new BasicNameValuePair(name, params.get(name)));
 			}			
 			postRequest.setEntity(new UrlEncodedFormEntity(postParameters, "UTF-8"));
